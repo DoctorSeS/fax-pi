@@ -1,0 +1,1908 @@
+import discord
+from discord.ext import commands, tasks
+import random
+from random import randint
+import asyncio
+from rea import sexres
+from nword import *
+import json
+import requests
+import math
+from replit import db
+from discord.commands import slash_command
+from main import client, bot_prefix, currentDT, round_time, ses, currency
+from termcolor import cprint
+from discord import Option
+import datetime
+from cogs.slash import add_milestone
+
+empty = '\uFEFF'
+space = "<:nothing:1091325435595468890>"
+hit = "<:hit:1091325003364057188>"
+miss = "<:miss:1091324231805063189>"
+
+starts_with = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+def random_position():
+  check = []
+  all_moves = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8','F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8']
+  while len(check) != 4:
+    positions = ["up", "down", "left", "right"]
+    move = random.choice(all_moves)
+
+    if "1" in move:
+      positions = ["up", "down", "right"]
+
+    if "8" in move:
+      positions = ["up", "down", "left"]
+    
+    if "A" in move:
+      if "1" in move:
+        positions = ["up", "right"]
+      elif "8" in move:
+        positions = ["up", "left"]
+      else:
+        positions = ["up", "right", "left"]
+
+    if "H" in move:
+      if "1" in move:
+        positions = ["down", "right"]
+      elif "8" in move:
+        positions = ["down", "left"]
+      else:
+        positions = ["down", "right", "left"]
+
+  
+    pos2 = random.choice(positions)
+    if pos2 == "up":
+      pos3 = ''.join(chr(ord(char)+1) for char in move[0])
+      final_move = f"{pos3}{move[1]}"
+    elif pos2 == "down":
+      pos3 = ''.join(chr(ord(char)-1) for char in move[0])
+      final_move = f"{pos3}{move[1]}"
+    elif pos2 == "right":
+      final_move = f"{move[0]}{int(move[1]) + 1}"
+    elif pos2 == "left":
+      final_move = f"{move[0]}{int(move[1]) - 1}"
+
+    try:
+      all_moves.remove(move)
+      all_moves.remove(final_move)
+    except:
+      pass
+    else:
+      pass
+    check.append(f"{move},{final_move},")
+  else:
+    check2 = str(check).replace("'", "")
+    check2 = check2.replace("[", "")
+    check2 = check2.replace("]", "")
+    check2 = check2.replace(" ", "")
+    
+    
+    if "@" in check2:
+      cprint(f"FUCKED POSITION: {check2}", "red")
+      random_position()
+    else:
+      if ",," in check2:
+        check2 = check2.replace(",,", ",")
+        return check2
+
+
+def detect_move(move, game_id, player_id, opponent_id, player_name):
+  value = db[f"Battleship-{game_id}"]
+  opponent_placement = value.split(f"{opponent_id}>PLACEMENT(")[1].lstrip().split(")", 1)[0]
+  if move in opponent_placement:
+    op_pl2 = opponent_placement.replace(f"{move},", "")
+    value2 = value.replace(opponent_placement, op_pl2)
+    db[f"Battleship-{game_id}"] = value2
+    return f"\n```ml\n{player_name} shot at {move}... it's a Hit.```"
+  else:
+    return f"\n```ml\n{player_name} shot at {move}... it's a Miss.```"
+
+def check_win(game_id, player_id, opponent_id, player_name, opponent_name):
+  value = db[f"Battleship-{game_id}"]
+  if f"{player_id}>PLACEMENT()" in value:
+    add_milestone(user=opponent_id, milestone="mini-games, Battleship", amount=1)
+    return f"```fix\n{opponent_name} has won the game.```"
+  elif f"{opponent_id}>PLACEMENT()" in value:
+    add_milestone(user=player_id, milestone="mini-games, Battleship", amount=1)
+    return f"```fix\n{player_name} has won the game.```"
+  else:
+    return None
+
+
+class Number_Moves(discord.ui.View):
+  def __init__(self):
+    super().__init__(timeout=1000)
+
+  @discord.ui.button(label="1", style=discord.ButtonStyle.primary, custom_id="1", disabled=False, row=0)
+  async def move_1(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    betcheck = False
+    if bet2 != "`None`":
+      betcheck = True
+    footer = embeddict["footer"]
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+
+    value = db[f"Battleship-{interaction.message.id}"]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+      last_turn = first_id
+    else:
+      turn = first_id
+      last_turn = second_id
+
+    if interaction.user.id == turn:
+      footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
+      
+      view = Letter_Moves()
+      value2 = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+      last_turn_name = interaction.guild.get_member(int(last_turn))
+      turn_name = interaction.guild.get_member(int(turn))
+
+      final_value = ""
+      others = None
+      if not value2:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        value2 = f"{turn}>HITS({add_move2}{button.label},)"
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS()", value2)
+      else:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS({others}", f"{turn}>HITS({others}{add_move2}{button.label},")
+
+      move = f"{add_move2}{button.label}"
+      if others:
+        if move in others:
+          button.disabled = True
+          button.style = discord.ButtonStyle.red
+          await interaction.message.edit(view=self)
+          await interaction.response.defer()  
+          return
+
+      db[f"Battleship-{interaction.message.id}"] = f"{final_value}"
+      check_move = detect_move(move, interaction.message.id, turn, last_turn, turn_name.display_name)
+        
+      embed = discord.Embed(description=f"""```fix\nWaiting for {last_turn_name.display_name}...```{check_move}\nCurrent Bet: {bet2}""")
+
+      
+      if (check_move != None) or ("ERROR" not in check_move):
+
+        hit_or_miss = ""
+        if "Hit" in check_move:
+          hit_or_miss = f"'{move}'"
+        elif "Miss" in check_move:
+          hit_or_miss = '"XX"'
+        
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+      embed.set_footer(text=f"Turn number: {footer2}")
+
+      check_for_win = check_win(interaction.message.id, turn, last_turn, turn_name.display_name, last_turn_name.display_name)
+      if check_for_win != None:
+        win = f"{check_for_win}"
+        embed = discord.Embed(description=f"{win}")
+        embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}")
+  
+        if betcheck:
+          uservalue = db[f"Score-{last_turn}"]
+          yourvalue = db[f"Score-{interaction.user.id}"]
+          uservalueint = float(uservalue)
+          yourvalueint = float(yourvalue)
+          uservaluefinal = uservalueint - int(bet2)
+          yourvaluefinal = yourvalueint + int(bet2)
+          db[f"Score-{last_turn}"] = f"{uservaluefinal}"
+          db[f"Score-{interaction.user.id}"] = f"{yourvaluefinal}"
+          embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}\n\n{interaction.user.name}: {yourvalue} ≫ {yourvaluefinal}\n{turn.name}: {uservalue} ≫ {uservaluefinal}")
+
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+        del db[f"Battleship-{interaction.message.id}"]
+        await interaction.message.edit(embed=embed, content=None, view=None)
+        await interaction.response.defer()
+        
+      else: 
+        await interaction.message.edit(embed=embed, view=view)
+        await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+        
+  @discord.ui.button(label="2", style=discord.ButtonStyle.primary, custom_id="2", disabled=False, row=0)
+  async def move_2(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    betcheck = False
+    if bet2 != "`None`":
+      betcheck = True
+    footer = embeddict["footer"]
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+
+    value = db[f"Battleship-{interaction.message.id}"]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+      last_turn = first_id
+    else:
+      turn = first_id
+      last_turn = second_id
+
+    if interaction.user.id == turn:
+      footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
+      
+      view = Letter_Moves()
+      value2 = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+      last_turn_name = interaction.guild.get_member(int(last_turn))
+      turn_name = interaction.guild.get_member(int(turn))
+
+      final_value = ""
+      others = None
+      if not value2:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        value2 = f"{turn}>HITS({add_move2}{button.label},)"
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS()", value2)
+      else:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS({others}", f"{turn}>HITS({others}{add_move2}{button.label},")
+
+      move = f"{add_move2}{button.label}"
+      if others:
+        if move in others:
+          button.disabled = True
+          button.style = discord.ButtonStyle.red
+          await interaction.message.edit(view=self)
+          await interaction.response.defer()  
+          return
+
+      db[f"Battleship-{interaction.message.id}"] = f"{final_value}"
+      check_move = detect_move(move, interaction.message.id, turn, last_turn, turn_name.display_name)
+        
+      embed = discord.Embed(description=f"""```fix\nWaiting for {last_turn_name.display_name}...```{check_move}\nCurrent Bet: {bet2}""")
+      
+      if (check_move != None) or ("ERROR" not in check_move):
+
+        hit_or_miss = ""
+        if "Hit" in check_move:
+          hit_or_miss = f"'{move}'"
+        elif "Miss" in check_move:
+          hit_or_miss = '"XX"'
+        
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+      embed.set_footer(text=f"Turn number: {footer2}")
+
+      check_for_win = check_win(interaction.message.id, turn, last_turn, turn_name.display_name, last_turn_name.display_name)
+      if check_for_win != None:
+        win = f"{check_for_win}"
+        embed = discord.Embed(description=f"{win}")
+        embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}")
+  
+        if betcheck:
+          uservalue = db[f"Score-{last_turn}"]
+          yourvalue = db[f"Score-{interaction.user.id}"]
+          uservalueint = float(uservalue)
+          yourvalueint = float(yourvalue)
+          uservaluefinal = uservalueint - int(bet2)
+          yourvaluefinal = yourvalueint + int(bet2)
+          db[f"Score-{last_turn}"] = f"{uservaluefinal}"
+          db[f"Score-{interaction.user.id}"] = f"{yourvaluefinal}"
+          embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}\n\n{interaction.user.name}: {yourvalue} ≫ {yourvaluefinal}\n{turn.name}: {uservalue} ≫ {uservaluefinal}")
+
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+        del db[f"Battleship-{interaction.message.id}"]
+        await interaction.message.edit(embed=embed, content=None, view=None)
+        await interaction.response.defer()
+        
+      else: 
+        await interaction.message.edit(embed=embed, view=view)
+        await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+  
+  @discord.ui.button(label="3", style=discord.ButtonStyle.primary, custom_id="3", disabled=False, row=0)
+  async def move_3(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    betcheck = False
+    if bet2 != "`None`":
+      betcheck = True
+    footer = embeddict["footer"]
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+
+    value = db[f"Battleship-{interaction.message.id}"]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+      last_turn = first_id
+    else:
+      turn = first_id
+      last_turn = second_id
+
+    if interaction.user.id == turn:
+      footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
+      
+      view = Letter_Moves()
+      value2 = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+      last_turn_name = interaction.guild.get_member(int(last_turn))
+      turn_name = interaction.guild.get_member(int(turn))
+      
+      final_value = ""
+      others = None
+      if not value2:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        value2 = f"{turn}>HITS({add_move2}{button.label},)"
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS()", value2)
+      else:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS({others}", f"{turn}>HITS({others}{add_move2}{button.label},")
+
+      move = f"{add_move2}{button.label}"
+      if others:
+        if move in others:
+          button.disabled = True
+          button.style = discord.ButtonStyle.red
+          await interaction.message.edit(view=self)
+          await interaction.response.defer()  
+          return
+
+      db[f"Battleship-{interaction.message.id}"] = f"{final_value}"
+      check_move = detect_move(move, interaction.message.id, turn, last_turn, turn_name.display_name)
+        
+      embed = discord.Embed(description=f"""```fix\nWaiting for {last_turn_name.display_name}...```{check_move}\nCurrent Bet: {bet2}""")
+            
+      if (check_move != None) or ("ERROR" not in check_move):
+
+        hit_or_miss = ""
+        if "Hit" in check_move:
+          hit_or_miss = f"'{move}'"
+        elif "Miss" in check_move:
+          hit_or_miss = '"XX"'
+        
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+      embed.set_footer(text=f"Turn number: {footer2}")
+
+      check_for_win = check_win(interaction.message.id, turn, last_turn, turn_name.display_name, last_turn_name.display_name)
+      if check_for_win != None:
+        win = f"{check_for_win}"
+        embed = discord.Embed(description=f"{win}")
+        embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}")
+  
+        if betcheck:
+          uservalue = db[f"Score-{last_turn}"]
+          yourvalue = db[f"Score-{interaction.user.id}"]
+          uservalueint = float(uservalue)
+          yourvalueint = float(yourvalue)
+          uservaluefinal = uservalueint - int(bet2)
+          yourvaluefinal = yourvalueint + int(bet2)
+          db[f"Score-{last_turn}"] = f"{uservaluefinal}"
+          db[f"Score-{interaction.user.id}"] = f"{yourvaluefinal}"
+          embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}\n\n{interaction.user.name}: {yourvalue} ≫ {yourvaluefinal}\n{turn.name}: {uservalue} ≫ {uservaluefinal}")
+
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+        del db[f"Battleship-{interaction.message.id}"]
+        await interaction.message.edit(embed=embed, content=None, view=None)
+        await interaction.response.defer()
+        
+      else: 
+        await interaction.message.edit(embed=embed, view=view)
+        await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="4", style=discord.ButtonStyle.primary, custom_id="4", disabled=False, row=0)
+  async def move_4(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    betcheck = False
+    if bet2 != "`None`":
+      betcheck = True
+    footer = embeddict["footer"]
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+
+    value = db[f"Battleship-{interaction.message.id}"]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+      last_turn = first_id
+    else:
+      turn = first_id
+      last_turn = second_id
+
+    if interaction.user.id == turn:
+      footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
+      
+      view = Letter_Moves()
+      value2 = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+      last_turn_name = interaction.guild.get_member(int(last_turn))
+      turn_name = interaction.guild.get_member(int(turn))
+
+      final_value = ""
+      others = None
+      if not value2:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        value2 = f"{turn}>HITS({add_move2}{button.label},)"
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS()", value2)
+      else:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS({others}", f"{turn}>HITS({others}{add_move2}{button.label},")
+
+      move = f"{add_move2}{button.label}"
+      if others:
+        if move in others:
+          button.disabled = True
+          button.style = discord.ButtonStyle.red
+          await interaction.message.edit(view=self)
+          await interaction.response.defer()  
+          return
+
+      db[f"Battleship-{interaction.message.id}"] = f"{final_value}"
+      check_move = detect_move(move, interaction.message.id, turn, last_turn, turn_name.display_name)
+        
+      embed = discord.Embed(description=f"""```fix\nWaiting for {last_turn_name.display_name}...```{check_move}\nCurrent Bet: {bet2}""")
+        
+      if (check_move != None) or ("ERROR" not in check_move):
+
+        hit_or_miss = ""
+        if "Hit" in check_move:
+          hit_or_miss = f"'{move}'"
+        elif "Miss" in check_move:
+          hit_or_miss = '"XX"'
+        
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+      embed.set_footer(text=f"Turn number: {footer2}")
+
+      check_for_win = check_win(interaction.message.id, turn, last_turn, turn_name.display_name, last_turn_name.display_name)
+      if check_for_win != None:
+        win = f"{check_for_win}"
+        embed = discord.Embed(description=f"{win}")
+        embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}")
+  
+        if betcheck:
+          uservalue = db[f"Score-{last_turn}"]
+          yourvalue = db[f"Score-{interaction.user.id}"]
+          uservalueint = float(uservalue)
+          yourvalueint = float(yourvalue)
+          uservaluefinal = uservalueint - int(bet2)
+          yourvaluefinal = yourvalueint + int(bet2)
+          db[f"Score-{last_turn}"] = f"{uservaluefinal}"
+          db[f"Score-{interaction.user.id}"] = f"{yourvaluefinal}"
+          embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}\n\n{interaction.user.name}: {yourvalue} ≫ {yourvaluefinal}\n{turn.name}: {uservalue} ≫ {uservaluefinal}")
+  
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+        
+
+        del db[f"Battleship-{interaction.message.id}"]
+        await interaction.message.edit(embed=embed, content=None, view=None)
+        await interaction.response.defer()
+        
+      else: 
+        await interaction.message.edit(embed=embed, view=view)
+        await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="5", style=discord.ButtonStyle.primary, custom_id="5", disabled=False, row=1)
+  async def move_5(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    betcheck = False
+    if bet2 != "`None`":
+      betcheck = True
+    footer = embeddict["footer"]
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+
+    value = db[f"Battleship-{interaction.message.id}"]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+      last_turn = first_id
+    else:
+      turn = first_id
+      last_turn = second_id
+
+    if interaction.user.id == turn:
+      footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
+      
+      view = Letter_Moves()
+      value2 = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+      last_turn_name = interaction.guild.get_member(int(last_turn))
+      turn_name = interaction.guild.get_member(int(turn))
+
+      final_value = ""
+      others = None
+      if not value2:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        value2 = f"{turn}>HITS({add_move2}{button.label},)"
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS()", value2)
+      else:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS({others}", f"{turn}>HITS({others}{add_move2}{button.label},")
+
+      move = f"{add_move2}{button.label}"
+      if others:
+        if move in others:
+          button.disabled = True
+          button.style = discord.ButtonStyle.red
+          await interaction.message.edit(view=self)
+          await interaction.response.defer()  
+          return
+
+      db[f"Battleship-{interaction.message.id}"] = f"{final_value}"
+      check_move = detect_move(move, interaction.message.id, turn, last_turn, turn_name.display_name)
+        
+      embed = discord.Embed(description=f"""```fix\nWaiting for {last_turn_name.display_name}...```{check_move}\nCurrent Bet: {bet2}""")
+            
+      if (check_move != None) or ("ERROR" not in check_move):
+
+        hit_or_miss = ""
+        if "Hit" in check_move:
+          hit_or_miss = f"'{move}'"
+        elif "Miss" in check_move:
+          hit_or_miss = '"XX"'
+        
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+      embed.set_footer(text=f"Turn number: {footer2}")
+
+      check_for_win = check_win(interaction.message.id, turn, last_turn, turn_name.display_name, last_turn_name.display_name)
+      if check_for_win != None:
+        win = f"{check_for_win}"
+        embed = discord.Embed(description=f"{win}")
+        embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}")
+  
+        if betcheck:
+          uservalue = db[f"Score-{last_turn}"]
+          yourvalue = db[f"Score-{interaction.user.id}"]
+          uservalueint = float(uservalue)
+          yourvalueint = float(yourvalue)
+          uservaluefinal = uservalueint - int(bet2)
+          yourvaluefinal = yourvalueint + int(bet2)
+          db[f"Score-{last_turn}"] = f"{uservaluefinal}"
+          db[f"Score-{interaction.user.id}"] = f"{yourvaluefinal}"
+          embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}\n\n{interaction.user.name}: {yourvalue} ≫ {yourvaluefinal}\n{turn.name}: {uservalue} ≫ {uservaluefinal}")
+
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+        del db[f"Battleship-{interaction.message.id}"]
+        await interaction.message.edit(embed=embed, content=None, view=None)
+        await interaction.response.defer()
+        
+      else: 
+        await interaction.message.edit(embed=embed, view=view)
+        await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="6", style=discord.ButtonStyle.primary, custom_id="6", disabled=False, row=1)
+  async def move_6(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    betcheck = False
+    if bet2 != "`None`":
+      betcheck = True
+    footer = embeddict["footer"]
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+
+    value = db[f"Battleship-{interaction.message.id}"]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+      last_turn = first_id
+    else:
+      turn = first_id
+      last_turn = second_id
+
+    if interaction.user.id == turn:
+      footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
+      
+      view = Letter_Moves()
+      value2 = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+      last_turn_name = interaction.guild.get_member(int(last_turn))
+      turn_name = interaction.guild.get_member(int(turn))
+
+      final_value = ""
+      others = None
+      if not value2:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        value2 = f"{turn}>HITS({add_move2}{button.label},)"
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS()", value2)
+      else:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS({others}", f"{turn}>HITS({others}{add_move2}{button.label},")
+
+      move = f"{add_move2}{button.label}"
+      if others:
+        if move in others:
+          button.disabled = True
+          button.style = discord.ButtonStyle.red
+          await interaction.message.edit(view=self)
+          await interaction.response.defer()  
+          return
+
+      db[f"Battleship-{interaction.message.id}"] = f"{final_value}"
+      check_move = detect_move(move, interaction.message.id, turn, last_turn, turn_name.display_name)
+        
+      embed = discord.Embed(description=f"""```fix\nWaiting for {last_turn_name.display_name}...```{check_move}\nCurrent Bet: {bet2}""")
+
+      if (check_move != None) or ("ERROR" not in check_move):
+
+        hit_or_miss = ""
+        if "Hit" in check_move:
+          hit_or_miss = f"'{move}'"
+        elif "Miss" in check_move:
+          hit_or_miss = '"XX"'
+        
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+      embed.set_footer(text=f"Turn number: {footer2}")
+
+      check_for_win = check_win(interaction.message.id, turn, last_turn, turn_name.display_name, last_turn_name.display_name)
+      if check_for_win != None:
+        win = f"{check_for_win}"
+        embed = discord.Embed(description=f"{win}")
+        embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}")
+  
+        if betcheck:
+          uservalue = db[f"Score-{last_turn}"]
+          yourvalue = db[f"Score-{interaction.user.id}"]
+          uservalueint = float(uservalue)
+          yourvalueint = float(yourvalue)
+          uservaluefinal = uservalueint - int(bet2)
+          yourvaluefinal = yourvalueint + int(bet2)
+          db[f"Score-{last_turn}"] = f"{uservaluefinal}"
+          db[f"Score-{interaction.user.id}"] = f"{yourvaluefinal}"
+          embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}\n\n{interaction.user.name}: {yourvalue} ≫ {yourvaluefinal}\n{turn.name}: {uservalue} ≫ {uservaluefinal}")
+
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+        del db[f"Battleship-{interaction.message.id}"]
+        await interaction.message.edit(embed=embed, content=None, view=None)
+        await interaction.response.defer()
+        
+      else: 
+        await interaction.message.edit(embed=embed, view=view)
+        await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="7", style=discord.ButtonStyle.primary, custom_id="7", disabled=False, row=1)
+  async def move_7(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    betcheck = False
+    if bet2 != "`None`":
+      betcheck = True
+    footer = embeddict["footer"]
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+
+    value = db[f"Battleship-{interaction.message.id}"]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+      last_turn = first_id
+    else:
+      turn = first_id
+      last_turn = second_id
+
+    if interaction.user.id == turn:
+      footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
+      
+      view = Letter_Moves()
+      value2 = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+      last_turn_name = interaction.guild.get_member(int(last_turn))
+      turn_name = interaction.guild.get_member(int(turn))
+
+      final_value = ""
+      others = None
+      if not value2:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        value2 = f"{turn}>HITS({add_move2}{button.label},)"
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS()", value2)
+      else:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS({others}", f"{turn}>HITS({others}{add_move2}{button.label},")
+
+      move = f"{add_move2}{button.label}"
+      if others:
+        if move in others:
+          button.disabled = True
+          button.style = discord.ButtonStyle.red
+          await interaction.message.edit(view=self)
+          await interaction.response.defer()  
+          return
+
+      db[f"Battleship-{interaction.message.id}"] = f"{final_value}"
+      check_move = detect_move(move, interaction.message.id, turn, last_turn, turn_name.display_name)
+        
+      embed = discord.Embed(description=f"""```fix\nWaiting for {last_turn_name.display_name}...```{check_move}\nCurrent Bet: {bet2}""")
+      
+      if (check_move != None) or ("ERROR" not in check_move):
+
+        hit_or_miss = ""
+        if "Hit" in check_move:
+          hit_or_miss = f"'{move}'"
+        elif "Miss" in check_move:
+          hit_or_miss = '"XX"'
+        
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+      embed.set_footer(text=f"Turn number: {footer2}")
+
+      check_for_win = check_win(interaction.message.id, turn, last_turn, turn_name.display_name, last_turn_name.display_name)
+      if check_for_win != None:
+        win = f"{check_for_win}"
+        embed = discord.Embed(description=f"{win}")
+        embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}")
+  
+        if betcheck:
+          uservalue = db[f"Score-{last_turn}"]
+          yourvalue = db[f"Score-{interaction.user.id}"]
+          uservalueint = float(uservalue)
+          yourvalueint = float(yourvalue)
+          uservaluefinal = uservalueint - int(bet2)
+          yourvaluefinal = yourvalueint + int(bet2)
+          db[f"Score-{last_turn}"] = f"{uservaluefinal}"
+          db[f"Score-{interaction.user.id}"] = f"{yourvaluefinal}"
+          embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}\n\n{interaction.user.name}: {yourvalue} ≫ {yourvaluefinal}\n{turn.name}: {uservalue} ≫ {uservaluefinal}")
+
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+        del db[f"Battleship-{interaction.message.id}"]
+        await interaction.message.edit(embed=embed, content=None, view=None)
+        await interaction.response.defer()
+        
+      else: 
+        await interaction.message.edit(embed=embed, view=view)
+        await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="8", style=discord.ButtonStyle.primary, custom_id="8", disabled=False, row=1)
+  async def move_8(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    betcheck = False
+    if bet2 != "`None`":
+      betcheck = True
+    footer = embeddict["footer"]
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+
+    value = db[f"Battleship-{interaction.message.id}"]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+      last_turn = first_id
+    else:
+      turn = first_id
+      last_turn = second_id
+
+    if interaction.user.id == turn:
+      footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
+      
+      view = Letter_Moves()
+      value2 = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+      last_turn_name = interaction.guild.get_member(int(last_turn))
+      turn_name = interaction.guild.get_member(int(turn))
+
+      final_value = ""
+      others = None
+      if not value2:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        value2 = f"{turn}>HITS({add_move2}{button.label},)"
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS()", value2)
+      else:
+        add_move2 = str(add_move.split("... ")[1].lstrip().split("```")[0])
+        others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+        final_value = value.replace(f"{turn}>HITS({others}", f"{turn}>HITS({others}{add_move2}{button.label},")
+
+      move = f"{add_move2}{button.label}"
+      if others:
+        if move in others:
+          button.disabled = True
+          button.style = discord.ButtonStyle.red
+          await interaction.message.edit(view=self)
+          await interaction.response.defer()  
+          return
+
+      db[f"Battleship-{interaction.message.id}"] = f"{final_value}"
+      check_move = detect_move(move, interaction.message.id, turn, last_turn, turn_name.display_name)
+        
+      embed = discord.Embed(description=f"""```fix\nWaiting for {last_turn_name.display_name}...```{check_move}\nCurrent Bet: {bet2}""")
+
+      if (check_move != None) or ("ERROR" not in check_move):
+
+        hit_or_miss = ""
+        if "Hit" in check_move:
+          hit_or_miss = f"'{move}'"
+        elif "Miss" in check_move:
+          hit_or_miss = '"XX"'
+        
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+      embed.set_footer(text=f"Turn number: {footer2}")
+
+      check_for_win = check_win(interaction.message.id, turn, last_turn, turn_name.display_name, last_turn_name.display_name)
+      if check_for_win != None:
+        win = f"{check_for_win}"
+        embed = discord.Embed(description=f"{win}")
+        embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}")
+  
+        if betcheck:
+          uservalue = db[f"Score-{last_turn}"]
+          yourvalue = db[f"Score-{interaction.user.id}"]
+          uservalueint = float(uservalue)
+          yourvalueint = float(yourvalue)
+          uservaluefinal = uservalueint - int(bet2)
+          yourvaluefinal = yourvalueint + int(bet2)
+          db[f"Score-{last_turn}"] = f"{uservaluefinal}"
+          db[f"Score-{interaction.user.id}"] = f"{yourvaluefinal}"
+          embed.set_footer(text=f"Game concluded.\nNumber of turns: {footerpre}\n\n{interaction.user.name}: {yourvalue} ≫ {yourvaluefinal}\n{turn.name}: {uservalue} ≫ {uservaluefinal}")
+
+        if str(last_turn) in field1name:
+          field1val_edit = field1val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val_edit, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val, inline=False)
+        else:
+          field3val_edit = field3val.replace(f"[{move}]", f"{hit_or_miss}")
+          embed.add_field(name=field1name, value=field1val, inline=False)
+          embed.add_field(name=field2name, value=field2val)
+          embed.add_field(name=field3name, value=field3val_edit, inline=False)
+
+        del db[f"Battleship-{interaction.message.id}"]
+        await interaction.message.edit(embed=embed, content=None, view=None)
+        await interaction.response.defer()
+        
+      else: 
+        await interaction.message.edit(embed=embed, view=view)
+        await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="Reveal your placements", style=discord.ButtonStyle.gray, custom_id="Reveal", disabled=False, row=2)
+  async def Reveal(self, button, interaction):
+    value = db[f"Battleship-{interaction.message.id}"]
+    if str(interaction.user.id) in value:
+      board = """```md\n
+-  1   2   3   4   5   6   7   8
+A (A1)(A2)(A3)(A4)(A5)(A6)(A7)(A8)
+B (B1)(B2)(B3)(B4)(B5)(B6)(B7)(B8)
+C (C1)(C2)(C3)(C4)(C5)(C6)(C7)(C8)
+D (D1)(D2)(D3)(D4)(D5)(D6)(D7)(D8)
+E (E1)(E2)(E3)(E4)(E5)(E6)(E7)(E8)
+F (F1)(F2)(F3)(F4)(F5)(F6)(F7)(F8)
+G (G1)(G2)(G3)(G4)(G5)(G6)(G7)(G8)
+H (H1)(H2)(H3)(H4)(H5)(H6)(H7)(H8)
+```"""
+      embed = discord.Embed(description=f"Your current placements.")
+
+      placements = value.split(f"{interaction.user.id}>PLACEMENT(")[1].lstrip().split(")", 1)[0]
+      placements2 = placements.split(",")
+      del placements2[-1] 
+
+      for x in placements2:
+        board = board.replace(f"({x})", f"<{x}>")
+      else:
+        embed.add_field(name=f"{len(placements2)}/8 placements left.", value=board)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+    
+    else:
+      await interaction.response.defer()
+      return
+
+### LETTER MOVES
+
+class Letter_Moves(discord.ui.View):
+  def __init__(self):
+    super().__init__(timeout=1000)
+
+  @discord.ui.button(label="A", style=discord.ButtonStyle.primary, custom_id="A", disabled=False, row=0)
+  async def A_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+    
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="B", style=discord.ButtonStyle.primary, custom_id="B", disabled=False, row=0)
+  async def B_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="C", style=discord.ButtonStyle.primary, custom_id="C", disabled=False, row=0)
+  async def C_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="D", style=discord.ButtonStyle.primary, custom_id="D", disabled=False, row=0)
+  async def D_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="E", style=discord.ButtonStyle.primary, custom_id="E", disabled=False, row=1)
+  async def E_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="F", style=discord.ButtonStyle.primary, custom_id="F", disabled=False, row=1)
+  async def F_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="G", style=discord.ButtonStyle.primary, custom_id="G", disabled=False, row=1)
+  async def G_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="D", style=discord.ButtonStyle.primary, custom_id="D", disabled=False, row=0)
+  async def D_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="H", style=discord.ButtonStyle.primary, custom_id="H", disabled=False, row=1)
+  async def H_moves(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+      
+    add_move = str(embeddict['description'])
+    footer = embeddict["footer"]
+    footer_text = embeddict["footer"]["text"]
+    field1name = embeddict['fields'][0]['name']
+    field1val = embeddict['fields'][0]['value']
+    field2name = embeddict['fields'][1]['name']
+    field2val = embeddict['fields'][1]['value']
+    field3name = embeddict['fields'][2]['name']
+    field3val = embeddict['fields'][2]['value']
+    footerpre = str(footer).split("number: ")[1].lstrip().split("'}")[0]
+    value = db[f"Battleship-{interaction.message.id}"]
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+
+    first_id = int(value.split("1:", 1)[1].lstrip().split(">", 1)[0])
+    second_id = int(value.split("2:", 1)[1].lstrip().split(">", 1)[0])
+    
+    if (float(footerpre) % 2) == 0:
+      turn = second_id
+    else:
+      turn = first_id 
+
+    others = value.split(f"{turn}>HITS(")[1].lstrip().split(")")[0]
+    moves = [f"{button.label}1", f"{button.label}2", f"{button.label}3", f"{button.label}4", f"{button.label}5", f"{button.label}6", f"{button.label}7", f"{button.label}8"]
+    if others:
+      for x in moves:
+        if x in others:
+          pass
+        else:
+          break
+      else:
+        button.disabled = True
+        button.style = discord.ButtonStyle.red
+        await interaction.message.edit(view=self)
+        await interaction.response.defer()
+        return
+
+    if interaction.user.id == turn:
+      turn_name = interaction.guild.get_member(int(turn))
+      embed = discord.Embed(description=f"""```fix\nWaiting for {turn_name.display_name}... {button.label}```\n```fix\nAwaiting next move...```\nCurrent Bet: {bet2}""")
+      embed.add_field(name=field1name, value=field1val, inline=False)
+      embed.add_field(name=field2name, value=field2val)
+      embed.add_field(name=field3name, value=field3val, inline=False)
+      embed.set_footer(text=footer_text)
+      
+      view = Number_Moves()
+      await interaction.message.edit(embed=embed, view=view)
+      await interaction.response.defer()
+    else:
+      await interaction.response.defer()
+      return
+
+  @discord.ui.button(label="Reveal your placements", style=discord.ButtonStyle.gray, custom_id="Reveal", disabled=False, row=2)
+  async def Reveal(self, button, interaction):
+    value = db[f"Battleship-{interaction.message.id}"]
+    if str(interaction.user.id) in value:
+      board = """```md\n
+-  1   2   3   4   5   6   7   8
+A (A1)(A2)(A3)(A4)(A5)(A6)(A7)(A8)
+B (B1)(B2)(B3)(B4)(B5)(B6)(B7)(B8)
+C (C1)(C2)(C3)(C4)(C5)(C6)(C7)(C8)
+D (D1)(D2)(D3)(D4)(D5)(D6)(D7)(D8)
+E (E1)(E2)(E3)(E4)(E5)(E6)(E7)(E8)
+F (F1)(F2)(F3)(F4)(F5)(F6)(F7)(F8)
+G (G1)(G2)(G3)(G4)(G5)(G6)(G7)(G8)
+H (H1)(H2)(H3)(H4)(H5)(H6)(H7)(H8)
+```"""
+      embed = discord.Embed(description=f"Your current placements.")
+
+      placements = value.split(f"{interaction.user.id}>PLACEMENT(")[1].lstrip().split(")", 1)[0]
+      placements2 = placements.split(",")
+      del placements2[-1] 
+
+      for x in placements2:
+        board = board.replace(f"({x})", f"<{x}>")
+      else:
+        embed.add_field(name=f"{len(placements2)}/8 placements left.", value=board)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+    
+    else:
+      await interaction.response.defer()
+      return
+    
+
+class Join_BS(discord.ui.View):
+  def __init__(self, user, author):
+    super().__init__(timeout=60)
+    self.value = 0
+    self.user = user
+    self.author = author
+  
+  @discord.ui.button(label="Join Battleship game", style=discord.ButtonStyle.green, custom_id="Join")
+  async def join(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    
+    footer = embeddict['footer']['text']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Bet: ')[1]
+    self.value += 1
+    if self.value == 1:
+      if str(interaction.user.id) == self.user:                                   
+        author2 = interaction.guild.get_member(int(self.author))
+          
+        random = randint(1, 2)
+        if random == 1:
+          first = author2
+          second = interaction.user
+        else:
+          first = interaction.user
+          second = author2
+      
+        view = Letter_Moves()
+        embed = discord.Embed(description=f"""```fix\nWaiting for {first.display_name}...```\nCurrent Bet: {bet2}""")
+        embed.add_field(name=f"{first}'s Board: `({first.id})`", value=f"""
+```ml
+-  1   2   3   4   5   6   7   8
+A [A1][A2][A3][A4][A5][A6][A7][A8]
+B [B1][B2][B3][B4][B5][B6][B7][B8]
+C [C1][C2][C3][C4][C5][C6][C7][C8]
+D [D1][D2][D3][D4][D5][D6][D7][D8]
+E [E1][E2][E3][E4][E5][E6][E7][E8]
+F [F1][F2][F3][F4][F5][F6][F7][F8]
+G [G1][G2][G3][G4][G5][G6][G7][G8]
+H [H1][H2][H3][H4][H5][H6][H7][H8]```""", inline=False)
+        embed.add_field(name=empty, value=empty)
+        embed.add_field(name=f"{second}'s Board: `({second.id})`", value="""
+```ml
+-  1   2   3   4   5   6   7   8
+A [A1][A2][A3][A4][A5][A6][A7][A8]
+B [B1][B2][B3][B4][B5][B6][B7][B8]
+C [C1][C2][C3][C4][C5][C6][C7][C8]
+D [D1][D2][D3][D4][D5][D6][D7][D8]
+E [E1][E2][E3][E4][E5][E6][E7][E8]
+F [F1][F2][F3][F4][F5][F6][F7][F8]
+G [G1][G2][G3][G4][G5][G6][G7][G8]
+H [H1][H2][H3][H4][H5][H6][H7][H8]```""", inline=False)
+        embed.set_footer(text="Turn number: 1")
+        msg = await interaction.message.edit(embed=embed, view=view)
+        placements_first = random_position()
+        placements_second = random_position()
+        db[f"Battleship-{msg.id}"] = f"1:{first.id}>PLACEMENT({placements_first}){first.id}>HITS()/2:{second.id}>PLACEMENT({placements_second}){second.id}>HITS()"
+        await interaction.response.defer()
+      else:
+        self.value = 0
+        return
+
+  @discord.ui.button(label="Decline", style=discord.ButtonStyle.red, custom_id="decline")
+  async def decline(self, button, interaction):
+    embeds = interaction.message.embeds
+    for embed in embeds:
+      embeddict = embed.to_dict()
+    
+    footer = embeddict['footer']['text']
+    bet = str(embeddict['description'])
+    bet2 = bet.split('Current')[1]
+    self.value += 1
+    if self.value == 1:
+      if str(interaction.user.id) == self.user:
+        embed2 = discord.Embed(description=f"{interaction.user.mention} has declined your invitation.")
+        await interaction.message.edit(content=None, embed=embed2, view=None)
+        await interaction.response.defer()
+      else:
+        self.value = 0
+        return
+
+
+class Battleship(commands.Cog):
+  def __init__(self, client):
+    self.client = client
+
+  async def disabled_check(self, ctx):
+    ### disabled check ###
+    try:
+      value = db[f"disabled-{ctx.guild.id}"]
+    except:
+      return
+    else:
+      if f"<{str(ctx.command.name)}>" in value:
+        raise discord.ext.commands.CommandError(f"The <{ctx.command.name}> command is disabled in this server.")
+      else:
+        ### ignored check ###
+        try:
+          value = db[f"ignored-{ctx.guild.id}"]
+        except:
+          return
+        else:
+          if str(ctx.channel.id) in value:
+            raise discord.ext.commands.CommandError(f"Commands are not allowed in this channel.")
+          else:
+            pass
+
+  ### COMMANDS ### ### COMMANDS ### ### COMMANDS ### ### COMMANDS ### ### COMMANDS ### ### COMMANDS ### ### COMMANDS ### AAAAAAAAAAAAAAAAAAAAA
+  
+  @commands.command(aliases=['bs', 'battle'])
+  @commands.before_invoke(disabled_check)
+  @commands.cooldown(1, 30, commands.BucketType.guild)
+  async def battleship(self, ctx, user: discord.User, bet: int=None):
+    if user is None:
+      embed2 = discord.Embed(description=f"`ERROR:` ```python\n{ctx.author.name}, Fax cannot fight you. yet.```", color=0xc40000)
+      await ctx.send(embed=embed2, content=None, delete_after=30)
+      return
+    else:
+      if user.bot:
+        embed2 = discord.Embed(description=f"`ERROR:` ```python\n{ctx.author.name}, bots can not fight you.```", color=0xc40000)
+        await ctx.send(embed=embed2, content=None, delete_after=30)
+        return
+      else:
+        if user == int or user.mention:
+          pass
+        else:
+          user = ctx.guild.get_member_named(user)
+        if ctx.author.id == user.id:
+          embed = discord.Embed(description="Waiting...")
+          embed.set_footer(text=f"{ctx.author.id}")
+          await ctx.send(embed=embed, view=Select())
+          return
+        else:
+          pass
+        if bet != None:
+          firstvalue = db[f"Score-{ctx.author.id}"]
+          secondvalue = db[f"Score-{user.id}"]
+          if bet <= 0:
+            embed2 = discord.Embed(description=f"`ERROR:` ```python\n{ctx.author.name}, you can not bet below 1.```", color=0xc40000)
+            await ctx.send(embed=embed2, content=None, delete_after=30)
+            return
+          elif bet > 1000:
+            embed2 = discord.Embed(description=f"`ERROR:` ```python\n{ctx.author.name}, you can not bet above 1000.```", color=0xc40000)
+            await ctx.send(embed=embed2, content=None, delete_after=30)
+            return
+          elif float(firstvalue) < bet:
+            embed2 = discord.Embed(description=f"`ERROR:` ```\n{ctx.author.name}, you do not have enough.\n\nYour bet: {bet}\nYour: {firstvalue}```", color=0xc40000)
+            await ctx.send(embed=embed2, content=None, delete_after=30)
+            return
+          elif float(secondvalue) < bet:
+            embed2 = discord.Embed(description=f"`ERROR:` ```\n{ctx.author.name}, {user.name} does not have enough.\n\nYour bet: {bet}\n{user.name}'s: {secondvalue}```", color=0xc40000)
+            await ctx.send(embed=embed2, content=None, delete_after=30)
+            return
+          else:
+            embed = discord.Embed(description=f"Waiting for {user.mention} to join...\nCurrent Bet: `{bet}`")
+            embed.set_footer(text=f"Gamemode: Battleship")
+            user2 = str(user.id)
+            author = str(ctx.author.id)
+            await ctx.send(embed=embed, view=Join_BS(user2, author))
+        else:
+          embed = discord.Embed(description=f"Waiting for {user.mention} to join...\nCurrent Bet: `None`")
+          embed.set_footer(text=f"Gamemode: Battleship")
+          user2 = str(user.id)
+          author = str(ctx.author.id)
+          await ctx.send(embed=embed, view=Join_BS(user2, author))
+  
+
+        
+def setup(client):
+  client.add_cog(Battleship(client))

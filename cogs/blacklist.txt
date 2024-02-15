@@ -1,0 +1,363 @@
+import discord
+from discord.ext import commands, tasks
+import logging
+import traceback
+from random import randint
+from main import client, currentDT, bot_prefix, error_counter2, ses, round_time
+import fileinput
+from replit import db
+from cogs.errors import patreoncount, roles2
+from termcolor import cprint
+
+def blacklistsave(filterList):
+    f = open("blacklist_servers.txt", "a")
+    f.write('%d' % filterList + "\n")
+    f.close()
+
+def blacklistremove(word):
+    with open("blacklist_servers.txt", "r") as f:
+      lines = f.readlines()
+    with open("blacklist_servers.txt", "w") as f:
+      for line in lines:
+        if line.strip("\n") != word:
+          f.write(line)
+
+class Select(discord.ui.View):
+  def __init__(self, ctx):
+    super().__init__(timeout=60)
+    self.selected = ""
+    self.ctx = ctx
+
+  @discord.ui.select(placeholder="Choose what you want to edit.", max_values=1, disabled=False, options=[
+        discord.SelectOption(
+          label="Enable/Disable",
+          description="Enable/Disable the module."
+        ),
+        discord.SelectOption(
+            label="Reset Blacklist",
+            description="Reset the blacklist and remove all words."
+        ),
+        discord.SelectOption(
+            label=f"Blacklist Channel",
+            description="Ignores the specified channels."
+        ),
+        discord.SelectOption(
+            label="Add Words",
+            description="Add words to the blacklist."
+        ),
+        discord.SelectOption(
+            label="Remove Words",
+            description="Remove words from the blacklist."
+        ),
+        discord.SelectOption(
+            label="Preview Settings",
+            description="Preview the blacklisted words and the ignored channels."
+        )
+    ])
+  async def sele(self, select, interaction):
+    val = str(select.values)
+    valre = val.replace("['", "")
+    val2 = valre.replace("']", "")
+    try:
+      if "Enable/Disable" in val2:
+        await interaction.message.delete()
+        await self.ctx.invoke(client.get_command("blacklist_select"), chosen="enable")
+        return
+      elif "Reset " in val2:
+        await interaction.message.delete()
+        await self.ctx.invoke(client.get_command("blacklist_select"), chosen="reset")
+        return
+      elif " Channel" in val2:
+        await interaction.message.delete()
+        await self.ctx.invoke(client.get_command("blacklist_select"), chosen="channel")
+        return
+      elif "Add " in val2:
+        await interaction.message.delete()
+        await self.ctx.invoke(client.get_command("blacklist_select"), chosen="add")
+        return
+      elif "Remove " in val2:
+        await interaction.message.delete()
+        await self.ctx.invoke(client.get_command("blacklist_select"), chosen="remove")
+        return
+      elif "Preview" in val2:
+        await interaction.message.delete()
+        await self.ctx.invoke(client.get_command("blacklist_select"), chosen="preview")
+        return
+    except discord.HTTPException as error:
+      return
+
+class Blacklist(commands.Cog):
+  def __init__(self, client):
+    self.client = client
+
+  async def check(self, ctx):
+    #cooldown
+    if ctx.author.guild_permissions.administrator:
+      ctx.command.reset_cooldown(ctx)
+      patreoncount = 0
+      pass
+    elif ctx.author.id == ses:
+      ctx.command.reset_cooldown(ctx)
+      patreoncount = 0
+      pass
+    elif ctx.author.id in roles2:
+      ctx.command.reset_cooldown(ctx)
+      patreoncount = 0
+      pass
+    else:
+      matches = db.prefix(f"{ctx.guild.id}-cooldowns")
+      if str(matches) != "()":
+        value = db[f"{ctx.guild.id}-cooldowns"]
+        if str(ctx.channel.id) in value:
+          ctx.command.reset_cooldown(ctx)
+          patreoncount = 0
+          return
+        else:
+          return
+      else:
+        matches = db.prefix(f"{ctx.guild.id}-cooldowns")
+        if str(matches) != "()":
+          value = db[f"{ctx.guild.id}-cooldowns"]
+          if str(ctx.channel.id) in value:
+            ctx.command.reset_cooldown(ctx)
+            patreoncount = 0
+            pass
+          else:
+            patreoncount = 0
+            pass
+        else:
+          patreoncount = 0
+          pass
+    ###disabled
+    disvalue = db.prefix(f"{ctx.guild.id}-disabled")
+    disvalue2 = str(disvalue)
+    if disvalue2 == "()":
+      db[f"{ctx.guild.id}-disabled"] = ""
+      pass
+    else:
+      value = db[f"{ctx.guild.id}-disabled"]
+      message = str(ctx.message.content)
+      first = message.split()[0]
+      second = first.replace("g!", "")
+      third = second.replace("G!", "")
+      if third in value:
+        raise discord.ext.commands.CommandError(f"The <{third}> command is disabled in this server.")
+      else:
+        pass
+  
+  @commands.Cog.listener()
+  async def on_message(self, message):
+    if message.author.bot:
+      return
+    else:
+      if message.author.guild_permissions.manage_roles:
+        return
+      else:
+        enabled = False
+        try: 
+          value = db[f"Blacklist-{message.guild.id}"]
+          enabled = True
+        except:
+          enabled = False
+        if enabled:
+          splitmsg = str(message.content).split()
+          for mes in splitmsg:
+            if mes in value:
+              await message.delete()
+  
+  @commands.command()
+  @commands.has_permissions(administrator=True) 
+  async def blacklist_select(self, ctx, chosen: str):
+    try:
+      if chosen == "enable":
+        file = open("blacklist_servers.txt", "r")
+        file2 = file.read()
+        
+        if str(ctx.guild.id) in file2:
+          embed2 = discord.Embed(description=f"**`SUCCESS:`** ```python\nThe server has been removed from the list.\nYou can re-enable this at anytime with the {bot_prefix}blacklist command.\n```", color=0x1bd13a)
+          blacklistremove(str(ctx.guild.id))
+          await ctx.send(embed=embed2, content=None)
+        else:
+          embed2 = discord.Embed(description=f"**`SUCCESS:`** ```python\nThe server has been added to the list.\n```", color=0x1bd13a) 
+          blacklistsave(ctx.guild.id)
+          await ctx.send(embed=embed2, content=None)
+      
+      elif chosen == "reset":
+        try:
+          value = db[f"Blacklist-{ctx.guild.id}"]
+        except:
+          embed2 = discord.Embed(description=f"**`SUCCESS:`** ```python\nThe blacklist has been created, and set to default.\n```", color=0x1bd13a)
+          db[f"Blacklist-{ctx.guild.id}"] = "╳"
+          await ctx.send(embed=embed2, content=None)
+        else:
+          embed2 = discord.Embed(description=f"**`SUCCESS:`** ```python\nThe blacklist has been reset and set to default.\n```", color=0x1bd13a)
+          db[f"Blacklist-{ctx.guild.id}"] = "╳"
+          await ctx.send(embed=embed2, content=None)
+      
+      elif chosen == "channel":
+        try:
+          value = db[f"Blacklist-{ctx.guild.id}"]
+        except:
+          db[f"Blacklist-{ctx.guild.id}"] = "╳"
+        
+        value = db[f"Blacklist-{ctx.guild.id}"]
+        if "ᚋ" in value:
+          value2 = value.split("╳")[0]
+          value3 = value2[1:].replace("ᚋ", ", ")
+        else:
+          value3 = "None"
+        embed = discord.Embed(description=f"```python\nPlease respond with a channel you want to add/remove from the blacklist.\n\nCurrent list: {value3}```", color=0x1bd13a)
+        embed.set_footer(text="If the channel is already in the database, it will get removed.")
+        value = db[f"Blacklist-{ctx.guild.id}"]
+        mes = await ctx.send(embed=embed, content=None)
+
+        def check(m: discord.TextChannel):
+          global msg1
+          msg1 = m.content
+          return m.content and m.author == ctx.author
+
+        msg = await client.wait_for("message", check=check, timeout=60)
+        await msg.delete()
+        if msg1 in value:
+          embed2 = discord.Embed(title="Channel Removed", description=f"The channel (<#{msg1}>) has been removed from the database.", color=0xd10000)
+          value4 = value2.replace(f"ᚋ{msg1}", "")
+          db[f"Blacklist-{ctx.guild.id}"] = value4
+        else:
+          embed2 = discord.Embed(title="Channel Added", description=f"The channel (<#{msg1}>) has been added to the database.", color=0x00d10a)
+          value4 = f"{value2}ᚋ{msg1}"
+          db[f"Blacklist-{ctx.guild.id}"] = value4
+
+        await mes.edit(embed=embed2, content=None)
+      
+      elif chosen == "add":
+        try:
+          value = db[f"Blacklist-{ctx.guild.id}"]
+        except:
+          db[f"Blacklist-{ctx.guild.id}"] = "╳"
+        
+        value = db[f"Blacklist-{ctx.guild.id}"]
+        if "ᚌ" in value:
+          value2 = value.split("╳")[1]
+          value3 = value2[1:].replace("ᚌ", ", ")
+        else:
+          value3 = "None"
+        embed = discord.Embed(description=f"""```python\nPlease respond with a word or set of words you want to add to the blacklist.\n\n"Use a space to separate the words." Keep in mind that this module uses exact words to delete a message.\n\nCurrent list: {value3}```""", color=0x1bd13a)
+        mes = await ctx.send(embed=embed, content=None)
+
+        def check(m: str):
+          global msg2
+          msg2 = m.content
+          return m.content and m.author == ctx.author
+
+        msg = await client.wait_for("message", check=check, timeout=60)
+        await msg.delete()
+        msg2a = msg2.split(" ")
+        cprint(msg2a, "red")
+        msg2fail = []
+        for word in msg2a:
+          cprint(word, "blue")
+          if word in value2:
+            msg2fail.append(word)
+            pass
+          else:
+            cprint(word, "red")
+            valuefinal = db[f"Blacklist-{ctx.guild.id}"]
+            valuefinal2 = f"{valuefinal}ᚌ{word}"
+            db[f"Blacklist-{ctx.guild.id}"] = valuefinal2
+        else:
+          embed2 = discord.Embed(title="Words added", description=f"The list: {msg2}\n\nYour list been added to the database.\n\nSkipped words: {msg2fail}", color=0x00d10a)
+
+        await mes.edit(embed=embed2, content=None)
+
+      elif chosen == "remove":
+        try:
+          value = db[f"Blacklist-{ctx.guild.id}"]
+        except:
+          db[f"Blacklist-{ctx.guild.id}"] = "╳"
+        
+        value = db[f"Blacklist-{ctx.guild.id}"]
+        if "ᚌ" in value:
+          value2 = value.split("╳")[1]
+          value3 = value2[1:].replace("ᚌ", ", ")
+        else:
+          value3 = "None"
+        embed = discord.Embed(description=f"""```python\nPlease respond with a word or set of words you want to add to the blacklist.\n\n"Use a space to separate the words." Keep in mind that this module uses exact words to delete a message.\n\nCurrent list: {value3}```""", color=0x1bd13a)
+        mes = await ctx.send(embed=embed, content=None)
+
+        def check(m: str):
+          global msg3
+          msg3 = m.content
+          return m.content and m.author == ctx.author
+
+        msg = await client.wait_for("message", check=check, timeout=60)
+        await msg.delete()
+        msg3a = msg2.split(" ")
+        msg3fail = []
+        for word in msg3a:
+          if word in value2:
+            valuefinal = db[f"Blacklist-{ctx.guild.id}"]
+            valuefinal2 = valuefinal.replace(f"ᚌ{word}", "")
+            db[f"Blacklist-{ctx.guild.id}"] = valuefinal2
+          else:
+            msg3fail.append(word)
+            pass
+        else:
+          embed2 = discord.Embed(title="Words added", description=f"The list: {msg3}\n\nYour list been removed from the database.\n\nSkipped words: {msg3fail}", color=0x00d10a)
+        
+        await mes.edit(embed=embed2, content=None)
+      
+      elif chosen == "preview":
+        try:
+          value = db[f"Blacklist-{ctx.guild.id}"]
+        except:
+          db[f"Blacklist-{ctx.guild.id}"] = "╳"
+        
+        value = db[f"Blacklist-{ctx.guild.id}"]
+        if "ᚌ" in value:
+          words = value.split("╳")[1]
+          words2 = words.replace("ᚌ", "", 1)
+          words3 = words2.replace("ᚌ", ", ")
+        else:
+          words3 = "None"
+        if "ᚋ" in value:
+          channels = value.split("╳")[0]
+          channels2 = channels.replace("ᚋ", "", 1)
+          channels3 = channels2.split("ᚋ")
+          channels4 = []
+          for channel in channels3:
+            channels3.append(f"<#{channel}>, ")
+          else:
+            channels5 = str(channels4).replace("'", "")
+            channels6 = channels5.replace("[", "")
+            channels7 = channels6.replace("]", "")
+        else:
+          channels7 = "None"
+        
+
+        embed = discord.Embed(description=f"""```python\nCurrent settings:```""")
+        embed.add_field(name="Ignored Channels:" , value=f"{channels7}")
+        embed.add_field(name="Blacklisted Words:", value=f"{words3}")
+        await ctx.send(embed=embed, content=None)
+      else:
+        return
+    except:
+      return
+
+  @commands.command()
+  @commands.before_invoke(check)
+  @commands.has_permissions(administrator=True)
+  async def blacklist(self, ctx, *, swears: str=None):
+    file = open("blacklist_servers.txt", "r")
+    file2 = file.read()
+    enabled = False
+    if str(ctx.guild.id) in file2:
+      enabled = True
+
+    view = Select(ctx)
+    embed = discord.Embed(title="Blacklist Settings", description=f"Please select what you want to do with this module.") 
+    embed.set_footer(text=f"The Blacklist is currently {enabled}.")
+    await ctx.send(embed=embed, content=None, view=view)
+
+
+def setup(client):
+  client.add_cog(Blacklist(client))
