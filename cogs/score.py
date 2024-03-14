@@ -1260,12 +1260,11 @@ class Scores(commands.Cog):
           badge = badge.resize((int(120*1.25), int(132*1.25)))
           img.paste(badge, (x, y), badge)
 
-        elif "hunter" in badge_placements[str(the_badge)]:
+        elif ("hunter" in badge_placements[str(the_badge)]) or ("arg1" in badge_placements[str(the_badge)]):
           x = badges[int(the_badge) - 1][0] - 15
           y = badges[int(the_badge) - 1][1] 
           badge = Image.open(f"images/assets/badges/{badge_placements[str(the_badge)]}.png")
           img.paste(badge, (x, y), badge)
-
 
         else:
           img.paste(no_badge, badges[int(the_badge) - 1], no_badge)
@@ -1488,7 +1487,7 @@ class Scores(commands.Cog):
           badge = badge.resize((int(120 * 1.25), int(132 * 1.25)))
           img.paste(badge, (x, y), badge)
 
-        elif "hunter" in badge_placements[str(the_badge)]:
+        elif ("hunter" in badge_placements[str(the_badge)]) or ("arg1" in badge_placements[str(the_badge)]):
           x = badges[int(the_badge) - 1][0] - 15
           y = badges[int(the_badge) - 1][1]
           badge = Image.open(f"images/assets/badges/{badge_placements[str(the_badge)]}.png")

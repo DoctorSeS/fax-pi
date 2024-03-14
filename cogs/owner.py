@@ -10,7 +10,6 @@ import random
 import DiscordUtils
 from termcolor import cprint
 import patreon
-from characterai import PyAsyncCAI
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 import datetime
@@ -228,7 +227,7 @@ class Owner(commands.Cog):
       await asyncio.sleep(0.5)
       await ctx.send(embed=embed, content=None)
   
-  @commands.command()
+  """@commands.command()
   @commands.is_owner()
   async def ask_test(self, ctx, *, ask: str): 
     ch_client = PyAsyncCAI(cai_token)
@@ -240,7 +239,7 @@ class Owner(commands.Cog):
     ch_message = data['replies'][0]['text']
     name = data['src_char']['participant']['name']
 
-    await ctx.send(ch_message)
+    await ctx.send(ch_message)"""
   
   @commands.command()
   @commands.is_owner()
