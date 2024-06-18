@@ -28,7 +28,7 @@ class Errors(commands.Cog):
     self.client = client
     self.command_list.start()
 
-  @tasks.loop(hours=1)
+  @tasks.loop(hours=10)
   async def command_list(self):
     commands = [c.name for c in client.commands]
     remove_comms = ["gbchat_select", "dbvalue", "dbpref", "dbdelete", "dbadd", "dbkeys", "channel_select", "choose_the_welcome", "extend_shorten_time", "lastMessage", "ai_selection", "aicollect", "dm", "say", "globalsay", "wipe", "cmd", "killswitch", "humble", "suggestionban", "suggestionunban", "msgdata", "leave", "shutdown", "reload", "load", "unload", "cogs", "servers", "botreply", "channels", "restart", "move", "servunmute", "helpcounter", "messages", "roles", "nick_change", "patrons", "starboard_settings", "read", "join", "calc", "fax", "dbmassdel", "print", "ok", "comms"]

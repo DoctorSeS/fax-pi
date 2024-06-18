@@ -34,10 +34,9 @@ logger.addHandler(file_handler)
 logger.addHandler(stdout_handler)
 
 from discord.ext import commands, tasks
-from discord.commands import slash_command
 import random
 from itertools import cycle
-import datetime as DT
+import datetime
 from random import randint
 import traceback
 import urllib.request
@@ -84,10 +83,7 @@ def round_int(x):
     return int(round(x))
 
 
-client = commands.Bot(command_prefix=get_prefix,
-                      description=f"The funny bot for the funny servers",
-                      case_insensitive=True,
-                      intents=discord.Intents.all())
+client = commands.Bot(command_prefix=get_prefix, description=f"The funny bot for the funny servers", case_insensitive=True, intents=discord.Intents.all())
 Client = discord.Client(intents=discord.Intents.all())
 client.remove_command('help')
 
@@ -123,10 +119,9 @@ all_databases = ['Battleship', 'rr', 'TTT', 'Snipe', 'Hilo', 'Slots', 'RPS']
 async def on_ready():
   cprint('----------------------------------', 'blue')
   cprint("The bot is now online.", "green")
-  currentDT = DT.datetime.now()
   print(f"Logged in as: {client.user.name}\nID: {client.user.id}\nVersion: {discord.__version__}")
   print(f"Watching {len(client.guilds)} guilds.")
-  print(f'Date and time: {round_time(currentDT)}')
+  print(f'Date and time: {round_time(datetime.datetime.now())}')
   await client.wait_until_ready()
   open('discord.log', 'w').close()
   if client.is_ready():
@@ -150,6 +145,12 @@ async def on_ready():
             del_db('minigames', f"{x}")
     else:
         cprint("Cleaned the 'minigames' database.", "blue")
+
+    all_guilds = ""
+    for x in client.guilds:
+        all_guilds += f"{x.id},"
+    else:
+        update_db('misc', 'none', {"all_servers": all_guilds})
 
     cprint('----------------------------------', 'blue')
 
@@ -217,10 +218,10 @@ async def change_status():
 
 def round_time(dt=None, round_to=60, tzinfo=None):
     if dt == None:
-        dt = DT.datetime.now()
+        dt = datetime.datetime.now()
     seconds = (dt - dt.min).seconds
     rounding = (seconds + round_to / 2) // round_to * round_to
-    return dt + DT.timedelta(0, rounding - seconds, -dt.microsecond)
+    return dt + datetime.timedelta(0, rounding - seconds, -dt.microsecond)
 
 
 lastuser = int
@@ -244,6 +245,10 @@ def fact_generator():
 
 @client.event
 async def on_message(message):
+    ### REMOVE THIS AFTER UPDATE ###
+    if message.author.id != 645660675334471680:
+        return
+
     ### prefix response ###
     global lastuser
     if lastuser != message.author.id:
@@ -307,7 +312,10 @@ async def on_error(event, *args, **kwargs):
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
-        client.load_extension(f'cogs.{filename[:-3]}')
+        if "ai.py" in filename:
+            continue
+        else:
+            client.load_extension(f'cogs.{filename[:-3]}')
 
 token = os.environ.get("DISCORD_BOT_SECRET")
 
@@ -316,7 +324,6 @@ def exception_handler(loop, context):
   cprint(context['message'], "red")
 
 try:
-  client.loop.set_exception_handler(exception_handler)
   client.run(os.getenv('DISCORD_BOT_SECRET'))
 except discord.errors.HTTPException:
   cprint("\n\n\nBLOCKED BY RATE LIMITS\nRESTARTING NOW\n\n\n", "red")

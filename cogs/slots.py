@@ -114,60 +114,59 @@ def replace_name(x):
   elif x == role_list[0]:
     return "Exotic"
 
+
 def check_win_slots(randomizer):
   if_win = randomizer.split(',')
   for x in role_list:
     if (if_win[0] == x) and (if_win[1] == x) and (if_win[2] == x) and (if_win[3] == x) and (if_win[4] == x) and (if_win[5] == x) and (if_win[6] == x) and (if_win[7] == x) and (if_win[8] == x):
       return f"full board {replace_name(x)}"
-      break
 
-    if (if_win[0] == x) and (if_win[3] == x) and (if_win[6] == x) and (if_win[1] == x) and (if_win[4] == x) and (if_win[7] == x):
+    elif (if_win[0] == x) and (if_win[3] == x) and (if_win[6] == x) and (if_win[1] == x) and (if_win[4] == x) and (if_win[7] == x):
       return f"big line 1 {replace_name(x)}"
-      break
-    if (if_win[0] == x) and (if_win[3] == x) and (if_win[6] == x) and (if_win[2] == x) and (if_win[5] == x) and (if_win[8] == x):
+
+    elif (if_win[0] == x) and (if_win[3] == x) and (if_win[6] == x) and (if_win[2] == x) and (if_win[5] == x) and (if_win[8] == x):
       return f"big line 2 {replace_name(x)}"
-      break
-    if (if_win[0] == x) and (if_win[1] == x) and (if_win[2] == x) and (if_win[3] == x) and (if_win[4] == x) and (if_win[5] == x):
+
+    elif (if_win[0] == x) and (if_win[1] == x) and (if_win[2] == x) and (if_win[3] == x) and (if_win[4] == x) and (if_win[5] == x):
       return f"big line 3 {replace_name(x)}"
-      break
-    if (if_win[3] == x) and (if_win[4] == x) and (if_win[5] == x) and (if_win[6] == x) and (if_win[7] == x) and (if_win[8] == x):
+
+    elif (if_win[3] == x) and (if_win[4] == x) and (if_win[5] == x) and (if_win[6] == x) and (if_win[7] == x) and (if_win[8] == x):
       return f"big line 4 {replace_name(x)}"
-      break
-    if (if_win[0] == x) and (if_win[3] == x) and (if_win[6] == x) and (if_win[2] == x) and (if_win[5] == x) and (if_win[8] == x):
+
+    elif (if_win[0] == x) and (if_win[3] == x) and (if_win[6] == x) and (if_win[2] == x) and (if_win[5] == x) and (if_win[8] == x):
       return f"big line 5 {replace_name(x)}"
-      break
 
-    if (if_win[0] == x) and (if_win[2] == x) and (if_win[4] == x) and (if_win[6] == x) and (if_win[8] == x):
+    elif (if_win[0] == x) and (if_win[2] == x) and (if_win[4] == x) and (if_win[6] == x) and (if_win[8] == x):
       return f"big ass 2 {replace_name(x)}"
-      break
-    if (if_win[1] == x) and (if_win[3] == x) and (if_win[4] == x) and (if_win[5] == x) and (if_win[7] == x):
-      return f"big ass 3 {replace_name(x)}"
-      break
 
-    if (if_win[0] == x) and (if_win[1] == x) and (if_win[2] == x):
+    elif (if_win[1] == x) and (if_win[3] == x) and (if_win[4] == x) and (if_win[5] == x) and (if_win[7] == x):
+      return f"big ass 3 {replace_name(x)}"
+
+
+    elif (if_win[0] == x) and (if_win[1] == x) and (if_win[2] == x):
       return f"normal 1 {replace_name(x)}"
-      break
-    if (if_win[0] == x) and (if_win[4] == x) and (if_win[8] == x):
+
+    elif (if_win[0] == x) and (if_win[4] == x) and (if_win[8] == x):
       return f"normal 2 {replace_name(x)}"
-      break
-    if (if_win[2] == x) and (if_win[4] == x) and (if_win[6] == x):
+
+    elif (if_win[2] == x) and (if_win[4] == x) and (if_win[6] == x):
       return f"normal 2 {replace_name(x)}"
-      break
-    if (if_win[0] == x) and (if_win[3] == x) and (if_win[6] == x):
+
+    elif (if_win[0] == x) and (if_win[3] == x) and (if_win[6] == x):
       return f"normal 3 {replace_name(x)}"
-      break
-    if (if_win[1] == x) and (if_win[4] == x) and (if_win[7] == x):
+
+    elif (if_win[1] == x) and (if_win[4] == x) and (if_win[7] == x):
       return f"normal 4 {replace_name(x)}"
-      break
-    if (if_win[2] == x) and (if_win[5] == x) and (if_win[8] == x):
+
+    elif (if_win[2] == x) and (if_win[5] == x) and (if_win[8] == x):
       return f"normal 5 {replace_name(x)}"
-      break
+
     elif (if_win[3] == x) and (if_win[4] == x) and (if_win[5] == x):
       return f"normal 6 {replace_name(x)}"
-      break
+
     elif (if_win[6] == x) and (if_win[7] == x) and (if_win[8] == x):
       return f"normal 7 {replace_name(x)}"
-      break
+
   else:
     return "You lost"
 

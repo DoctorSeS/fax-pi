@@ -119,6 +119,9 @@ class Events(commands.Cog):
   
   @commands.Cog.listener()
   async def on_guild_join(self, guild):
+    data = {'text_channels': len(guild.text_channels), 'voice_channels': len(guild.voice_channels), 'members': guild.member_count, "roles": len(guild.roles)}
+    update_db('guilds', f'{guild.id}', data)
+
     serv = str(guild.id)
     l1 = discord.utils.get(guild.channels, name="logs")
     l2 = discord.utils.get(guild.channels, name="logs-the-second")
@@ -192,6 +195,7 @@ class Events(commands.Cog):
   
   @commands.Cog.listener()
   async def on_member_join(self, member):
+    update_db('guilds', f'{member.guild.id}', {'members': member.guild.member_count})
     date1 = member.created_at
     date1 = str(date1).split(" ")[0]
     if "True" in anti_raid(member, member.guild.id):
@@ -207,40 +211,52 @@ class Events(commands.Cog):
         pass
 
     try:
-      value = get_db('guilds')['']
+      value = get_db('guilds')[f'{member.guild.id}']['welcome_message']
     except:
       return
     else:
-      chan = value.split("ᚋ")[0]
-      try:
-        global channel1
-        channel1 = discord.utils.get(member.guild.channels, id=int(chan))
-      except:
-        cprint(f"Could not find welcome channel in guild {member.guild.id}", "red")
-        return
-      else:
-        mess = value.split("ᚋ")[1].lstrip().split('ᚌ')[0]
-        image = value.split("ᚌ")[1]
+      if 'active' in value:
+        if value['active'] is True:
 
-        mess2 = mess.replace("[member.mention]", f"{member.mention}")
-        mess3 = mess2.replace("[member.id]", f"{member.id}")
-        mess4 = mess3.replace("[member.name]", f"{member.name}")
-        mess5 = mess4.replace("[server]", f"{member.guild}")
+          if 'channel' in value:
+            chan = value['channel']
+          else:
+            return
 
-        mess6 = mess5.replace("{member.mention}", f"{member.mention}")
-        mess7 = mess6.replace("{member.id}", f"{member.id}")
-        mess8 = mess7.replace("{member.name}", f"{member.name}")
-        mess9 = mess8.replace("{server}", f"{member.guild}")
+          try:
+            wm_channel = member.guild.get_channel(int(chan))
+          except:
+            return
+          else:
+            if 'message' in value:
+              mess = value['message']
+            else:
+              mess = "Welcome to [server], [member.mention]."
 
-        welcome = discord.Embed(title="New Member!", description=f"{mess9}",color=discord.Color.random())
-        welcome.set_footer(text=f"{member} • ID: {member.id}", icon_url=member.avatar)
-        f = discord.File(f"{os.getcwd()}/images/pixel.png", filename=f"pixel.png")
-        if image != "None":
-          f = discord.File(f"{os.getcwd()}/images/assets/welcome/{image}", filename=f"{image}")
-          welcome.set_image(url=f"attachment://{image}")
+            if 'image' in value:
+              image = value['image']
+            else:
+              image = None
 
-        await channel1.send(embed=welcome, content=None, file=f)
-        await channel1.send(member.mention, delete_after=0.1)
+            if 'color' in value:
+              color = str(value['color']).replace('#', "0x")
+            else:
+              color = discord.Color.random()
+
+            to_change = ['[member.mention]', '[member.id]', '[member.name]', '[server]']
+            change_to = [f'{member.mention}', f'{member.id}', f'{member.name}', f'{member.guild}']
+
+            for x in to_change:
+              index = to_change.index(x)
+              mess = mess.replace(x, change_to[index])
+
+            welcome = discord.Embed(title="New Member!", description=f"{mess}", color=color)
+            welcome.set_footer(text=f"{member} • ID: {member.id}", icon_url=member.avatar)
+            if image != "None":
+              welcome.set_image(url=f"{image}")
+
+            await wm_channel.send(embed=welcome, content=None)
+            await wm_channel.send(member.mention, delete_after=0.1)
 
     logs_global = list(check_logs(member.guild.id))
     if logs_global[0] is True:
@@ -256,6 +272,7 @@ class Events(commands.Cog):
 
   @commands.Cog.listener()
   async def on_member_remove(self, member):
+    update_db('guilds', f'{member.guild.id}', {'members': member.guild.member_count})
     logs_global = list(check_logs(member.guild.id))
     if logs_global[0] is True:
       if logs_global[1] != "None":
@@ -302,6 +319,8 @@ class Events(commands.Cog):
 
   @commands.Cog.listener()
   async def on_guild_channel_create(self, channel):
+    update_db('guilds', f'{channel.guild.id}', {'text_channels': len(channel.guild.text_channels)})
+    update_db('guilds', f'{channel.guild.id}', {'voice_channels': len(channel.guild.voice_channels)})
     logs_global = list(check_logs(channel.guild.id))
     if logs_global[0] is True:
       if logs_global[1] != "None":
@@ -317,6 +336,8 @@ class Events(commands.Cog):
 
   @commands.Cog.listener()
   async def on_guild_channel_delete(self, channel):
+    update_db('guilds', f'{channel.guild.id}', {'text_channels': len(channel.guild.text_channels)})
+    update_db('guilds', f'{channel.guild.id}', {'voice_channels': len(channel.guild.voice_channels)})
     logs_global = list(check_logs(channel.guild.id))
     if logs_global[0] is True:
       if logs_global[1] != "None":
@@ -443,6 +464,7 @@ class Events(commands.Cog):
 
   @commands.Cog.listener()
   async def on_guild_role_create(self, role):
+    update_db('guilds', f'{role.guild.id}', {"roles": len(role.guild.roles)})
     logs_global = list(check_logs(role.guild.id))
     if logs_global[0] is True:
       if logs_global[1] != "None":
@@ -458,6 +480,7 @@ class Events(commands.Cog):
 
   @commands.Cog.listener()
   async def on_guild_role_delete(self, role):
+    update_db('guilds', f'{role.guild.id}', {"roles": len(role.guild.roles)})
     logs_global = list(check_logs(role.guild.id))
     if logs_global[0] is True:
       if logs_global[1] != "None":
