@@ -316,7 +316,7 @@ for filename in os.listdir('./cogs'):
         else:
             client.load_extension(f'cogs.{filename[:-3]}')
 
-token = os.environ.get("DISCORD_BOT_SECRET")
+token = os.environ.get("DISCORD_BOT_SECRET_TEST")
 
 def exception_handler(loop, context):
   cprint("Caught the following exception", "red")
