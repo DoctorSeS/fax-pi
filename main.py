@@ -8,6 +8,7 @@ import socket
 socket.getaddrinfo('localhost', 8080)
 
 os.environ["DISCORD_BOT_SECRET"] = "ODMwMTk5NTEyNTcyMTAwNjA5.GyR50E.sFezI207cDpL-hyhPGocIPxuiKbAD0unNV6IiE"
+os.environ["DISCORD_BOT_SECRET_TEST"] = "MTI1MjYzMDY4NTI4MjQ3MjAyNg.GBTiJG.B__cmQkImH866KCuZmPeLiuMqLxcTOcoB71LiI"
 os.environ["C.AI_TOKEN"] = "b1ffb8024bf5e453260524dc439ca62b1e61e145"
 os.environ["C.AI_FAX"] = "6rUveGFqEg9-HZY5K14LS4Qxzw4dQcSIe8208XOowfQ"
 os.environ["PATREON_KEY"] = "13f3cB16LgqzalPNsC1VmY1XDZe9zNPmUTDVF6bdjCE"
@@ -90,8 +91,6 @@ client.remove_command('help')
 #COLORS#
 red = 0xc40000
 green = 0x00d10a
-
-currentDT = DT.datetime.now()
 logs = 639513264522526769
 logs_global = "logs"
 laure = 339823622774456322
