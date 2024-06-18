@@ -323,7 +323,7 @@ def exception_handler(loop, context):
   cprint(context['message'], "red")
 
 try:
-  client.run(os.getenv('DISCORD_BOT_SECRET'))
+  client.run(token)
 except discord.errors.HTTPException:
   cprint("\n\n\nBLOCKED BY RATE LIMITS\nRESTARTING NOW\n\n\n", "red")
   system("python restarter.py")
