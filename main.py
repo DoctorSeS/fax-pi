@@ -49,7 +49,7 @@ import requests
 from database import *
 
 currency = "Kromer"
-
+currentDT = datetime.datetime.now()
 bot_prefix = 'g!'
 
 def check_name(name):
