@@ -145,11 +145,12 @@ async def on_ready():
         print(f"Number of lines in ai.txt: {nm_lines}")
         update_db("misc", 'none', {"ai_lines": nm_lines})
 
+        """
         global ch, msggg, cl, count
         ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
         msggg = await ch.fetch_message(831865097726328833)
         cl = client.get_guild(msggg.guild.id)
-        bot_data.start()
+        bot_data.start()"""
 
         change_status.start()
 
