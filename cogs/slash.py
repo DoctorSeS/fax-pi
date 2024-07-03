@@ -493,11 +493,11 @@ class PlayAgain(discord.ui.View):
       _, _, w, h = draw.textbbox((0, 0), f"{playerids['bet']}", font=ImageFont.truetype("images/assets/que.otf", 80))
       draw.text(((1500-w)/2, 780), f"{playerids['bet']}", (255, 255, 255), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
 
-      img.save("images/rps_used.png")
-      f = discord.File(f"{os.getcwd()}/images/rps_used.png", filename="rps_used.png")
+      img.save(f"images/rps/{playerids['player1']['id']}.png")
+      f = discord.File(f"{os.getcwd()}/images/rps/{playerids['player1']['id']}.png", filename=f"{playerids['player1']['id']}.png")
 
       embed = discord.Embed()
-      embed.set_image(url="attachment://rps_used.png")
+      embed.set_image(url=f"attachment://{playerids['player1']['id']}.png")
       await interaction.message.edit(content=None, embed=embed, view=Multi(), file=f)
       await interaction.response.defer()
       
@@ -639,7 +639,7 @@ class Multi(discord.ui.View):
         
         elif firstpick == "Scissors":
           if secondpick == "Rock":
-            embed.set_image(url="attachment://rps_used.png")
+            embed.set_image(url=f"attachment://{playerids['player1']['id']}.png")
             embed.set_footer(text=complete_transaction(interaction.message.id, 2))
             winner = 2
             update_db(f'minigames/rps/{interaction.message.id}', f'player{winner}', {"points": int(playerids[f'player{winner}']['points']) + 1})
@@ -752,10 +752,10 @@ class Multi(discord.ui.View):
         img.paste(player1_pick, (390, 350), player1_pick)
         img.paste(player2_pick, (910, 350), player2_pick)
         
-        img.save("images/rps_used.png")
-        f = discord.File(f"{os.getcwd()}/images/rps_used.png", filename="rps_used.png")
+        img.save(f"images/rps/{playerids['player1']['id']}.png")
+        f = discord.File(f"{os.getcwd()}/images/rps/{playerids['player1']['id']}.png", filename=f"{playerids['player1']['id']}.png")
         
-        embed.set_image(url="attachment://rps_used.png")
+        embed.set_image(url=f"attachment://{playerids['player1']['id']}.png")
 
         await interaction.message.edit(embed=embed, content=None, view=PlayAgain(), file=f)
         await interaction.response.defer()
@@ -843,11 +843,11 @@ class Join(discord.ui.View):
       _, _, w, h = draw.textbbox((0, 0), f"{playerids['bet']}", font=ImageFont.truetype("images/assets/que.otf", 80))
       draw.text(((1500-w)/2, 780), f"{playerids['bet']}", (255, 255, 255), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
 
-      img.save("images/rps_used.png")
-      f = discord.File(f"{os.getcwd()}/images/rps_used.png", filename="rps_used.png")
+      img.save(f"images/rps/{playerids['player1']['id']}.png")
+      f = discord.File(f"{os.getcwd()}/images/rps/{playerids['player1']['id']}.png", filename=f"{playerids['player1']['id']}.png")
       
       embed = discord.Embed()
-      embed.set_image(url="attachment://rps_used.png")
+      embed.set_image(url=f"attachment://{playerids['player1']['id']}.png")
       await interaction.message.edit(content=None, embed=embed, view=Multi(), file=f)
       await interaction.response.defer()
 
@@ -1073,10 +1073,10 @@ class Turns_rr(discord.ui.View):
       
       embed = discord.Embed(color=embed_color)
 
-      img.save("images/rr_used.png")
-      f = discord.File(f"{os.getcwd()}/images/rr_used.png", filename="rr_used.png")
+      img.save(f"images/rr/{rrdata['player1']['id']}.png")
+      f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename=f"{rrdata['player1']['id']}.png")
       
-      embed.set_image(url="attachment://rr_used.png")
+      embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
       embed.set_footer(text=f"Total Turns: {int(rrdata['total_turns']) + 1}\nCurrent Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
       if winner == 0:
         await interaction.message.edit(content=None, embed=embed, view=Turns_rr(), file=f)
@@ -1268,10 +1268,10 @@ class Turns_rr(discord.ui.View):
 
       embed = discord.Embed(color=embed_color)
 
-      img.save("images/rr_used.png")
-      f = discord.File(f"{os.getcwd()}/images/rr_used.png", filename="rr_used.png")
+      img.save(f"images/rr/{rrdata['player1']['id']}.png")
+      f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename=f"{rrdata['player1']['id']}.png")
 
-      embed.set_image(url="attachment://rr_used.png")
+      embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
       embed.set_footer(text=f"Total Turns: {int(rrdata['total_turns']) + 1}\nCurrent Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
       if winner == 0:
         await interaction.message.edit(content=None, embed=embed, view=Turns_rr(), file=f)
@@ -1403,12 +1403,12 @@ class Join_rr(discord.ui.View):
       _, _, w, h = draw.textbbox((0, 0), f"""=== Russian Roulette ===""", font=ImageFont.truetype("images/assets/que.otf", 80))
       draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
 
-      img.save("images/rr_used.png")
+      img.save(f"images/rr/{rrdata['player1']['id']}.png")
       
-      f = discord.File(f"{os.getcwd()}/images/rr_used.png", filename="rr_used.png")
+      f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename=f"{rrdata['player1']['id']}.png")
       embed = discord.Embed()
       embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
-      embed.set_image(url=f"attachment://rr_used.png")
+      embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
       
       if self.joined >= 6:
         button.disabled = True
@@ -1486,11 +1486,11 @@ class Join_rr(discord.ui.View):
         _, _, w, h = draw.textbbox((0, 0), f"""=== Russian Roulette ===""", font=ImageFont.truetype("images/assets/que.otf", 80))
         draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
 
-        img.save("images/rr_used.png")
+        img.save(f"images/rr/{rrdata['player1']['id']}.png")
 
-        f = discord.File(f"{os.getcwd()}/images/rr_used.png", filename="rr_used.png")
+        f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename=f"{rrdata['player1']['id']}.png")
         embed = discord.Embed()
-        embed.set_image(url=f"attachment://rr_used.png")
+        embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
         embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
         
         await interaction.message.edit(content=f"Forced to start by {interaction.user.mention}. Game Started.", embed=embed, view=Turns_rr(), file=f)
@@ -1568,11 +1568,11 @@ class Join_rr(discord.ui.View):
           _, _, w, h = draw.textbbox((0, 0), f"""=== Russian Roulette ===""", font=ImageFont.truetype("images/assets/que.otf", 80))
           draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
 
-          img.save("images/rr_used.png")
+          img.save(f"images/rr/{rrdata['player1']['id']}.png")
 
-          f = discord.File(f"{os.getcwd()}/images/rr_used.png", filename="rr_used.png")
+          f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename="{rrdata['player1']['id']}.png")
           embed = discord.Embed()
-          embed.set_image(url=f"attachment://rr_used.png")
+          embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
           embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(self.message.guild.id)}")
           
           await self.message.edit(embed=embed, view=Turns_rr(), file=f)
@@ -2787,12 +2787,12 @@ class Slash(commands.Cog):
     else:
       bet = 0
 
-    img.save("images/rr_used.png")
-    f = discord.File(f"{os.getcwd()}/images/rr_used.png", filename="rr_used.png")
+    img.save(f"images/rr/{ctx.author.id}.png")
+    f = discord.File(f"{os.getcwd()}/images/rr/{ctx.author.id}.png", filename=f"{ctx.author.id}.png")
       
     join = Join_rr(ctx)
     embed.set_footer(text=f"Current Bet: {bet} {check_currency(ctx.guild.id)}")
-    embed.set_image(url="attachment://rr_used.png")
+    embed.set_image(url=f"attachment://{ctx.author.id}.png")
     msgid = await ctx.send(embed=embed, view=join, file=f)
 
     update_db("minigames/rr", f"{msgid.id}", {'turn': 1, 'total_turns': 0, 'total_players': 1, 'player_count': 1, 'bet': bet, 'all_ids': [ctx.author.id], 'player1': {'id': ctx.author.id, 'name': ctx.author.display_name, 'dead': False}})
@@ -2896,14 +2896,14 @@ class Slash(commands.Cog):
         _, _, w, h = draw.textbbox((0, 0), f"{bet}", font=ImageFont.truetype("images/assets/que.otf", 80))
         draw.text(((1500-w)/2, 780), f"{bet}", (255, 255, 255), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
 
-        img.save("images/rps_used.png")
-        f = discord.File(f"{os.getcwd()}/images/rps_used.png", filename="rps_used.png")
+        img.save(f"images/rps/{ctx.author.id}.png")
+        f = discord.File(f"{os.getcwd()}/images/rps/{ctx.author.id}.png", filename="{ctx.author.id}.png")
         
         embed = discord.Embed(description=f"Waiting for {user.mention} to join...\nCurrent Bet: **`{bet}`** **`{check_currency(ctx.guild.id)}`**")
-        embed.set_image(url="attachment://rps_used.png")
+        embed.set_image(url=f"attachment://{ctx.author.id}.png")
         mesid = await ctx.send(embed=embed, view=Join(), file=f)
 
-        update_db("minigames/rr", f"{mesid.id}", {"player1": {"id": f"{ctx.author.id}", "name": f"{ctx.author.display_name}", "pick": "None", "points": 0}, "player2": {"id": f"{user.id}", "name": f"{user.display_name}", "pick": "None", "points": 0}, "bet": f"{bet}"})
+        update_db("minigames/rps", f"{mesid.id}", {"player1": {"id": f"{ctx.author.id}", "name": f"{ctx.author.display_name}", "pick": "None", "points": 0}, "player2": {"id": f"{user.id}", "name": f"{user.display_name}", "pick": "None", "points": 0}, "bet": f"{bet}"})
         return
         
   

@@ -658,19 +658,6 @@ def removeservers(word):
         if line.strip("\n") != word:
           f.write(line)
 
-def savenickserver(filterList):
-    f = open("nick.txt", "a")
-    f.write('%d' % filterList + "\n")
-    f.close()
-
-def removenickserver(word):
-    with open("nick.txt", "r") as f:
-      lines = f.readlines()
-    with open("nick.txt", "w") as f:
-      for line in lines:
-        if line.strip("\n") != word:
-          f.write(line)
-
 def ai2save(filterList):
     f = open("ai2.txt", "a")
     f.write('%d' % filterList + "\n")
@@ -780,7 +767,7 @@ class Disable_Select(discord.ui.View):
     val = str(select.values[0])
     if interaction.user.id == self.author:
       try:
-        value = get_db('guilds')[f'{interaction.guild.id}']['disable']
+        value = get_db('guilds')[f'{interaction.guild.id}']['disable']['commands']
       except:
         value = ''
 
@@ -992,7 +979,7 @@ class Config(commands.Cog):
   async def disabled_check(self, ctx):
     ### disabled check ###
     try:
-      value = get_db('guilds')[f'{ctx.guild.id}']['disable']
+      value = get_db('guilds')[f'{ctx.guild.id}']['disable']['commands']
     except:
       return
     else:
@@ -1136,17 +1123,13 @@ class Config(commands.Cog):
   @commands.before_invoke(disabled_check)
   @commands.is_owner()
   async def nickcheck(self, ctx):
-    file = open("nick.txt", "r")
-    file2 = file.read()
-    ids = ctx.guild.id
-    ids2 = str(ids)
-    if ids2 in file2:
+    if get_db('guilds')[str(ctx.guild.id)].get('nick') is True:
       embed2 = discord.Embed(description=f"**`SUCCESS:`** ```k\nThe server has been removed from the list.\nYou can re-enable this at anytime with the {bot_prefix}nickcheck command.\n```", color=green)
-      removenickserver(ids2)
+      update_db('guilds', f'{ctx.guild.id}', {"nick": False})
       await ctx.send(embed=embed2, content=None)
     else:
       embed2 = discord.Embed(description=f"**`SUCCESS:`** ```k\nThe server has been added to the list.\nThe bot will now rename anyone with a non-latin name to 'Unpingable Name #num'. You can disable this at anytime with the {bot_prefix}nickcheck command.\n```", color=green)
-      savenickserver(ids)
+      update_db('guilds', f'{ctx.guild.id}', {"nick": True})
       await ctx.send(embed=embed2, content=None)
 
   @commands.command()

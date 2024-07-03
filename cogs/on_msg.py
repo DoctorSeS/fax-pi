@@ -79,15 +79,14 @@ class On_msg(commands.Cog):
     ### aritificial intelligence lol ###
     #collect messages
     if message.guild:
-      servers = open("servers2.txt").read()
-      if str(message.guild.id) in servers:
+      if str(message.guild.id) in get_db('misc')['ai_collect_servers']:
         if not ("@everyone" in message.content) and not ("@here" in message.content) and not ("@here" in message.content) and not ("<@&" in message.content) and not (message.author.bot) and not (bot_prefix in message.content):
           with open('ai.txt', "a", encoding='utf-8') as f:
             if message.attachments:
               text = f"{message.content}\n{message.attachments[0].url}\n"
             else:
               text = f"{message.content}\n"
-              
+
             f.write(f"{text}")
             f.close()
             pass
@@ -99,11 +98,13 @@ class On_msg(commands.Cog):
         pass
       else:
         if value.get("active") is not None:
-          if value["active"] == True:
-            chance = 1
+          if value["active"] is True:
+            chance = 0
             if value.get("channels") is not None:
               if value["channels"].get(f"{message.channel.id}") is not None:
-                chance = int(value["channels"][f"{message.channel.id}"])
+                if value.get('advanced') is not None:
+                  if value.get('advanced') is True:
+                    chance = int(value["channels"][f"{message.channel.id}"])
               else:
                 chance = 0
             else:
@@ -127,13 +128,10 @@ class On_msg(commands.Cog):
           
   
     ### nickname check ###
-    if message.guild != None:
-      nickcheck = open("nick.txt", "r")
-      nickcheck2 = nickcheck.read()
-      serv = str(message.guild.id)
-      if serv in nickcheck2:
+    if message.guild is not None:
+      if get_db('guilds')[str(message.guild.id)].get('nick') is True:
         user = message.guild.get_member(message.author.id)
-        if user == None:
+        if user is None:
           return
         name = str(user.name)
         name2 = name.strip()
@@ -167,41 +165,9 @@ class On_msg(commands.Cog):
   @commands.before_invoke(disabled_check)
   @commands.is_owner()
   async def aicollect(self, ctx):
-    servers = []
-    chatservers = []
-    serv = open("servers.txt", "r")
-    serv2 = serv.readlines()
-    chatserv = open("servers2.txt", "r")
-    chatserv2 = chatserv.readlines()
-    for id in serv2:
-      id2 = int(id)
-      name = client.get_guild(id2)
-      servers.append(f"{name} - {id2}")
-    else:
-      servers2 = str(servers)
-      servers3 = servers2.replace("[", "")
-      servers4 = servers3.replace("]", "")
-      servers5 = servers4.replace('"', "")
-      servers6 = servers5.replace("'", "")
-      servers7 = servers6.replace(",", "\n")
-      servers8 = str(servers7)
-      for ids in chatserv2:
-        ids2 = int(ids)
-        name2 = client.get_guild(ids2)
-        chatservers.append(f"{name2} - {ids2}")
-      else:
-        chatservers2 = str(chatservers)
-        chatservers3 = chatservers2.replace("[", "")
-        chatservers4 = chatservers3.replace("]", "")
-        chatservers5 = chatservers4.replace('"', "")
-        chatservers6 = chatservers5.replace("'", "")
-        chatservers7 = chatservers6.replace(",", "\n")
-        chatservers8 = str(chatservers7)
-
-        embed = discord.Embed(description=f"The bot is collecting messages from the following servers:\n{servers8}")
-        embed2 = discord.Embed(description=f"The bot can respond in the following servers:\n{chatservers8}")
-        await ctx.send(embed=embed, content=None)
-        await ctx.send(embed=embed2, content=None)
+    update_db('misc', 'none', {'ai_collect_servers': f"{get_db('misc')['ai_collect_servers']}{ctx.guild.id},"})
+    embed = discord.Embed(description=f"The bot is collecting messages from the following servers:\n{get_db('misc')['ai_collect_servers']}")
+    await ctx.send(embed=embed, content=None)
   
   @commands.command(aliases=['msgs', 'mes'])
   @commands.before_invoke(disabled_check)

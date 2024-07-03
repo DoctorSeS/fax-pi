@@ -49,7 +49,7 @@ import requests
 from database import *
 
 currency = "Kromer"
-currentDT = datetime.datetime.now()
+
 bot_prefix = 'g!'
 
 def check_name(name):
@@ -131,14 +131,13 @@ async def on_ready():
     print(f"Number of lines in ai.txt: {nm_lines}")
     update_db("misc", 'none', {"ai_lines": nm_lines})
 
-    if int(client.user.id) == 830199512572100609:
-      global ch, msggg, cl, count
-      ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
-      msggg = await ch.fetch_message(831865097726328833)
-      cl = client.get_guild(msggg.guild.id)
-      bot_data.start()
+    global ch, msggg, cl, count
+    ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
+    msggg = await ch.fetch_message(831865097726328833)
+    cl = client.get_guild(msggg.guild.id)
+    bot_data.start()
 
-      change_status.start()
+    change_status.start()
 
     for x in list(get_db('minigames')):
         if x != 'holder':
@@ -317,14 +316,14 @@ for filename in os.listdir('./cogs'):
         else:
             client.load_extension(f'cogs.{filename[:-3]}')
 
-token = os.environ.get("DISCORD_BOT_SECRET_TEST")
+token = os.environ.get("DISCORD_BOT_SECRET")
 
 def exception_handler(loop, context):
   cprint("Caught the following exception", "red")
   cprint(context['message'], "red")
 
 try:
-  client.run(token)
+  client.run(os.getenv('DISCORD_BOT_SECRET'))
 except discord.errors.HTTPException:
   cprint("\n\n\nBLOCKED BY RATE LIMITS\nRESTARTING NOW\n\n\n", "red")
   system("python restarter.py")

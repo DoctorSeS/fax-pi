@@ -305,11 +305,11 @@ class Slots_Button(discord.ui.View):
 
       img.paste(smooth_corners(pfp, 20), (37, 141), smooth_corners(pfp, 20))
 
-      img.save("images/slots_used.png")
-      f = discord.File(f"{os.getcwd()}/images/slots_used.png", filename="slots_used.png")
+      img.save(f"images/slots/{interaction.user.id}.png")
+      f = discord.File(f"{os.getcwd()}/images/slots/{interaction.user.id}.png", filename=f"{interaction.user.id}.png")
 
       embed = discord.Embed(color=0x36393F)
-      embed.set_image(url=f"attachment://slots_used.png")
+      embed.set_image(url=f"attachment://{interaction.user.id}.png")
 
       await interaction.response.defer()
       time.sleep(0.5)
