@@ -246,7 +246,7 @@ class Backgrounds(discord.ui.View):
         
       self.add_item(BackgroundPurchase(self.ctx, name=x, filename=filename, color=color, category=self.category))
 
-  @discord.ui.button(label="Back", style=discord.ButtonStyle.danger, custom_id="back", row=2)
+  @discord.ui.button(label="Back", style=discord.ButtonStyle.danger, custom_id="back", row=3)
   async def back(self, button, interaction):
     if self.ctx.author.id == interaction.user.id:
       category = discord.Embed(description=f"Please select what category of backgrounds you want to look at.\n\n**{list(all_backgrounds)[1].capitalize()}:** {all_backgrounds[list(all_backgrounds)[1]]['price']} {check_currency(interaction.guild.id)}\n**{list(all_backgrounds)[0].capitalize()}:** {all_backgrounds[list(all_backgrounds)[0]]['price']} {check_currency(interaction.guild.id)}\n**{list(all_backgrounds)[3].capitalize()}:** {all_backgrounds[list(all_backgrounds)[3]]['price']} {check_currency(interaction.guild.id)}\n**{list(all_backgrounds)[2].capitalize()}:** {all_backgrounds[list(all_backgrounds)[2]]['price']} {check_currency(interaction.guild.id)}")
