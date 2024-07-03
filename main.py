@@ -106,7 +106,6 @@ ch = 0
 count = 0
 msggg = 0
 cl = ''
-currentDT = datetime.datetime.now()
 
 
 def Diff(li1, li2):
@@ -333,14 +332,14 @@ for filename in os.listdir('./cogs'):
         else:
             client.load_extension(f'cogs.{filename[:-3]}')
 
-token = os.environ.get("DISCORD_BOT_SECRET")
+token = os.environ.get("DISCORD_BOT_SECRET_TEST")
 
 def exception_handler(loop, context):
   cprint("Caught the following exception", "red")
   cprint(context['message'], "red")
 
 try:
-  client.run(os.getenv('DISCORD_BOT_SECRET'))
+  client.run(token)
 except discord.errors.HTTPException:
   cprint("\n\n\nBLOCKED BY RATE LIMITS\nRESTARTING NOW\n\n\n", "red")
   system("python restarter.py")
