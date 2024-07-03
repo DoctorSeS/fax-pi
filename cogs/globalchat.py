@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 import logging
 import traceback
 from random import randint
-from main import client, currentDT, bot_prefix, ses, round_time, red, green
+from main import client, bot_prefix, ses, round_time, red, green
 import fileinput
 from database import *
 from termcolor import cprint

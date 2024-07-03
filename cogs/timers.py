@@ -6,7 +6,7 @@ import asyncio
 import datetime
 import random
 from random import randint
-from main import client, bot_prefix, currentDT, round_time, ses, currency, red, green, caught_message
+from main import client, bot_prefix, round_time, ses, currency, red, green, caught_message
 import fileinput
 from cogs.slash import guild_ids
 from discord.commands import slash_command

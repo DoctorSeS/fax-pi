@@ -8,7 +8,7 @@ import datetime
 from nword import *
 import requests
 import math
-from main import client, bot_prefix, currentDT, round_time, ses, currency, red, green, check_name
+from main import client, bot_prefix, round_time, ses, currency, red, green, check_name
 from discord.commands import slash_command
 from discord import Option
 from termcolor import colored, cprint

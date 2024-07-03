@@ -5,7 +5,7 @@ import traceback
 import asyncio
 import datetime
 from random import randint
-from main import client, bot_prefix, currentDT, round_time, ses, red, green
+from main import client, bot_prefix, round_time, ses, red, green
 from termcolor import cprint
 from cogs.events import check_logs
 from database import *
@@ -471,7 +471,7 @@ class Mod_coms(commands.Cog):
       if user.id == fax:
         embed = discord.Embed(description="I can't dm myself.", color=discord.Color.from_rgb(r=255, g=0, b=0))
         await ctx.send(embed=embed, content=None, delete_after=5)
-        print(f'{ctx.author} tried to dm the bot with the content: {talking}', f'(Date and time: {currentDT})')
+        print(f'{ctx.author} tried to dm the bot with the content: {talking}', f'(Date and time: {datetime.datetime.now()})')
         await msg.delete()
       else:
         if talking.startswith("https://"):
@@ -481,7 +481,7 @@ class Mod_coms(commands.Cog):
           await user2.send(f'{talking}')
           await ctx.send(embed=embed, content=None)
           print(f'Dm sent to {user} with the content: "{talking}"')
-          print(f'Dm requested by: {ctx.author}', f'(Date and time: {currentDT})')
+          print(f'Dm requested by: {ctx.author}', f'(Date and time: {datetime.datetime.now()})')
           await msg.delete()
         else:
           embed = discord.Embed(description=f'Dm sent to <@{user.id}> with the content:\n"{talking}"')
@@ -489,7 +489,7 @@ class Mod_coms(commands.Cog):
           await user2.send(f'{talking}')
           await ctx.send(embed=embed, content=None)
           print(f'Dm sent to {user} with the content: "{talking}"')
-          print(f'Dm requested by: {ctx.author}', f'(Date and time: {currentDT})')
+          print(f'Dm requested by: {ctx.author}', f'(Date and time: {datetime.datetime.now()})')
           await msg.delete()
     else:
       embed = discord.Embed(description=f"**`ERROR:`** ```\nThis command is only available to moderators from {serv}.\n```", color=red)

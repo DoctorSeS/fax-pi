@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 from random import randint
-from main import client, currentDT, bot_prefix, ses, round_time, red, green
+from main import client, bot_prefix, ses, round_time, red, green
 import fileinput
 from termcolor import cprint
 from discord.ui import InputText, Modal

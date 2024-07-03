@@ -4,7 +4,7 @@ import logging
 import traceback
 import asyncio
 from random import randint
-from main import client, bot_prefix, currentDT, round_time, ses, currency
+from main import client, bot_prefix, round_time, ses, currency
 import fileinput
 import os
 from termcolor import cprint

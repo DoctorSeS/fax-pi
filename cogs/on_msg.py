@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import random
 import re
 from random import randint
@@ -9,11 +10,12 @@ from discord.ext import commands
 from database import *
 from main import bot_prefix
 from main import client
-from main import currentDT, ses
+from main import ses
 
 mess = 0
 alpha = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', "'", "[", "]", "{", "}", ";", ":", '"', ",", "<", ".", ">", "/", "?", "|", "-", "_", "=", "+", "`", "~", "/", "*", "-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "A", "B", "C", 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 numbers = ["0", '1', '2', '3', '4', '5', '6', '7', '8', '9']
+currentDT = datetime.datetime.now()
 
 def file_len():
   with open("ai.txt") as f:
@@ -168,7 +170,7 @@ class On_msg(commands.Cog):
     update_db('misc', 'none', {'ai_collect_servers': f"{get_db('misc')['ai_collect_servers']}{ctx.guild.id},"})
     embed = discord.Embed(description=f"The bot is collecting messages from the following servers:\n{get_db('misc')['ai_collect_servers']}")
     await ctx.send(embed=embed, content=None)
-  
+
   @commands.command(aliases=['msgs', 'mes'])
   @commands.before_invoke(disabled_check)
   @commands.has_permissions(manage_messages=True)

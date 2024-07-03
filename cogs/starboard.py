@@ -4,7 +4,7 @@ import logging
 import traceback
 import random
 from random import randint
-from main import client, currentDT, bot_prefix, ses, round_time, check_name, green, red
+from main import client, bot_prefix, ses, round_time, check_name, green, red
 import fileinput
 from termcolor import cprint
 import os

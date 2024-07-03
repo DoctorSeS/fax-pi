@@ -9,7 +9,7 @@ import json
 import requests
 import math
 from discord.commands import slash_command
-from main import client, bot_prefix, currentDT, round_time, ses, currency, red, green, check_name
+from main import client, bot_prefix, round_time, ses, currency, red, green, check_name
 from termcolor import cprint
 from discord import Option
 import datetime

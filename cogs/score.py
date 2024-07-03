@@ -7,7 +7,7 @@ import asyncio
 import datetime
 import random
 from random import randint
-from main import client, bot_prefix, currentDT, round_time, ses, currency, check_name, green, red
+from main import client, bot_prefix, round_time, ses, currency, check_name, green, red
 import fileinput
 from discord.commands import slash_command
 from discord import Option

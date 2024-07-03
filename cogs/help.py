@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 import random
 from random import randint
 import asyncio
-from main import client, bot_prefix, currentDT, round_time, ses, faxname, faxpfp, currency, red, green
+from main import client, bot_prefix, round_time, ses, faxname, faxpfp, currency, red, green
 import requests
 from database import *
 from discord.commands import slash_command
