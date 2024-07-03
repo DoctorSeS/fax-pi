@@ -106,6 +106,7 @@ ch = 0
 count = 0
 msggg = 0
 cl = ''
+currentDT = datetime.datetime.now()
 
 
 def Diff(li1, li2):
