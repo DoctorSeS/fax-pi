@@ -109,49 +109,65 @@ cl = ''
 
 
 def Diff(li1, li2):
-  return list(set(li1) - set(li2)) + list(set(li2) - set(li1))
+    return list(set(li1) - set(li2)) + list(set(li2) - set(li1))
+
+
+def create_directories():
+    directories = [
+        "images/rps",
+        "images/rr",
+        "images/slots",
+        "images/assets/backgrounds/custom"
+    ]
+
+    for directory in directories:
+        os.makedirs(directory, exist_ok=True)
+    else:
+        return f"Checked and ensured directory exists"
 
 caught_message = None
 all_databases = ['Battleship', 'rr', 'TTT', 'Snipe', 'Hilo', 'Slots', 'RPS']
 
 @client.event
 async def on_ready():
-  cprint('----------------------------------', 'blue')
-  cprint("The bot is now online.", "green")
-  print(f"Logged in as: {client.user.name}\nID: {client.user.id}\nVersion: {discord.__version__}")
-  print(f"Watching {len(client.guilds)} guilds.")
-  print(f'Date and time: {round_time(datetime.datetime.now())}')
-  await client.wait_until_ready()
-  open('discord.log', 'w').close()
-  if client.is_ready():
-    cprint("Client ready.", "green")
+      cprint('----------------------------------', 'blue')
+      cprint("The bot is now online.", "green")
+      print(f"Logged in as: {client.user.name}\nID: {client.user.id}\nVersion: {discord.__version__}")
+      print(f"Watching {len(client.guilds)} guilds.")
+      print(f'Date and time: {round_time(datetime.datetime.now())}')
+      await client.wait_until_ready()
+      open('discord.log', 'w').close()
+      if client.is_ready():
+        cprint("Client ready.", "green")
 
-    print(f"Cogs Available: {len(listofcogs)}")
-    nm_lines = len(open(r"ai.txt", "r", encoding='unicode_escape').readlines())
-    print(f"Number of lines in ai.txt: {nm_lines}")
-    update_db("misc", 'none', {"ai_lines": nm_lines})
+        print(f"Cogs Available: {len(listofcogs)}")
+        nm_lines = len(open(r"ai.txt", "r", encoding='unicode_escape').readlines())
+        print(f"Number of lines in ai.txt: {nm_lines}")
+        update_db("misc", 'none', {"ai_lines": nm_lines})
 
-    global ch, msggg, cl, count
-    ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
-    msggg = await ch.fetch_message(831865097726328833)
-    cl = client.get_guild(msggg.guild.id)
-    bot_data.start()
+        global ch, msggg, cl, count
+        ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
+        msggg = await ch.fetch_message(831865097726328833)
+        cl = client.get_guild(msggg.guild.id)
+        bot_data.start()
 
-    change_status.start()
+        change_status.start()
 
-    for x in list(get_db('minigames')):
-        if x != 'holder':
-            del_db('minigames', f"{x}")
-    else:
-        cprint("Cleaned the 'minigames' database.", "blue")
+        for x in list(get_db('minigames')):
+            if x != 'holder':
+                del_db('minigames', f"{x}")
+        else:
+            cprint("Cleaned the 'minigames' database.", "blue")
 
-    all_guilds = ""
-    for x in client.guilds:
-        all_guilds += f"{x.id},"
-    else:
-        update_db('misc', 'none', {"all_servers": all_guilds})
+        all_guilds = ""
+        for x in client.guilds:
+            all_guilds += f"{x.id},"
+        else:
+            update_db('misc', 'none', {"all_servers": all_guilds})
 
-    cprint('----------------------------------', 'blue')
+        print(create_directories())
+
+        cprint('----------------------------------', 'blue')
 
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
