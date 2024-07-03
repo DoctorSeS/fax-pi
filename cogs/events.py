@@ -4,7 +4,7 @@ from random import randint
 import asyncio
 import datetime
 from datetime import date
-from main import client, bot_prefix, currentDT, ses, red, green, check_name
+from main import client, bot_prefix, ses, red, green, check_name
 from discord import slash_command
 from termcolor import colored, cprint
 import os
@@ -185,11 +185,11 @@ class Events(commands.Cog):
     try:
       global unguilds
       unguilds += 1
-      embed = discord.Embed(description=f"Guild {guild.name} • ID: {guild.id} has become unavailable.\n`Reason:` Unknown.", timestamp=currentDT)
+      embed = discord.Embed(description=f"Guild {guild.name} • ID: {guild.id} has become unavailable.\n`Reason:` Unknown.", timestamp=datetime.datetime.now())
       embed.set_footer(text="Last restart:", icon_url=client.user.avatar)
       await ses2.send(embed=embed, content=None)
     except discord.HTTPException as error:
-      embed = discord.Embed(description=f"**`Error:`**\n```python\n{error}```", timestamp=currentDT)
+      embed = discord.Embed(description=f"**`Error:`**\n```python\n{error}```", timestamp=datetime.datetime.now())
       embed.set_footer(text="Last restart:", icon_url=client.user.avatar)
       await ses2.send(embed=embed, content=None)
   
