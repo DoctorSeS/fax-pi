@@ -1,13 +1,24 @@
 import os
 import socket
 import logging
+
+import requests
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 import sys
 from termcolor import cprint
 
 
-cprint(f"Running Site... IP: {socket.gethostbyname(socket.gethostname())}", "light_green")
+def get_public_ip():
+    try:
+        response = requests.get('https://api.ipify.org?format=json')
+        return response.json()['ip']
+    except requests.RequestException as e:
+        logger.error(f"Error fetching public IP: {e}")
+        return None
+
+
+cprint(f"Running Site... IP: {get_public_ip()}", "light_green")
 # Initialize Flask and SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app)
