@@ -388,10 +388,10 @@ class EventSelect(discord.ui.Select):
     self.ctx = ctx
 
   async def callback(self, interaction: discord.Interaction):
-    val = str(self.values[0])
+    val = str(self.values[0]).replace('Background: ', '')
     userid = str(interaction.user.id)
     if self.ctx.author.id == interaction.user.id:
-      
+
       f = discord.File(f"{os.getcwd()}/images/assets/backgrounds/{check_folder(val)}.png", filename=f"{val}.png")
 
       embed = discord.Embed(description=f"Previewing Background: {val}")
