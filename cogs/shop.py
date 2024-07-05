@@ -388,18 +388,14 @@ class EventSelect(discord.ui.Select):
     self.ctx = ctx
 
   async def callback(self, interaction: discord.Interaction):
-    val = str(self.values)
+    val = str(self.values[0])
     userid = str(interaction.user.id)
     if self.ctx.author.id == interaction.user.id:
-      val2 = val.split("Background: ")[1].lstrip().split("']")[0]
       
-      if " " in val2:
-        val2 = val2.replace(" ", "_")
-      
-      f = discord.File(f"{os.getcwd()}/images/assets/backgrounds/{check_folder(val2)}.png", filename=f"{val2}.png")
+      f = discord.File(f"{os.getcwd()}/images/assets/backgrounds/{check_folder(val)}.png", filename=f"{val}.png")
 
-      embed = discord.Embed(description=f"Previewing Background: {val2}")
-      embed.set_image(url=f"attachment://{val2}.png")
+      embed = discord.Embed(description=f"Previewing Background: {val}")
+      embed.set_image(url=f"attachment://{val}.png")
 
       await interaction.message.edit(embed=embed, content=None, view=Use_Background(self.ctx, userid, self.options), file=f)
       await interaction.response.defer()
@@ -461,7 +457,7 @@ class Use_Background(discord.ui.View):
       if "Previewing Background:" in embeddict['description']:
         background = embeddict['description'].split("Background: ")[1]
   
-        update_db('users', f"{interaction.guild.id}", {"background": background})
+        update_db('users', f"{interaction.user.id}", {"background": background})
         embed = discord.Embed(description=f"Background applied.\n\n**{background[0].upper()}{background[1:]}** has been set as your profile background.")
         f = discord.File(f"{os.getcwd()}/images/pixel.png", filename="pixel.png")
   
