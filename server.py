@@ -18,7 +18,7 @@ def get_public_ip():
         return None
 
 
-cprint(f"Running Site... IP: {get_public_ip()}", "light_green")
+cprint(f"Running Site... IP: {socket.gethostbyname(socket.gethostname())}/{get_public_ip()}", "light_green")
 # Initialize Flask and SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -65,4 +65,4 @@ if __name__ == "__main__":
     cprint("Running main...", "light_green")
     exec(open('main.py').read())
 
-    socketio.run(app, host='0.0.0.0', port=8080, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
