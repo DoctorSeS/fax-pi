@@ -54,4 +54,4 @@ if __name__ == "__main__":
     cprint("Running main...", "light_green")
     exec(open('main.py').read())
 
-    socketio.run(app, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
