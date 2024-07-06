@@ -266,7 +266,7 @@ class Currency_Choice(discord.ui.View):
     if " " in self.response:
       self.response = self.response.split(" ", 1)[0]
 
-    update_db(f'guilds/{interaction.guild.id}', 'currency',f"{self.response[0].upper()}{self.response[1:]}")
+    update_db(f'guilds', f'{interaction.guild.id}', {'currency': f"{self.response[0].upper()}{self.response[1:]}"})
     
     if ("reset" in self.response) or ("default" in self.response):
       self.response = currency
@@ -412,10 +412,6 @@ class Select_Command(discord.ui.View):
           description="Select a channel and choose what that channel will log."
         ),
         discord.SelectOption(
-          label="Nickname Check (Manage_Roles)",
-          description="Automatically changes any non-latin names to a random name."
-        ),
-        discord.SelectOption(
           label="Change Prefix (Administrator)",
           description=f"Change the prefix used by The Fax Machine"
         ),
@@ -555,17 +551,6 @@ class Select_Command(discord.ui.View):
           return
           
         command = "starboard"
-        await self.ctx.invoke(client.get_command(command))
-        await interaction.message.delete()
-
-      elif "Nick" in val:
-        perms = "Manage_Roles"
-        if not interaction.user.guild_permissions.manage_roles:
-          perm_embed.add_field(name="Required Permissions:", value=f"```md\n<{perms}>```")
-          await interaction.message.edit(embed=perm_embed, content=None, delete_after=20, view=None)
-          return
-        
-        command = "nickcheck"
         await self.ctx.invoke(client.get_command(command))
         await interaction.message.delete()
         
@@ -708,14 +693,14 @@ class Ignore_Select(discord.ui.View):
           await interaction.message.edit(embed=embed, content=None)
           await interaction.response.defer()
         else:
-          update_db(f'guilds', f'{interaction.guild.id}', {"ignore": f"{value}{self.channel},"})
+          update_db(f'guilds', f'{interaction.guild.id}/ignore', {"channels": f"{value}{self.channel},"})
           embed = discord.Embed(description=f"""```md\n<#{self.name}> is now being ignored.\n```""")
           await interaction.message.edit(embed=embed, content=None)
           await interaction.response.defer()
       elif "Unignore" in val:
         if str(self.channel) in value:
           valuefinal = str(value).replace(f"{self.channel},", "")
-          update_db(f'guilds', f'{interaction.guild.id}', {"ignore": f"{valuefinal}"})
+          update_db(f'guilds', f'{interaction.guild.id}/ignore', {"channels": f"{valuefinal}"})
           embed = discord.Embed(description=f"""```md\n<#{self.name}> is now not being ignored.\n```""")
           await interaction.message.edit(embed=embed, content=None)
           await interaction.response.defer()
@@ -1118,19 +1103,6 @@ class Config(commands.Cog):
     embed = discord.Embed(title="Beta Ai Settings", description="Please select what you want to do with this module.")
     embed.set_footer(text=f"This module is currently {state}.")
     await ctx.send(embed=embed, content=None, view=ai_first_select(ctx))
-
-  @commands.command()
-  @commands.before_invoke(disabled_check)
-  @commands.is_owner()
-  async def nickcheck(self, ctx):
-    if get_db('guilds')[str(ctx.guild.id)].get('nick') is True:
-      embed2 = discord.Embed(description=f"**`SUCCESS:`** ```k\nThe server has been removed from the list.\nYou can re-enable this at anytime with the {bot_prefix}nickcheck command.\n```", color=green)
-      update_db('guilds', f'{ctx.guild.id}', {"nick": False})
-      await ctx.send(embed=embed2, content=None)
-    else:
-      embed2 = discord.Embed(description=f"**`SUCCESS:`** ```k\nThe server has been added to the list.\nThe bot will now rename anyone with a non-latin name to 'Unpingable Name #num'. You can disable this at anytime with the {bot_prefix}nickcheck command.\n```", color=green)
-      update_db('guilds', f'{ctx.guild.id}', {"nick": True})
-      await ctx.send(embed=embed2, content=None)
 
   @commands.command()
   @commands.before_invoke(disabled_check)
