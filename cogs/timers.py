@@ -80,7 +80,7 @@ class Timers(commands.Cog):
   @tasks.loop(minutes=10)
   async def check_files(self):
     files = []
-    dir_path = ["images/assets/backgrounds/simple", "images/assets/backgrounds/complex", "images/assets/backgrounds/very complex"]
+    dir_path = ["images/assets/backgrounds/simple", "images/assets/backgrounds/complex", "images/assets/backgrounds/very complex", "images/assets/backgrounds/special"]
     for folder in dir_path:
       for file_path in os.listdir(folder):
         if os.path.isfile(os.path.join(folder, file_path)):
