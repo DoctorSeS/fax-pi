@@ -1291,117 +1291,49 @@ class Turns_rr(discord.ui.View):
         return
 
 class Join_rr(discord.ui.View):
-  def __init__(self, ctx):
+  def __init__(self):
     super().__init__(timeout=None)
     self.joined = 1
     self.value = "Timed out."
-    self.ctx = ctx
     self.msgid = int
     self.fs = False
 
   @discord.ui.button(label="Join RR Room", style=discord.ButtonStyle.green, custom_id="Join", disabled=False)
   async def join(self, button, interaction):
     rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
-    all_ids = list(rrdata['all_ids'])
-
-    if interaction.user.id in all_ids:
-      await interaction.response.defer()
+    if rrdata['total_players'] >= 6:
       return
-    else:
-      turn = rrdata['turn']
-      coords = (150, 300)
-      count = 1
-      text_x = 550
-      added_user = False
 
-      img = Image.open('images/assets/rr/rr_background.png').convert("RGBA")
+    if interaction.user.id not in rrdata['all_ids']:
+      img = Image.open(f'images/rr/{interaction.user.id}.png').convert("RGBA")
 
-      while count <= 6:
-        if added_user is True:
-          rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
-          all_ids = list(rrdata['all_ids'])
+      coords_final = get_coords(int(rrdata['total_players']) + 1)[0]
+      text_x_final = get_coords(int(rrdata['total_players']) + 1)[1]
+      count = int(rrdata['total_players']) + 1
 
-        coords_final = get_coords(count)[0]
-        text_x_final = get_coords(count)[1]
+      if count >= 6:
+        button.disabled = True
 
-        if rrdata.get(f"player{count}") is None:
-          if interaction.user.id in all_ids:
-            outline = Image.new('RGBA', (262, 312), (30, 30, 30))
-            img.paste(smooth_corners(outline, 30), (get_coords(count)[0][0] - 6, get_coords(count)[0][1] - 6), smooth_corners(outline, 30))
-            unknown = Image.open("images/assets/rr/unknown.png").convert("RGBA").resize((250, 250))
-            img.paste(unknown, get_coords(count)[0], unknown)
-            count += 1
-            continue
-          else:
-            asset = interaction.user.display_avatar
-            data = BytesIO(await asset.read())
-            player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
-            color = (30, 30, 30)
+      asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
+      data = BytesIO(await asset.read())
+      player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
+      color = (30, 30, 30)
 
-            outline = Image.new('RGBA', (262, 312), color)
-            img.paste(smooth_corners(outline, 30), (coords_final[0]-6, coords_final[1]-6), smooth_corners(outline, 30))
+      outline = Image.new('RGBA', (262, 312), color)
+      img.paste(smooth_corners(outline, 30), (coords_final[0] - 6, coords_final[1] - 6), smooth_corners(outline, 30))
 
-            img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
-
-            draw = ImageDraw.Draw(img)
-            _, _, w, h = draw.textbbox((0, 0), f"{interaction.user.display_name}", font=ImageFont.truetype("images/assets/que.otf", 40))
-            draw.text(((text_x_final - w) / 2, coords_final[1]+260), f"{interaction.user.display_name}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
-
-            all_ids.append(interaction.user.id)
-            rrdata.update({'all_ids': all_ids})
-            rrdata.update({'player_count': int(rrdata['player_count']) + 1})
-            rrdata.update({'total_players': int(rrdata['total_players']) + 1})
-            self.joined += 1
-            rrdata.update({f'player{count}': {'id': interaction.user.id, 'name': interaction.user.display_name, 'dead': False}})
-            update_db('minigames/rr', f"{interaction.message.id}", rrdata)
-
-            added_user = True
-
-          #add empty places
-          if get_coords(count + 1)[0][0] < 0:
-            count += 1
-            continue
-          else:
-            outline = Image.new('RGBA', (262, 312), (30, 30, 30))
-            img.paste(smooth_corners(outline, 30), (get_coords(count + 1)[0][0] - 6, get_coords(count + 1)[0][1] - 6), smooth_corners(outline, 30))
-            unknown = Image.open("images/assets/rr/unknown.png").convert("RGBA").resize((250, 250))
-            img.paste(unknown, get_coords(count + 1)[0], unknown)
-            count += 1
-            continue
-        else:
-          asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
-          data = BytesIO(await asset.read())
-          player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
-
-
-        #check for color
-        color = (30, 30, 30)
-
-        outline = Image.new('RGBA', (262, 312), color)
-        img.paste(smooth_corners(outline, 30), (coords_final[0]-6, coords_final[1]-6), smooth_corners(outline, 30))
-
-        img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
-
-        draw = ImageDraw.Draw(img)
-        _, _, w, h = draw.textbbox((0, 0), f"{rrdata[f'player{count}']['name']}", font=ImageFont.truetype("images/assets/que.otf", 40))
-        draw.text(((text_x_final - w) / 2, coords_final[1]+260), f"{rrdata[f'player{count}']['name']}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
-        count += 1
-
-      TINT_COLOR = (0, 0, 0)
-      TRANSPARENCY = .50
-      OPACITY = int(255 * TRANSPARENCY)
-
-      overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
-      draw3 = ImageDraw.Draw(overlay)
-
-      draw3.rounded_rectangle((100, 100, 1400, 250), fill=TINT_COLOR + (OPACITY,), radius=20)
-      img = Image.alpha_composite(img, overlay)
+      img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
 
       draw = ImageDraw.Draw(img)
-      _, _, w, h = draw.textbbox((0, 0), f"""Waiting for players...""", font=ImageFont.truetype("images/assets/que.otf", 70))
-      draw.text(((1500 - w) / 2, 150), f"""Waiting for players...""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=4)
-      _, _, w, h = draw.textbbox((0, 0), f"""=== Russian Roulette ===""", font=ImageFont.truetype("images/assets/que.otf", 80))
-      draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
+      _, _, w, h = draw.textbbox((0, 0), f"Bot", font=ImageFont.truetype("images/assets/que.otf", 40))
+      draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"Bot", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
+
+      rrdata.update({'all_ids': rrdata['all_ids'].append(interaction.user.id)})
+      rrdata.update({'player_count': int(rrdata['player_count']) + 1})
+      rrdata.update({'total_players': int(rrdata['total_players']) + 1})
+      self.joined += 1
+      rrdata.update({f'player{count}': {'id': f'{interaction.user.id}', 'name': f"{interaction.user.display_name}", 'dead': False}})
+      update_db('minigames/rr', f"{interaction.message.id}", rrdata)
 
       img.save(f"images/rr/{rrdata['player1']['id']}.png")
 
@@ -1410,13 +1342,8 @@ class Join_rr(discord.ui.View):
       embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
       embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
 
-      if self.joined >= 6:
-        button.disabled = True
-        await interaction.message.edit(embed=embed, view=Turns_rr(), file=f)
-        await interaction.response.defer()
-      else:
-        await interaction.message.edit(embed=embed, content=None, file=f)
-        await interaction.response.defer()
+      await interaction.message.edit(embed=embed, content=None, view=self, file=f)
+      await interaction.response.defer()
 
   @discord.ui.button(label="Start", style=discord.ButtonStyle.green, custom_id="ForceStart", disabled=False)
   async def fs(self, button, interaction):
@@ -1447,9 +1374,14 @@ class Join_rr(discord.ui.View):
             img.paste(unknown, coords_final, unknown)
             count += 1
             continue
+          
+          if rrdata[f'player{count}']['id'] == "bot":
+            asset = requests.get(rrdata[f'player{count}']['avatar_url'])
+            data = BytesIO(asset.content)
+          else:
+            asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
+            data = BytesIO(await asset.read())
 
-          asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
-          data = BytesIO(await asset.read())
           player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
 
           #check for color
@@ -1510,12 +1442,17 @@ class Join_rr(discord.ui.View):
 
       coords_final = get_coords(int(rrdata['total_players']) + 1)[0]
       text_x_final = get_coords(int(rrdata['total_players']) + 1)[1]
+      count = int(rrdata['total_players']) + 1
+
+      if count >= 6:
+        button.disabled = True
 
       cprint("reached else", 'green')
       nmb = randint(0, 19)
       url = "https://google-search83.p.rapidapi.com/google/search_image"
 
-      querystring = {"query": f"neco arc profile picture", "gl": "us", "lr": "en", "num": "1", "start": "0"}
+      pfp_to_search = ["neco arc", 'neco arc profile picture', 'neco arc chaos', 'neco arc chaos pfp', 'kratos face', 'neco arc face']
+      querystring = {"query": f"{random.choice(pfp_to_search)}", "gl": "us", "lr": "en", "num": "1", "start": "0"}
 
       headers = {
         "X-RapidAPI-Key": "656579fde0msh1a659fc425536d6p163315jsn94162aa70de6",
@@ -1538,13 +1475,12 @@ class Join_rr(discord.ui.View):
       _, _, w, h = draw.textbbox((0, 0), f"Bot", font=ImageFont.truetype("images/assets/que.otf", 40))
       draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"Bot", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
 
-      count = int(rrdata['total_players']) + 1
       cprint("reached append", 'red')
       rrdata.update({'all_ids': ['bot']})
       rrdata.update({'player_count': int(rrdata['player_count']) + 1})
       rrdata.update({'total_players': int(rrdata['total_players']) + 1})
       self.joined += 1
-      rrdata.update({f'player{count}': {'id': 'bot', 'name': "Bot", 'dead': False}})
+      rrdata.update({f'player{count}': {'id': 'bot', 'name': "Bot", 'dead': False, 'avatar_url': f"{googleresponse.json()[nmb]['url']}"}})
       update_db('minigames/rr', f"{interaction.message.id}", rrdata)
 
       img.save(f"images/rr/{rrdata['player1']['id']}.png")
@@ -1555,13 +1491,8 @@ class Join_rr(discord.ui.View):
       embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
       embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
 
-      if self.joined >= 6:
-        button.disabled = True
-        await interaction.message.edit(embed=embed, view=Turns_rr(), file=f)
-        await interaction.response.defer()
-      else:
-        await interaction.message.edit(embed=embed, content=None, file=f)
-        await interaction.response.defer()
+      await interaction.message.edit(embed=embed, content=None, view=self, file=f)
+      await interaction.response.defer()
 
 class Select_slash(discord.ui.View):
   def __init__(self):
@@ -2768,7 +2699,7 @@ class Slash(commands.Cog):
     img.save(f"images/rr/{ctx.author.id}.png")
     f = discord.File(f"{os.getcwd()}/images/rr/{ctx.author.id}.png", filename=f"{ctx.author.id}.png")
 
-    join = Join_rr(ctx)
+    join = Join_rr()
     embed.set_footer(text=f"Current Bet: {bet} {check_currency(ctx.guild.id)}")
     embed.set_image(url=f"attachment://{ctx.author.id}.png")
     msgid = await ctx.send(embed=embed, view=join, file=f)
