@@ -85,7 +85,8 @@ class Timers(commands.Cog):
       for file_path in os.listdir(folder):
         if os.path.isfile(os.path.join(folder, file_path)):
           files.append(file_path.replace(".png", ""))
-    
+
+    files.append('default')
     update_db('misc', 'none', {"background_files": files})
 
   @tasks.loop(minutes=10)

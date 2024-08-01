@@ -1499,6 +1499,138 @@ class Join_rr(discord.ui.View):
     else:
       return
 
+  @discord.ui.button(label="Add Bot", style=discord.ButtonStyle.gray, custom_id="add_bot", disabled=False)
+  async def add_bot(self, button, interaction):
+    rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
+    all_ids = list(rrdata['all_ids'])
+    if interaction.user.id == int(rrdata['player1']['id']):
+      turn = rrdata['turn']
+      coords = (150, 300)
+      count = 1
+      text_x = 550
+      added_user = False
+
+      img = Image.open('images/assets/rr/rr_background.png').convert("RGBA")
+
+      while count <= 6:
+        if added_user is True:
+          rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
+          all_ids = list(rrdata['all_ids'])
+
+        coords_final = get_coords(count)[0]
+        text_x_final = get_coords(count)[1]
+
+        if rrdata.get(f"player{count}") is None:
+          asset = interaction.user.display_avatar
+          data = BytesIO(await asset.read())
+          player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
+          color = (30, 30, 30)
+
+          outline = Image.new('RGBA', (262, 312), color)
+          img.paste(smooth_corners(outline, 30), (coords_final[0] - 6, coords_final[1] - 6),
+                      smooth_corners(outline, 30))
+
+          img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
+
+          draw = ImageDraw.Draw(img)
+          _, _, w, h = draw.textbbox((0, 0), f"{interaction.user.display_name}",
+                                       font=ImageFont.truetype("images/assets/que.otf", 40))
+          draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"{interaction.user.display_name}",
+                      (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0),
+                      stroke_width=4)
+
+          all_ids.append('bot')
+          rrdata.update({'all_ids': all_ids})
+          rrdata.update({'player_count': int(rrdata['player_count']) + 1})
+          rrdata.update({'total_players': int(rrdata['total_players']) + 1})
+          self.joined += 1
+          rrdata.update({f'player{count}': {'id': 'bot', 'name': 'Bot', 'dead': False}})
+          update_db('minigames/rr', f"{interaction.message.id}", rrdata)
+
+          added_user = True
+
+          # add empty places
+          if get_coords(count + 1)[0][0] < 0:
+            count += 1
+            continue
+          else:
+            outline = Image.new('RGBA', (262, 312), (30, 30, 30))
+            img.paste(smooth_corners(outline, 30), (get_coords(count + 1)[0][0] - 6, get_coords(count + 1)[0][1] - 6),
+                      smooth_corners(outline, 30))
+            unknown = Image.open("images/assets/rr/unknown.png").convert("RGBA").resize((250, 250))
+            img.paste(unknown, get_coords(count + 1)[0], unknown)
+            count += 1
+            continue
+        else:
+          nmb = randint(0, 19)
+          url = "https://google-search83.p.rapidapi.com/google/search_image"
+
+          querystring = {"query": f"neco arc profile picture", "gl": "us", "lr": "en", "num": "1", "start": "0"}
+
+          headers = {
+            "X-RapidAPI-Key": "656579fde0msh1a659fc425536d6p163315jsn94162aa70de6",
+            "X-RapidAPI-Host": "google-search83.p.rapidapi.com"
+          }
+
+          googleresponse = requests.request("GET", url, headers=headers, params=querystring)
+
+          asset = googleresponse.json()[nmb]['url']
+          data = BytesIO(await asset.read())
+          player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
+
+        # check for color
+        color = (30, 30, 30)
+
+        outline = Image.new('RGBA', (262, 312), color)
+        img.paste(smooth_corners(outline, 30), (coords_final[0] - 6, coords_final[1] - 6), smooth_corners(outline, 30))
+
+        img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
+
+        draw = ImageDraw.Draw(img)
+        _, _, w, h = draw.textbbox((0, 0), f"{rrdata[f'player{count}']['name']}",
+                                   font=ImageFont.truetype("images/assets/que.otf", 40))
+        draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"{rrdata[f'player{count}']['name']}",
+                  (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0),
+                  stroke_width=4)
+        count += 1
+
+      TINT_COLOR = (0, 0, 0)
+      TRANSPARENCY = .50
+      OPACITY = int(255 * TRANSPARENCY)
+
+      overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
+      draw3 = ImageDraw.Draw(overlay)
+
+      draw3.rounded_rectangle((100, 100, 1400, 250), fill=TINT_COLOR + (OPACITY,), radius=20)
+      img = Image.alpha_composite(img, overlay)
+
+      draw = ImageDraw.Draw(img)
+      _, _, w, h = draw.textbbox((0, 0), f"""Waiting for players...""",
+                                 font=ImageFont.truetype("images/assets/que.otf", 70))
+      draw.text(((1500 - w) / 2, 150), f"""Waiting for players...""", (200, 200, 200),
+                font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=4)
+      _, _, w, h = draw.textbbox((0, 0), f"""=== Russian Roulette ===""",
+                                 font=ImageFont.truetype("images/assets/que.otf", 80))
+      draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200),
+                font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
+
+      img.save(f"images/rr/{rrdata['player1']['id']}.png")
+
+      f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png",
+                       filename=f"{rrdata['player1']['id']}.png")
+      embed = discord.Embed()
+      embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
+      embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
+
+      if self.joined >= 6:
+        button.disabled = True
+        await interaction.message.edit(embed=embed, view=Turns_rr(), file=f)
+        await interaction.response.defer()
+      else:
+        await interaction.message.edit(embed=embed, content=None, file=f)
+        await interaction.response.defer()
+
+
   async def on_timeout(self):
     if self.joined >= 2:
       if self.fs is True:

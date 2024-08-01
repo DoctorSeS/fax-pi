@@ -734,40 +734,26 @@ class Member_coms(commands.Cog):
 
   @commands.command(aliases=["suggest", "botsuggestion"])
   @commands.before_invoke(disabled_check)
-  @commands.cooldown(1, 120, commands.BucketType.guild)
+  @commands.cooldown(1, 300, commands.BucketType.guild)
   async def suggestion(self, ctx, *, content: str):
-    with open("suggestionbans.txt", "r") as bans:
-      author = str(ctx.author.id)
-      author2 = str(ctx.author)
-      lencontent = len(content)
-      bans2 = bans.read()
-      if author in bans2:
-        embed = discord.Embed(title="Failed to send.", description=f"Your suggestion: `{content}`\n\n**`Reason:`** You have been banned from using this feature.", color=0xb52005)
+    bans = get_db('misc')['suggestion_bans']
+
+    lencontent = len(content)
+    if str(ctx.guild.id) in bans:
+      embed = discord.Embed(title="Failed to send.", description=f"Your suggestion: `{content}`\n\n**`Reason:`** You have been banned from using this feature.", color=0xb52005)
+      await ctx.message.delete()
+      await ctx.author.send(embed=embed, content=None)
+    else:
+      if lencontent <= 20:
+        embed = discord.Embed(title="Failed to send.", description=f"Your suggestion: `{content}`\n\n**`Reason:`** Suggestion does not meet the minimum requirements of being at least 20 letters long.", color=0xb52005)
         await ctx.message.delete()
         await ctx.author.send(embed=embed, content=None)
-        bans.close()
       else:
-        if lencontent <= 20:
-          embed = discord.Embed(title="Failed to send.", description=f"Your suggestion: `{content}`\n\n**`Reason:`** Suggestion does not meet the minimum requirements of being at least 20 letters long or more.", color=0xb52005)
-          await ctx.message.delete()
-          await ctx.author.send(embed=embed, content=None)
-          bans.close()
-        else:
-          with open("suggestions.txt", "r") as file:
-            file2 = file.read()
-            if content in file2:
-              embed = discord.Embed(title="Failed to send.", description=f"Your suggestion: `{content}`\n\n**`Reason:`** Suggestion already registered into the database.", color=0xb52005)
-              await ctx.message.delete()
-              await ctx.author.send(embed=embed, content=None)
-              file.close()
-            else:
-              file.close()
-              f = open("suggestions.txt", "a")
-              embed = discord.Embed(title="Successfully sent.", description=f"Your suggestion: `{content}`\n\nThank you for your contribution.", color=0x178a00)
-              await ctx.message.delete()
-              f.write(author2 + " - ID: " + author + " Suggestion: " + content + "\n")
-              f.close()
-              await ctx.author.send(embed=embed, content=None)
+        embed = discord.Embed(title="Successfully sent.", description=f"Your suggestion: `{content}`\n\nThank you for your contribution.", color=0x178a00)
+        await ctx.message.delete()
+
+        update_db('misc', 'suggestions', {f'suggestion-{ctx.author.id}': content})
+        await ctx.author.send(embed=embed, content=None)
 
   @commands.command(aliases=['hi', 'hey'])
   async def hello(self, ctx):
