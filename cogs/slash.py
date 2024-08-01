@@ -1530,6 +1530,7 @@ class Join_rr(discord.ui.View):
             count += 1
             continue
           else:
+            cprint("reached else", 'green')
             nmb = randint(0, 19)
             url = "https://google-search83.p.rapidapi.com/google/search_image"
 
@@ -1555,8 +1556,9 @@ class Join_rr(discord.ui.View):
 
             draw = ImageDraw.Draw(img)
             _, _, w, h = draw.textbbox((0, 0), f"{interaction.user.display_name}", font=ImageFont.truetype("images/assets/que.otf", 40))
-            draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"{interaction.user.display_name}",(200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
+            draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"{interaction.user.display_name}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
 
+            cprint("reached append", 'red')
             all_ids.append('bot')
             rrdata.update({'all_ids': all_ids})
             rrdata.update({'player_count': int(rrdata['player_count']) + 1})
