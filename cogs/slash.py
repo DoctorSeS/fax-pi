@@ -1314,7 +1314,7 @@ class Join_rr(discord.ui.View):
       if count >= 6:
         button.disabled = True
 
-      asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
+      asset = interaction.user.display_avatar
       data = BytesIO(await asset.read())
       player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
       color = (30, 30, 30)
