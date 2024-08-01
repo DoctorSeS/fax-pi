@@ -1574,8 +1574,8 @@ class Join_rr(discord.ui.View):
 
           googleresponse = requests.request("GET", url, headers=headers, params=querystring)
 
-          asset = googleresponse.json()[nmb]['url']
-          data = BytesIO(await asset.read())
+          asset = requests.get(googleresponse.json()[nmb]['url'])
+          data = BytesIO(asset.content)
           player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
 
         # check for color
