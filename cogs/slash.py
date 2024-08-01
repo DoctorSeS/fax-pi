@@ -1418,7 +1418,7 @@ class Join_rr(discord.ui.View):
         await interaction.message.edit(embed=embed, content=None, file=f)
         await interaction.response.defer()
 
-  @discord.ui.button(label="Force Start", style=discord.ButtonStyle.red, custom_id="ForceStart", disabled=False)
+  @discord.ui.button(label="Start", style=discord.ButtonStyle.green, custom_id="ForceStart", disabled=False)
   async def fs(self, button, interaction):
     rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
     if interaction.user.id == int(rrdata['player1']['id']):
@@ -1426,74 +1426,12 @@ class Join_rr(discord.ui.View):
         await interaction.response.defer()
         return
       else:
-        img = Image.open('images/assets/rr/rr_background.png').convert("RGBA")
-
-        turn = rrdata['turn']
-        coords = (150, 300)
-        count = 1
-        text_x = 550
-        while count <= 6:
-          if count >= 4:
-            coords_final = (coords[0]+450*(count-4), coords[1]+350)
-            text_x_final = text_x+900*(count-4)
-          else:
-            text_x_final = text_x+900*(count-1)
-            coords_final = (coords[0]+450*(count-1), coords[1])
-
-          if rrdata.get(f"player{count}") is None:
-            outline = Image.new('RGBA', (262, 312), (30, 30, 30))
-            img.paste(smooth_corners(outline, 30), (coords_final[0] - 6, coords_final[1] - 6), smooth_corners(outline, 30))
-            unknown = Image.open("images/assets/rr/unknown.png").convert("RGBA").resize((250, 250))
-            img.paste(unknown, coords_final, unknown)
-            count += 1
-            continue
-
-          asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
-          data = BytesIO(await asset.read())
-          player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
-
-          #check for color
-          if turn == count:
-            color = (0, 150, 0)
-            gun = Image.open("images/assets/rr/gun.png").convert("RGBA").resize((180, 120))
-            img.paste(gun, (coords_final[0] + 260, coords_final[1]+60), gun)
-          else:
-            color = (30, 30, 30)
-
-          outline = Image.new('RGBA', (262, 312), color)
-          img.paste(smooth_corners(outline, 30), (coords_final[0]-6, coords_final[1]-6), smooth_corners(outline, 30))
-
-          img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
-
-          draw = ImageDraw.Draw(img)
-          _, _, w, h = draw.textbbox((0, 0), f"{rrdata[f'player{count}']['name']}", font=ImageFont.truetype("images/assets/que.otf", 40))
-          draw.text(((text_x_final - w) / 2, coords_final[1]+260), f"{rrdata[f'player{count}']['name']}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
-          count += 1
-
-        TINT_COLOR = (0, 0, 0)
-        TRANSPARENCY = .50
-        OPACITY = int(255 * TRANSPARENCY)
-
-        overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
-        draw3 = ImageDraw.Draw(overlay)
-
-        draw3.rounded_rectangle((100, 100, 1400, 250), fill=TINT_COLOR + (OPACITY,), radius=20)
-        img = Image.alpha_composite(img, overlay)
-
-        draw = ImageDraw.Draw(img)
-        _, _, w, h = draw.textbbox((0, 0), f"""It's {rrdata[f'player{turn}']['name']}'s turn...""", font=ImageFont.truetype("images/assets/que.otf", 70))
-        draw.text(((1500 - w) / 2, 150), f"""It's {rrdata[f'player{turn}']['name']}'s turn...""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=4)
-        _, _, w, h = draw.textbbox((0, 0), f"""=== Russian Roulette ===""", font=ImageFont.truetype("images/assets/que.otf", 80))
-        draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
-
-        img.save(f"images/rr/{rrdata['player1']['id']}.png")
-
         f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename=f"{rrdata['player1']['id']}.png")
         embed = discord.Embed()
         embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
         embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
 
-        await interaction.message.edit(content=f"Forced to start by {interaction.user.mention}. Game Started.", embed=embed, view=Turns_rr(), file=f)
+        await interaction.message.edit(content=f"Game Started.", embed=embed, view=Turns_rr(), file=f)
         await interaction.response.defer()
         return
     else:
@@ -1510,7 +1448,7 @@ class Join_rr(discord.ui.View):
       text_x = 550
       added_user = False
 
-      img = Image.open('images/assets/rr/rr_background.png').convert("RGBA")
+      img = Image.open(f'images/rr/{interaction.user.id}').convert("RGBA")
 
       while count <= 6:
         if added_user is True:
@@ -1637,93 +1575,6 @@ class Join_rr(discord.ui.View):
       else:
         await interaction.message.edit(embed=embed, content=None, file=f)
         await interaction.response.defer()
-
-
-  async def on_timeout(self):
-    if self.joined >= 2:
-      if self.fs is True:
-        return
-      else:
-        if self.joined == 6:
-          return
-        else:
-          rrdata = get_db('minigames')['rr'][f'{self.message.id}']
-          img = Image.open('images/assets/rr/rr_background.png').convert("RGBA")
-
-          turn = rrdata['turn']
-          coords = (150, 300)
-          count = 1
-          text_x = 550
-          while count <= 6:
-            if count >= 4:
-              coords_final = (coords[0]+450*(count-4), coords[1]+350)
-              text_x_final = text_x+900*(count-4)
-            else:
-              text_x_final = text_x+900*(count-1)
-              coords_final = (coords[0]+450*(count-1), coords[1])
-
-            if rrdata.get(f"player{count}") is None:
-              outline = Image.new('RGBA', (262, 312), (30, 30, 30))
-              img.paste(smooth_corners(outline, 30), (coords_final[0] - 6, coords_final[1] - 6), smooth_corners(outline, 30))
-              unknown = Image.open("images/assets/rr/unknown.png").convert("RGBA").resize((250, 250))
-              img.paste(unknown, coords_final, unknown)
-              count += 1
-              continue
-
-            asset = client.get_guild(self.message.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
-            data = BytesIO(await asset.read())
-            player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
-
-            #check for color
-            if turn == count:
-              color = (0, 150, 0)
-              gun = Image.open("images/assets/rr/gun.png").convert("RGBA").resize((180, 120))
-              img.paste(gun, (coords_final[0] + 260, coords_final[1]+60), gun)
-            else:
-              color = (30, 30, 30)
-
-            outline = Image.new('RGBA', (262, 312), color)
-            img.paste(smooth_corners(outline, 30), (coords_final[0]-6, coords_final[1]-6), smooth_corners(outline, 30))
-
-            img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
-
-            draw = ImageDraw.Draw(img)
-            _, _, w, h = draw.textbbox((0, 0), f"{rrdata[f'player{count}']['name']}", font=ImageFont.truetype("images/assets/que.otf", 40))
-            draw.text(((text_x_final - w) / 2, coords_final[1]+260), f"{rrdata[f'player{count}']['name']}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
-            count += 1
-
-          TINT_COLOR = (0, 0, 0)
-          TRANSPARENCY = .50
-          OPACITY = int(255 * TRANSPARENCY)
-
-          overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
-          draw3 = ImageDraw.Draw(overlay)
-
-          draw3.rounded_rectangle((100, 100, 1400, 250), fill=TINT_COLOR + (OPACITY,), radius=20)
-          img = Image.alpha_composite(img, overlay)
-
-          draw = ImageDraw.Draw(img)
-          _, _, w, h = draw.textbbox((0, 0), f"""It's {rrdata[f'player{turn}']['name']}'s turn...""", font=ImageFont.truetype("images/assets/que.otf", 70))
-          draw.text(((1500 - w) / 2, 150), f"""It's {rrdata[f'player{turn}']['name']}'s turn...""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=4)
-          _, _, w, h = draw.textbbox((0, 0), f"""=== Russian Roulette ===""", font=ImageFont.truetype("images/assets/que.otf", 80))
-          draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
-
-          img.save(f"images/rr/{rrdata['player1']['id']}.png")
-
-          f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename="{rrdata['player1']['id']}.png")
-          embed = discord.Embed()
-          embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
-          embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(self.message.guild.id)}")
-
-          await self.message.edit(embed=embed, view=Turns_rr(), file=f)
-          msg = await self.ctx.send("Timed out, starting game...")
-          await msg.delete(delay=3)
-          return
-    else:
-      for child in self.children:
-        child.disabled = True
-      else:
-        await self.message.edit(view=self, content="Timed out, Nobody Joined.")
 
 class Select_slash(discord.ui.View):
   def __init__(self):
