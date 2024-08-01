@@ -1538,6 +1538,7 @@ class Join_rr(discord.ui.View):
       _, _, w, h = draw.textbbox((0, 0), f"Bot", font=ImageFont.truetype("images/assets/que.otf", 40))
       draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"Bot", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
 
+      count = int(rrdata['total_players']) + 1
       cprint("reached append", 'red')
       rrdata.update({'all_ids': ['bot']})
       rrdata.update({'player_count': int(rrdata['player_count']) + 1})
