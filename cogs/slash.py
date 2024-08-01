@@ -41,7 +41,7 @@ def add_milestone(user, milestone, amount=None):
       total_amount = all_milestones[name]["amount"] + 1
     else:
       total_amount = 1
-      
+
     if total_amount >= 1000:
       level2 = 6
     elif total_amount >= 750:
@@ -65,7 +65,7 @@ def add_milestone(user, milestone, amount=None):
       total_amount = all_milestones[name]["amount"] + 1
     else:
       total_amount = 1
-    
+
     if total_amount >= 5000:
       level2 = 6
     elif total_amount >= 2500:
@@ -80,13 +80,13 @@ def add_milestone(user, milestone, amount=None):
       level2 = 1
     else:
       level2 = 0
-  
+
     filename = f"gambler{level2}"
 
-  
+
   all_milestones.update({f"{name}": {"level": level2, "amount": total_amount, "filename": filename}})
   update_db(f'users/{user}', f'milestones', all_milestones)
-  
+
 
 def smooth_corners(im, rad):
   circle = Image.new('L', (rad * 2, rad * 2), 0)
@@ -107,7 +107,7 @@ logs_global = "logs"
 empty = '\uFEFF'
 guild_ids = [863561097604497438]
 numbers = ["₀", "₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "₉"]
-    
+
 def add_time(time_add):
   current = datetime.datetime.now()
   add = datetime.timedelta(seconds=int(time_add))
@@ -158,7 +158,7 @@ class Pages(discord.ui.View):
       pass
     else:
       pass
-    
+
     await interaction.message.channel.send(self.value)
     embeds = interaction.message.embeds
     for embed in embeds:
@@ -175,7 +175,7 @@ class Pages(discord.ui.View):
       await interaction.message.edit(content=None, embed=embed3, view=self)
       await interaction.response.defer()
       return
-  
+
   @discord.ui.button(label=f"Moderator Commands", style=discord.ButtonStyle.grey, custom_id="Other Commands", disabled=False)
   async def current(self, button, interaction):
     mod = discord.Embed(description="Moderator Active")
@@ -229,7 +229,7 @@ class Pages(discord.ui.View):
       pass
     else:
       pass
-    
+
     await interaction.message.channel.send(self.value)
     embeds = interaction.message.embeds
     for embed in embeds:
@@ -251,7 +251,7 @@ class Select(discord.ui.View):
   def __init__(self):
     super().__init__(timeout=60)
     self.rps = ""
-  
+
   #server2 = client.get_guild(710840786853429319)
   #emoji = discord.utils.get(server2.emojis, name="stone")
   #emoji2 = discord.utils.get(server2.emojis, name="paper")
@@ -283,12 +283,12 @@ class Select(discord.ui.View):
     sci = "<:scissors1:780724274762874890>"
     choose3 = random.choice(choose2)
     valre = val.replace("['", "")
-    val2 = valre.replace("']", "") 
+    val2 = valre.replace("']", "")
     userid = str(interaction.user.id)
     embeds = interaction.message.embeds
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     if userid in embeddict['footer']['text']:
       if "Rock" in val:
         if choose3 == "rock":
@@ -313,7 +313,7 @@ class Select(discord.ui.View):
           embed.set_footer(text=f"Your pick: {val2} ({interaction.user.id})", icon_url=interaction.user.avatar)
           await interaction.message.edit(embed=embed, content=None)
           await interaction.response.defer()
-          
+
         elif choose3 == "scissors":
           embed = discord.Embed(description=f"I picked {choose3} {sci}\n\n`It's a tie.`")
           embed.set_footer(text=f"Your pick: {val2} ({interaction.user.id})", icon_url=interaction.user.avatar)
@@ -421,7 +421,7 @@ class PlayAgain(discord.ui.View):
       playerids['player2'].update({"pick": "None"})
 
       update_db('minigames/rps', f'{interaction.message.id}', playerids)
-      
+
       asset = interaction.guild.get_member(int(playerids["player1"]["id"])).display_avatar
       data = BytesIO(await asset.read())
       player1_pfp = Image.open(data).convert("RGBA").resize((300, 300))
@@ -500,7 +500,7 @@ class PlayAgain(discord.ui.View):
       embed.set_image(url=f"attachment://{playerids['player1']['id']}.png")
       await interaction.message.edit(content=None, embed=embed, view=Multi(), file=f)
       await interaction.response.defer()
-      
+
 
 def complete_transaction(inteid, winner):
   playerids = get_db('minigames')['rps'][f'{inteid}']
@@ -531,11 +531,11 @@ def complete_transaction(inteid, winner):
       footer = "Could not complete transaction."
     else:
       footer = f"{playerids['player1']['name']}: {player1_score} ≫ {player1value}\n{playerids['player2']['name']}: {player2_score} ≫ {player2value}"
-      
+
     return footer
   else:
     return
-    
+
 
 class Multi(discord.ui.View):
   def __init__(self):
@@ -567,7 +567,7 @@ class Multi(discord.ui.View):
           firstpick = random.choice(choose2)
 
         update_db(f'minigames/rps/{interaction.message.id}', 'player1', {"pick": firstpick})
-        
+
       if interaction.user.id == int(playerids["player2"]["id"]):
         secondpick = val
         if "Random" in val:
@@ -620,7 +620,7 @@ class Multi(discord.ui.View):
         if firstpick == secondpick:
           winner = 0
           pass
-          
+
         if firstpick == "Rock":
           if secondpick == "Scissors":
             embed.set_footer(text=complete_transaction(interaction.message.id, 1))
@@ -628,15 +628,15 @@ class Multi(discord.ui.View):
             update_db(f'minigames/rps/{interaction.message.id}', f'player{winner}', {"points": int(playerids[f'player{winner}']['points']) + 1})
             add_milestone(user=int(playerids["player1"]["id"]), milestone="mini-games, RPS", amount=1)
             pass
-            
+
           elif secondpick == "Paper":
             embed.set_footer(text=complete_transaction(interaction.message.id, 2))
             winner = 2
             update_db(f'minigames/rps/{interaction.message.id}', f'player{winner}', {"points": int(playerids[f'player{winner}']['points']) + 1})
             add_milestone(user=int(playerids["player2"]["id"]), milestone="mini-games, RPS", amount=1)
             pass
-    
-        
+
+
         elif firstpick == "Scissors":
           if secondpick == "Rock":
             embed.set_image(url=f"attachment://{playerids['player1']['id']}.png")
@@ -645,15 +645,15 @@ class Multi(discord.ui.View):
             update_db(f'minigames/rps/{interaction.message.id}', f'player{winner}', {"points": int(playerids[f'player{winner}']['points']) + 1})
             add_milestone(user=int(playerids["player2"]["id"]), milestone="mini-games, RPS", amount=1)
             pass
-              
+
           elif secondpick == "Paper":
             embed.set_footer(text=complete_transaction(interaction.message.id, 1))
             winner = 1
             update_db(f'minigames/rps/{interaction.message.id}', f'player{winner}', {"points": int(playerids[f'player{winner}']['points']) + 1})
             add_milestone(user=int(playerids["player1"]["id"]), milestone="mini-games, RPS", amount=1)
             pass
-            
-        
+
+
         elif firstpick == "Paper":
           if secondpick == "Rock":
             embed.set_footer(text=complete_transaction(interaction.message.id, 1))
@@ -691,7 +691,7 @@ class Multi(discord.ui.View):
 
         _, _, w, h = draw.textbbox((0, 0), f"{win_text}", font=ImageFont.truetype("images/assets/que.otf", 80))
         draw.text(((1500-w)/2, 570), f"{win_text}", (0, 150, 0), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
-        
+
         img.paste(win, (640, 350), win)
 
         overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
@@ -751,10 +751,10 @@ class Multi(discord.ui.View):
 
         img.paste(player1_pick, (390, 350), player1_pick)
         img.paste(player2_pick, (910, 350), player2_pick)
-        
+
         img.save(f"images/rps/{playerids['player1']['id']}.png")
         f = discord.File(f"{os.getcwd()}/images/rps/{playerids['player1']['id']}.png", filename=f"{playerids['player1']['id']}.png")
-        
+
         embed.set_image(url=f"attachment://{playerids['player1']['id']}.png")
 
         await interaction.message.edit(embed=embed, content=None, view=PlayAgain(), file=f)
@@ -766,7 +766,7 @@ class Multi(discord.ui.View):
 class Join(discord.ui.View):
   def __init__(self):
     super().__init__(timeout=60)
-  
+
   @discord.ui.button(label="Join RPS game", style=discord.ButtonStyle.green, custom_id="Join")
   async def join(self, button, interaction):
     playerids = get_db('minigames')['rps'][f'{interaction.message.id}']
@@ -845,7 +845,7 @@ class Join(discord.ui.View):
 
       img.save(f"images/rps/{playerids['player1']['id']}.png")
       f = discord.File(f"{os.getcwd()}/images/rps/{playerids['player1']['id']}.png", filename=f"{playerids['player1']['id']}.png")
-      
+
       embed = discord.Embed()
       embed.set_image(url=f"attachment://{playerids['player1']['id']}.png")
       await interaction.message.edit(content=None, embed=embed, view=Multi(), file=f)
@@ -854,7 +854,7 @@ class Join(discord.ui.View):
   @discord.ui.button(label="Decline", style=discord.ButtonStyle.red, custom_id="decline")
   async def decline(self, button, interaction):
     playerids = get_db('minigames')['rps'][f'{interaction.message.id}']
-    
+
     if interaction.user.id == int(playerids["player2"]["id"]):
       embed = discord.Embed(description=f"{interaction.user.mention} has declined your invitation.")
       f = discord.File(f"{os.getcwd()}/images/pixel.png", filename="pixel.png")
@@ -876,7 +876,7 @@ def get_coords(count):
     else:
       text_x_final = text_x+900*(count-1)
       coords_final = (coords[0]+450*(count-1), coords[1])
-  
+
   return coords_final, text_x_final
 
 def give_to_winner(winner, all_ids, bet):
@@ -896,16 +896,16 @@ def give_to_winner(winner, all_ids, bet):
 class Turns_rr(discord.ui.View):
   def __init__(self):
     super().__init__(timeout=None)
-    
+
   @discord.ui.button(label="Shoot", style=discord.ButtonStyle.gray, custom_id="shoot", disabled=False)
   async def shoot(self, button, interaction):
     rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
     turn = rrdata['turn']
     next_turn = turn + 1
-    
+
     if interaction.user.id == rrdata[f'player{turn}']['id']:
       embed_color = discord.Color.dark_theme()
-      
+
       if rrdata.get(f"bullet") is None:
         bullet = randint(1, 6)
       else:
@@ -928,7 +928,7 @@ class Turns_rr(discord.ui.View):
         outcome = "but the gun didn't go off."
 
       img = Image.open('images/assets/rr/rr_background.png').convert("RGBA")
-      
+
       coords = (150, 300)
       count = 1
       text_x = 550
@@ -976,7 +976,7 @@ class Turns_rr(discord.ui.View):
           count += 1
           continue
 
-      
+
         color = (30, 30, 30)
 
         outline = Image.new('RGBA', (262, 312), color)
@@ -1015,7 +1015,7 @@ class Turns_rr(discord.ui.View):
             else:
               next_turn = x
               break
-            
+
       rrdata.update({"turn": next_turn})
 
       winner = 0
@@ -1035,15 +1035,15 @@ class Turns_rr(discord.ui.View):
         img.paste(gun, (get_coords(next_turn)[0][0] + 260, get_coords(next_turn)[0][1]+60), gun)
       else:
         color = (217, 196, 2)
-        
+
       outline = Image.new('RGBA', (262, 312), color)
 
       asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{next_turn}']['id'])).display_avatar
       data = BytesIO(await asset.read())
       player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
-      
+
       img.paste(smooth_corners(outline, 30), (get_coords(next_turn)[0][0]-6, get_coords(next_turn)[0][1]-6), smooth_corners(outline, 30))
-    
+
       img.paste(smooth_corners(player_pfp, 30), get_coords(next_turn)[0], smooth_corners(player_pfp, 30))
 
       draw = ImageDraw.Draw(img)
@@ -1051,7 +1051,7 @@ class Turns_rr(discord.ui.View):
       draw.text(((get_coords(next_turn)[1] - w) / 2, get_coords(next_turn)[0][1]+260), f"{rrdata[f'player{next_turn}']['name']}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
 
       update_db('minigames/rr', f"{interaction.message.id}", rrdata)
-    
+
       draw = ImageDraw.Draw(img)
 
       if winner == 0:
@@ -1064,18 +1064,18 @@ class Turns_rr(discord.ui.View):
         draw.text(((1500 - w) / 2, 120), f"{rrdata[f'player{winner}']['name']} wins.", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=4)
         _, _, w, h = draw.textbbox((0, 0), f"Total winnings: {rrdata['bet'] * (rrdata['total_players'] - 1)}", font=ImageFont.truetype("images/assets/que.otf", 70))
         draw.text(((1500 - w) / 2, 190), f"Total winnings: {rrdata['bet'] * (rrdata['total_players'] - 1)}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=4)
-        
+
         crown = Image.open("images/assets/rr/crown.png").convert("RGBA").resize((100, 100))
         img.paste(crown, (get_coords(winner)[0][0] + 80, get_coords(winner)[0][1] - 55), crown)
         embed_color = 0xd9c402
         if int(rrdata['bet']) > 0:
           give_to_winner(winner=rrdata[f'player{winner}']['id'], all_ids=list(rrdata['all_ids']), bet=int(rrdata['bet']))
-      
+
       embed = discord.Embed(color=embed_color)
 
       img.save(f"images/rr/{rrdata['player1']['id']}.png")
       f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename=f"{rrdata['player1']['id']}.png")
-      
+
       embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
       embed.set_footer(text=f"Total Turns: {int(rrdata['total_turns']) + 1}\nCurrent Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
       if winner == 0:
@@ -1088,14 +1088,14 @@ class Turns_rr(discord.ui.View):
         await interaction.response.defer()
       except:
         return
-      
+
     else:
       try:
         await interaction.response.defer()
       except:
         return
-    
-  
+
+
   @discord.ui.button(label="Spin & Shoot", style=discord.ButtonStyle.gray, custom_id="spinshoot", disabled=False)
   async def spinshoot(self, button, interaction):
     rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
@@ -1298,7 +1298,7 @@ class Join_rr(discord.ui.View):
     self.ctx = ctx
     self.msgid = int
     self.fs = False
-  
+
   @discord.ui.button(label="Join RR Room", style=discord.ButtonStyle.green, custom_id="Join", disabled=False)
   async def join(self, button, interaction):
     rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
@@ -1315,15 +1315,15 @@ class Join_rr(discord.ui.View):
       added_user = False
 
       img = Image.open('images/assets/rr/rr_background.png').convert("RGBA")
-      
+
       while count <= 6:
         if added_user is True:
           rrdata = get_db('minigames')['rr'][f'{interaction.message.id}']
           all_ids = list(rrdata['all_ids'])
-          
+
         coords_final = get_coords(count)[0]
         text_x_final = get_coords(count)[1]
-        
+
         if rrdata.get(f"player{count}") is None:
           if interaction.user.id in all_ids:
             outline = Image.new('RGBA', (262, 312), (30, 30, 30))
@@ -1337,16 +1337,16 @@ class Join_rr(discord.ui.View):
             data = BytesIO(await asset.read())
             player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
             color = (30, 30, 30)
-  
+
             outline = Image.new('RGBA', (262, 312), color)
             img.paste(smooth_corners(outline, 30), (coords_final[0]-6, coords_final[1]-6), smooth_corners(outline, 30))
-  
+
             img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
-  
+
             draw = ImageDraw.Draw(img)
             _, _, w, h = draw.textbbox((0, 0), f"{interaction.user.display_name}", font=ImageFont.truetype("images/assets/que.otf", 40))
             draw.text(((text_x_final - w) / 2, coords_final[1]+260), f"{interaction.user.display_name}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
-  
+
             all_ids.append(interaction.user.id)
             rrdata.update({'all_ids': all_ids})
             rrdata.update({'player_count': int(rrdata['player_count']) + 1})
@@ -1354,7 +1354,7 @@ class Join_rr(discord.ui.View):
             self.joined += 1
             rrdata.update({f'player{count}': {'id': interaction.user.id, 'name': interaction.user.display_name, 'dead': False}})
             update_db('minigames/rr', f"{interaction.message.id}", rrdata)
-  
+
             added_user = True
 
           #add empty places
@@ -1372,31 +1372,31 @@ class Join_rr(discord.ui.View):
           asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
           data = BytesIO(await asset.read())
           player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
-  
-  
+
+
         #check for color
         color = (30, 30, 30)
-  
+
         outline = Image.new('RGBA', (262, 312), color)
         img.paste(smooth_corners(outline, 30), (coords_final[0]-6, coords_final[1]-6), smooth_corners(outline, 30))
-  
+
         img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
-  
+
         draw = ImageDraw.Draw(img)
         _, _, w, h = draw.textbbox((0, 0), f"{rrdata[f'player{count}']['name']}", font=ImageFont.truetype("images/assets/que.otf", 40))
         draw.text(((text_x_final - w) / 2, coords_final[1]+260), f"{rrdata[f'player{count}']['name']}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
         count += 1
-  
+
       TINT_COLOR = (0, 0, 0)
       TRANSPARENCY = .50
       OPACITY = int(255 * TRANSPARENCY)
-  
+
       overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
       draw3 = ImageDraw.Draw(overlay)
-  
+
       draw3.rounded_rectangle((100, 100, 1400, 250), fill=TINT_COLOR + (OPACITY,), radius=20)
       img = Image.alpha_composite(img, overlay)
-  
+
       draw = ImageDraw.Draw(img)
       _, _, w, h = draw.textbbox((0, 0), f"""Waiting for players...""", font=ImageFont.truetype("images/assets/que.otf", 70))
       draw.text(((1500 - w) / 2, 150), f"""Waiting for players...""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=4)
@@ -1404,12 +1404,12 @@ class Join_rr(discord.ui.View):
       draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
 
       img.save(f"images/rr/{rrdata['player1']['id']}.png")
-      
+
       f = discord.File(f"{os.getcwd()}/images/rr/{rrdata['player1']['id']}.png", filename=f"{rrdata['player1']['id']}.png")
       embed = discord.Embed()
       embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
       embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
-      
+
       if self.joined >= 6:
         button.disabled = True
         await interaction.message.edit(embed=embed, view=Turns_rr(), file=f)
@@ -1492,7 +1492,7 @@ class Join_rr(discord.ui.View):
         embed = discord.Embed()
         embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
         embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
-        
+
         await interaction.message.edit(content=f"Forced to start by {interaction.user.mention}. Game Started.", embed=embed, view=Turns_rr(), file=f)
         await interaction.response.defer()
         return
@@ -1521,33 +1521,51 @@ class Join_rr(discord.ui.View):
         text_x_final = get_coords(count)[1]
 
         if rrdata.get(f"player{count}") is None:
-          asset = interaction.user.display_avatar
-          data = BytesIO(await asset.read())
-          player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
-          color = (30, 30, 30)
+          if interaction.user.id in all_ids:
+            outline = Image.new('RGBA', (262, 312), (30, 30, 30))
+            img.paste(smooth_corners(outline, 30), (get_coords(count)[0][0] - 6, get_coords(count)[0][1] - 6),
+                      smooth_corners(outline, 30))
+            unknown = Image.open("images/assets/rr/unknown.png").convert("RGBA").resize((250, 250))
+            img.paste(unknown, get_coords(count)[0], unknown)
+            count += 1
+            continue
+          else:
+            nmb = randint(0, 19)
+            url = "https://google-search83.p.rapidapi.com/google/search_image"
 
-          outline = Image.new('RGBA', (262, 312), color)
-          img.paste(smooth_corners(outline, 30), (coords_final[0] - 6, coords_final[1] - 6),
+            querystring = {"query": f"neco arc profile picture", "gl": "us", "lr": "en", "num": "1", "start": "0"}
+
+            headers = {
+              "X-RapidAPI-Key": "656579fde0msh1a659fc425536d6p163315jsn94162aa70de6",
+              "X-RapidAPI-Host": "google-search83.p.rapidapi.com"
+            }
+
+            googleresponse = requests.request("GET", url, headers=headers, params=querystring)
+
+            asset = requests.get(googleresponse.json()[nmb]['url'])
+            data = BytesIO(asset.content)
+            player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
+            color = (30, 30, 30)
+
+            outline = Image.new('RGBA', (262, 312), color)
+            img.paste(smooth_corners(outline, 30), (coords_final[0] - 6, coords_final[1] - 6),
                       smooth_corners(outline, 30))
 
-          img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
+            img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
 
-          draw = ImageDraw.Draw(img)
-          _, _, w, h = draw.textbbox((0, 0), f"{interaction.user.display_name}",
-                                       font=ImageFont.truetype("images/assets/que.otf", 40))
-          draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"{interaction.user.display_name}",
-                      (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0),
-                      stroke_width=4)
+            draw = ImageDraw.Draw(img)
+            _, _, w, h = draw.textbbox((0, 0), f"{interaction.user.display_name}", font=ImageFont.truetype("images/assets/que.otf", 40))
+            draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"{interaction.user.display_name}",(200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
 
-          all_ids.append('bot')
-          rrdata.update({'all_ids': all_ids})
-          rrdata.update({'player_count': int(rrdata['player_count']) + 1})
-          rrdata.update({'total_players': int(rrdata['total_players']) + 1})
-          self.joined += 1
-          rrdata.update({f'player{count}': {'id': 'bot', 'name': 'Bot', 'dead': False}})
-          update_db('minigames/rr', f"{interaction.message.id}", rrdata)
+            all_ids.append('bot')
+            rrdata.update({'all_ids': all_ids})
+            rrdata.update({'player_count': int(rrdata['player_count']) + 1})
+            rrdata.update({'total_players': int(rrdata['total_players']) + 1})
+            self.joined += 1
+            rrdata.update({f'player{count}': {'id': 'bot', 'name': "Bot", 'dead': False}})
+            update_db('minigames/rr', f"{interaction.message.id}", rrdata)
 
-          added_user = True
+            added_user = True
 
           # add empty places
           if get_coords(count + 1)[0][0] < 0:
@@ -1562,20 +1580,8 @@ class Join_rr(discord.ui.View):
             count += 1
             continue
         else:
-          nmb = randint(0, 19)
-          url = "https://google-search83.p.rapidapi.com/google/search_image"
-
-          querystring = {"query": f"neco arc profile picture", "gl": "us", "lr": "en", "num": "1", "start": "0"}
-
-          headers = {
-            "X-RapidAPI-Key": "656579fde0msh1a659fc425536d6p163315jsn94162aa70de6",
-            "X-RapidAPI-Host": "google-search83.p.rapidapi.com"
-          }
-
-          googleresponse = requests.request("GET", url, headers=headers, params=querystring)
-
-          asset = requests.get(googleresponse.json()[nmb]['url'])
-          data = BytesIO(asset.content)
+          asset = interaction.user.display_avatar
+          data = BytesIO(await asset.read())
           player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
 
         # check for color
@@ -1641,7 +1647,7 @@ class Join_rr(discord.ui.View):
         else:
           rrdata = get_db('minigames')['rr'][f'{self.message.id}']
           img = Image.open('images/assets/rr/rr_background.png').convert("RGBA")
-          
+
           turn = rrdata['turn']
           coords = (150, 300)
           count = 1
@@ -1665,7 +1671,7 @@ class Join_rr(discord.ui.View):
             asset = client.get_guild(self.message.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
             data = BytesIO(await asset.read())
             player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
-            
+
             #check for color
             if turn == count:
               color = (0, 150, 0)
@@ -1706,7 +1712,7 @@ class Join_rr(discord.ui.View):
           embed = discord.Embed()
           embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
           embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(self.message.guild.id)}")
-          
+
           await self.message.edit(embed=embed, view=Turns_rr(), file=f)
           msg = await self.ctx.send("Timed out, starting game...")
           await msg.delete(delay=3)
@@ -1721,7 +1727,7 @@ class Select_slash(discord.ui.View):
   def __init__(self):
     super().__init__(timeout=60)
     self.rps = ""
-  
+
   #server2 = client.get_guild(710840786853429319)
   #emoji = discord.utils.get(server2.emojis, name="stone")
   #emoji2 = discord.utils.get(server2.emojis, name="paper")
@@ -1753,12 +1759,12 @@ class Select_slash(discord.ui.View):
     sci = "<:scissors1:780724274762874890>"
     choose3 = random.choice(choose2)
     valre = val.replace("['", "")
-    val2 = valre.replace("']", "") 
+    val2 = valre.replace("']", "")
     userid = str(interaction.user.id)
     embeds = interaction.message.embeds
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     if userid in embeddict['footer']['text']:
       if "Rock" in val:
         if choose3 == "rock":
@@ -1853,34 +1859,34 @@ def checkwin(msg, symbol):
 
   if (f"1{symbol}" in value) and (f"2{symbol}" in value) and (f"3{symbol}" in value):
     return True
-    
+
   if (f"1{symbol}" in value) and (f"4{symbol}" in value) and (f"7{symbol}" in value):
     return True
-    
+
   if (f"1{symbol}" in value) and (f"5{symbol}" in value) and (f"9{symbol}" in value):
     return True
-    
+
   if (f"2{symbol}" in value) and (f"5{symbol}" in value) and (f"8{symbol}" in value):
     return True
 
   if (f"3{symbol}" in value) and (f"6{symbol}" in value) and (f"9{symbol}" in value):
     return True
-    
+
   if (f"3{symbol}" in value) and (f"5{symbol}" in value) and (f"7{symbol}" in value):
     return True
-    
+
   if (f"4{symbol}" in value) and (f"5{symbol}" in value) and (f"6{symbol}" in value):
     return True
 
   if (f"7{symbol}" in value) and (f"8{symbol}" in value) and (f"9{symbol}" in value):
     return True
-    
+
   return False
 
 class Tic(discord.ui.View):
   def __init__(self):
     super().__init__(timeout=180)
-    self.rps = ""    
+    self.rps = ""
 
   @discord.ui.button(label="1", style=discord.ButtonStyle.primary, custom_id="1", disabled=False, row=0)
   async def one(self, button, interaction):
@@ -1891,18 +1897,18 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
     if bet2 != "None":
       betcheck = True
-    
+
     desc = embeddict["description"]
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     symbol = "None"
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
@@ -1915,11 +1921,11 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
-    
+
     pattern = "disabled=False"
     comps2 = comps.split(" ")
     count = 0
@@ -1934,10 +1940,10 @@ class Tic(discord.ui.View):
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
 
-    turn = interaction.guild.get_member(int(desc3)) 
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -1973,7 +1979,7 @@ class Tic(discord.ui.View):
       button.style = discord.ButtonStyle.gray
       await interaction.message.edit(embed=final, content=None, view=self)
       await interaction.response.defer()
-  
+
   @discord.ui.button(label="2", style=discord.ButtonStyle.primary, custom_id="2", disabled=False, row=0)
   async def two(self, button, interaction):
     val = str(button.label)
@@ -1983,18 +1989,18 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
     if bet2 != "None":
       betcheck = True
-    
+
     desc = embeddict["description"]
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
       desc3 = footerpre2.split("┅\n<@", 1)[1].lstrip().split('> ⋙ **`0`**')[0]
@@ -2006,11 +2012,11 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
-    
+
     pattern = "disabled=False"
     comps2 = comps.split(" ")
     count = 0
@@ -2025,10 +2031,10 @@ class Tic(discord.ui.View):
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
 
-    turn = interaction.guild.get_member(int(desc3)) 
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -2073,7 +2079,7 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
@@ -2084,7 +2090,7 @@ class Tic(discord.ui.View):
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
       desc3 = footerpre2.split("┅\n<@", 1)[1].lstrip().split('> ⋙ **`0`**')[0]
@@ -2096,7 +2102,7 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
@@ -2114,11 +2120,11 @@ class Tic(discord.ui.View):
     value2 = value.split(f"{small_to_big(numbers[val2])}", 1)[1].lstrip().split('-')[0]
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
-    
-    turn = interaction.guild.get_member(int(desc3)) 
+
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -2152,7 +2158,7 @@ class Tic(discord.ui.View):
       button.style = discord.ButtonStyle.gray
       await interaction.message.edit(embed=final, content=None, view=self)
       await interaction.response.defer()
-  
+
   @discord.ui.button(label="4", style=discord.ButtonStyle.primary, custom_id="4", disabled=False, row=1)
   async def four(self, button, interaction):
     val = str(button.label)
@@ -2162,7 +2168,7 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
@@ -2173,7 +2179,7 @@ class Tic(discord.ui.View):
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
       desc3 = footerpre2.split("┅\n<@", 1)[1].lstrip().split('> ⋙ **`0`**')[0]
@@ -2185,11 +2191,11 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
-    
+
     pattern = "disabled=False"
     comps2 = comps.split(" ")
     count = 0
@@ -2204,10 +2210,10 @@ class Tic(discord.ui.View):
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
 
-    turn = interaction.guild.get_member(int(desc3)) 
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -2241,7 +2247,7 @@ class Tic(discord.ui.View):
       button.style = discord.ButtonStyle.gray
       await interaction.message.edit(embed=final, content=None, view=self)
       await interaction.response.defer()
-  
+
   @discord.ui.button(label="5", style=discord.ButtonStyle.primary, custom_id="5", disabled=False, row=1)
   async def five(self, button, interaction):
     val = str(button.label)
@@ -2251,7 +2257,7 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
@@ -2262,7 +2268,7 @@ class Tic(discord.ui.View):
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
       desc3 = footerpre2.split("┅\n<@", 1)[1].lstrip().split('> ⋙ **`0`**')[0]
@@ -2274,11 +2280,11 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
-    
+
     pattern = "disabled=False"
     comps2 = comps.split(" ")
     count = 0
@@ -2293,10 +2299,10 @@ class Tic(discord.ui.View):
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
 
-    turn = interaction.guild.get_member(int(desc3)) 
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -2330,7 +2336,7 @@ class Tic(discord.ui.View):
       button.style = discord.ButtonStyle.gray
       await interaction.message.edit(embed=final, content=None, view=self)
       await interaction.response.defer()
-  
+
   @discord.ui.button(label="6", style=discord.ButtonStyle.primary, custom_id="6", disabled=False, row=1)
   async def six(self, button, interaction):
     val = str(button.label)
@@ -2340,7 +2346,7 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
@@ -2351,7 +2357,7 @@ class Tic(discord.ui.View):
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
       desc3 = footerpre2.split("┅\n<@", 1)[1].lstrip().split('> ⋙ **`0`**')[0]
@@ -2363,11 +2369,11 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
-    
+
     pattern = "disabled=False"
     comps2 = comps.split(" ")
     count = 0
@@ -2382,10 +2388,10 @@ class Tic(discord.ui.View):
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
 
-    turn = interaction.guild.get_member(int(desc3)) 
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -2419,7 +2425,7 @@ class Tic(discord.ui.View):
       button.style = discord.ButtonStyle.gray
       await interaction.message.edit(embed=final, content=None, view=self)
       await interaction.response.defer()
-  
+
   @discord.ui.button(label="7", style=discord.ButtonStyle.primary, custom_id="7", disabled=False, row=2)
   async def seven(self, button, interaction):
     val = str(button.label)
@@ -2429,7 +2435,7 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
@@ -2440,7 +2446,7 @@ class Tic(discord.ui.View):
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
       desc3 = footerpre2.split("┅\n<@", 1)[1].lstrip().split('> ⋙ **`0`**')[0]
@@ -2452,11 +2458,11 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
-    
+
     pattern = "disabled=False"
     comps2 = comps.split(" ")
     count = 0
@@ -2471,10 +2477,10 @@ class Tic(discord.ui.View):
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
 
-    turn = interaction.guild.get_member(int(desc3)) 
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -2508,7 +2514,7 @@ class Tic(discord.ui.View):
       button.style = discord.ButtonStyle.gray
       await interaction.message.edit(embed=final, content=None, view=self)
       await interaction.response.defer()
-  
+
   @discord.ui.button(label="8", style=discord.ButtonStyle.primary, custom_id="8", disabled=False, row=2)
   async def eight(self, button, interaction):
     val = str(button.label)
@@ -2518,7 +2524,7 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
@@ -2529,7 +2535,7 @@ class Tic(discord.ui.View):
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
       desc3 = footerpre2.split("┅\n<@", 1)[1].lstrip().split('> ⋙ **`0`**')[0]
@@ -2541,11 +2547,11 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
-    
+
     pattern = "disabled=False"
     comps2 = comps.split(" ")
     count = 0
@@ -2560,10 +2566,10 @@ class Tic(discord.ui.View):
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
 
-    turn = interaction.guild.get_member(int(desc3)) 
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -2598,7 +2604,7 @@ class Tic(discord.ui.View):
       button.style = discord.ButtonStyle.gray
       await interaction.message.edit(embed=final, content=None, view=self)
       await interaction.response.defer()
-  
+
   @discord.ui.button(label="9", style=discord.ButtonStyle.primary, custom_id="9", disabled=False, row=2)
   async def nine(self, button, interaction):
     val = str(button.label)
@@ -2608,7 +2614,7 @@ class Tic(discord.ui.View):
     comps = str(interaction.message.components)
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: **`')[1].lstrip().split('`**')[0]
     betcheck = False
@@ -2619,7 +2625,7 @@ class Tic(discord.ui.View):
     footer = embeddict["footer"]
     footerpre = str(footer)[-3]
     footer2 = footerpre.replace(f"{footerpre}", f"{int(footerpre) + 1}")
-    
+
     footerpre2 = str(desc).replace("!", "")
     if (float(footer2) % 2) == 0:
       desc3 = footerpre2.split("┅\n<@", 1)[1].lstrip().split('> ⋙ **`0`**')[0]
@@ -2631,7 +2637,7 @@ class Tic(discord.ui.View):
       desc3 = footerpre2.split("<@", 1)[1].lstrip().split('> ⋙ **`X`**')[0]
       desc2 = str(desc).replace(numbers[val2], "0")
       symbol = "0"
-    
+
     if int(lastturn) != interaction.user.id:
       await interaction.response.defer()
       return
@@ -2649,11 +2655,11 @@ class Tic(discord.ui.View):
     value2 = value.split(f"{small_to_big(numbers[val2])}", 1)[1].lstrip().split('-')[0]
     value3 = value.replace(f"{small_to_big(numbers[val2])}{value2}", f"{small_to_big(numbers[val2])}{symbol}")
     update_db('minigames', 'ttt', {f"{interaction.message.id}": f"{value3}"})
-    
-    turn = interaction.guild.get_member(int(desc3)) 
+
+    turn = interaction.guild.get_member(int(desc3))
     desc3a = str(desc).split("...", 1)[0]
     desc3 = desc2.replace(f"{desc3a}", f"```fix\nWaiting for {turn.display_name}")
-    
+
     final = discord.Embed(description=f"{desc3}")
     final.set_footer(text=f"Turn number: {footer2}")
     if checkwin(str(interaction.message.id), symbol):
@@ -2687,20 +2693,20 @@ class Tic(discord.ui.View):
       button.style = discord.ButtonStyle.gray
       await interaction.message.edit(embed=final, content=None, view=self)
       await interaction.response.defer()
-    
+
 class Join_TTT(discord.ui.View):
   def __init__(self, user, author):
     super().__init__(timeout=60)
     self.value = 0
     self.user = user
     self.author = author
-  
+
   @discord.ui.button(label="Join TTT game", style=discord.ButtonStyle.green, custom_id="Join")
   async def join(self, button, interaction):
     embeds = interaction.message.embeds
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     footer = embeddict['footer']['text']
     bet = str(embeddict['description'])
     bet2 = bet.split('Bet: ')[1]
@@ -2708,7 +2714,7 @@ class Join_TTT(discord.ui.View):
     if self.value == 1:
       if str(interaction.user.id) == self.user:
         author2 = interaction.guild.get_member(int(self.author))
-          
+
         random = randint(1, 2)
         if random == 1:
           first = author2
@@ -2716,7 +2722,7 @@ class Join_TTT(discord.ui.View):
         else:
           first = interaction.user
           second = author2
-      
+
         view = Tic()
         embed = discord.Embed(description=f"""```fix\nWaiting for {first.display_name}...```\nCurrent Bet: {bet2} {check_currency(interaction.guild.id)}\n
 ```ml
@@ -2740,7 +2746,7 @@ class Join_TTT(discord.ui.View):
     embeds = interaction.message.embeds
     for embed in embeds:
       embeddict = embed.to_dict()
-    
+
     footer = embeddict['footer']['text']
     bet = str(embeddict['description'])
     bet2 = bet.split('Current')[1]
@@ -2753,7 +2759,7 @@ class Join_TTT(discord.ui.View):
       else:
         self.value = 0
         return
-  
+
   async def on_timeout(self):
     for child in self.children:
       child.disabled = True
@@ -2790,8 +2796,8 @@ class Slash(commands.Cog):
     ### internally disabled ###
     if ctx.author.id != int(ses):
       raise discord.ext.commands.CommandError(f"Sorry, this command is currently internally disabled, as it is being worked on.")
-  
-  
+
+
   @slash_command(name="print", description="Print any image you want. 5 Minute Cooldown, Forced ephemeral.")
   async def print(self, ctx, *, input:Option(str, "Anything you want to search on google.", required=True)):
     cooldown = False
@@ -2814,18 +2820,18 @@ class Slash(commands.Cog):
         embed.set_footer(text=f'{client.user.name}', icon_url=client.user.avatar)
         await channel.send(embed=embed, content=None)
         pass
-      
+
       await ctx.defer(ephemeral=True)
       nmb = randint(0, 19)
       url = "https://google-search83.p.rapidapi.com/google/search_image"
 
       querystring = {"query":f"{input}","gl":"us","lr":"en","num":"1","start":"0"}
-      
+
       headers = {
       	"X-RapidAPI-Key": "656579fde0msh1a659fc425536d6p163315jsn94162aa70de6",
       	"X-RapidAPI-Host": "google-search83.p.rapidapi.com"
       }
-      
+
       googleresponse = requests.request("GET", url, headers=headers, params=querystring)
       res2 = googleresponse.json()[nmb]['url']
       finalembed = discord.Embed(description=f"Searched for **`{input}`**.\nEntry Number: `{nmb}`")
@@ -2836,7 +2842,7 @@ class Slash(commands.Cog):
     else:
       finalembed = discord.Embed(description=f"You're on Cooldown.\n```\nTime left: {value} seconds.```")
       await ctx.respond(embed=finalembed, content=None, ephemeral=True)
-    
+
   @commands.command(aliases=["russianroulette", "russian", "roulette"])
   @commands.before_invoke(disabled_check)
   @commands.cooldown(1, 120, commands.BucketType.guild)
@@ -2896,7 +2902,7 @@ class Slash(commands.Cog):
     _, _, w, h = draw.textbbox((0, 0), f"""=== Russian Roulette ===""", font=ImageFont.truetype("images/assets/que.otf", 80))
     draw.text(((1500 - w) / 2, 20), f"""=== Russian Roulette ===""", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 80), stroke_fill=(0, 0, 0), stroke_width=4)
 
-    
+
     embed = discord.Embed()
     try:
       firstvalue = get_db('users')[f'{ctx.author.id}']['score']
@@ -2921,7 +2927,7 @@ class Slash(commands.Cog):
 
     img.save(f"images/rr/{ctx.author.id}.png")
     f = discord.File(f"{os.getcwd()}/images/rr/{ctx.author.id}.png", filename=f"{ctx.author.id}.png")
-      
+
     join = Join_rr(ctx)
     embed.set_footer(text=f"Current Bet: {bet} {check_currency(ctx.guild.id)}")
     embed.set_image(url=f"attachment://{ctx.author.id}.png")
@@ -2982,8 +2988,8 @@ class Slash(commands.Cog):
             return
         else:
           bet = 0
-          
-      
+
+
         asset = ctx.author.display_avatar
         data = BytesIO(await asset.read())
         player1_pfp = Image.open(data).convert("RGBA").resize((300, 300))
@@ -2991,12 +2997,12 @@ class Slash(commands.Cog):
         TINT_COLOR = (0, 0, 0)
         TRANSPARENCY = .50
         OPACITY = int(255 * TRANSPARENCY)
-        
+
         img = Image.open('images/assets/backgrounds/rps_background.png').convert("L")
         black = randint(0, 200), randint(0, 20), randint(0, 200)
         img = ImageOps.colorize(img, black=black, white="white")
         img = img.convert("RGBA")
-        
+
         outline = Image.new('RGBA', (302, 302), (30, 30, 30))
         img.paste(smooth_corners(outline, 30), (59, 299), smooth_corners(outline, 30))
         outline = Image.new('RGBA', (302, 302), (30, 30, 30))
@@ -3030,15 +3036,15 @@ class Slash(commands.Cog):
 
         img.save(f"images/rps/{ctx.author.id}.png")
         f = discord.File(f"{os.getcwd()}/images/rps/{ctx.author.id}.png", filename="{ctx.author.id}.png")
-        
+
         embed = discord.Embed(description=f"Waiting for {user.mention} to join...\nCurrent Bet: **`{bet}`** **`{check_currency(ctx.guild.id)}`**")
         embed.set_image(url=f"attachment://{ctx.author.id}.png")
         mesid = await ctx.send(embed=embed, view=Join(), file=f)
 
         update_db("minigames/rps", f"{mesid.id}", {"player1": {"id": f"{ctx.author.id}", "name": f"{ctx.author.display_name}", "pick": "None", "points": 0}, "player2": {"id": f"{user.id}", "name": f"{user.display_name}", "pick": "None", "points": 0}, "bet": f"{bet}"})
         return
-        
-  
+
+
   @commands.command()
   @commands.before_invoke(disabled_check)
   @commands.cooldown(1, 30, commands.BucketType.guild)
