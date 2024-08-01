@@ -1305,7 +1305,7 @@ class Join_rr(discord.ui.View):
       return
 
     if interaction.user.id not in rrdata['all_ids']:
-      img = Image.open(f'images/rr/{interaction.user.id}.png').convert("RGBA")
+      img = Image.open(f'images/rr/{rrdata["player1"]["id"]}.png').convert("RGBA")
 
       coords_final = get_coords(int(rrdata['total_players']) + 1)[0]
       text_x_final = get_coords(int(rrdata['total_players']) + 1)[1]
@@ -1374,7 +1374,7 @@ class Join_rr(discord.ui.View):
             img.paste(unknown, coords_final, unknown)
             count += 1
             continue
-          
+
           if rrdata[f'player{count}']['id'] == "bot":
             asset = requests.get(rrdata[f'player{count}']['avatar_url'])
             data = BytesIO(asset.content)
