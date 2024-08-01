@@ -1292,7 +1292,7 @@ class Turns_rr(discord.ui.View):
 
 class Join_rr(discord.ui.View):
   def __init__(self, ctx):
-    super().__init__(timeout=120)
+    super().__init__(timeout=None)
     self.joined = 1
     self.value = "Timed out."
     self.ctx = ctx
@@ -1506,7 +1506,7 @@ class Join_rr(discord.ui.View):
       return
 
     if interaction.user.id == int(rrdata['player1']['id']):
-      img = Image.open(f'images/rr/{interaction.user.id}').convert("RGBA")
+      img = Image.open(f'images/rr/{interaction.user.id}.png').convert("RGBA")
 
       coords_final = get_coords(int(rrdata['total_players']) + 1)[0]
       text_x_final = get_coords(int(rrdata['total_players']) + 1)[1]
