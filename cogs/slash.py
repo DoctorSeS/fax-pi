@@ -1090,14 +1090,8 @@ class Turns_rr(discord.ui.View):
       embed.set_footer(text=f"Total Turns: {int(rrdata['total_turns']) + 1}\nCurrent Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
       if winner == 0:
         if rrdata[f'player{next_turn}']['id'] == "bot":
-          time.sleep(2)
-          random_shoot = 1
-          fake_interaction = None
-          button = None
-          if random_shoot == 1:
-            await self.shoot.callback(button, fake_interaction)
-          else:
-            await self.spinshoot.callback(button, fake_interaction)
+          await asyncio.sleep(2)
+          await self.handle_bot_action(next_turn, interaction)
 
         else:
           await interaction.message.edit(content=None, embed=embed, view=Turns_rr(), file=f)
@@ -1300,6 +1294,15 @@ class Turns_rr(discord.ui.View):
         await interaction.response.defer()
       except:
         return
+
+  async def handle_bot_action(self, turn, interaction):
+    current_player = f"player{turn}"
+    random_shoot = 1
+
+    if random_shoot == 1:
+      await self.shoot(self, self.shoot, interaction)
+    else:
+      await self.spinshoot(self, self.spinshoot, interaction)
 
 class Join_rr(discord.ui.View):
   def __init__(self):
