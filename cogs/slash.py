@@ -886,6 +886,9 @@ def give_to_winner(winner, all_ids, bet):
     except:
       continue
     else:
+      if x == 'bot':
+        continue
+
       if x == winner:
         score_final = round(float(score + bet*(len(all_ids)-1)), 2)
         update_db(f'users', f"{x}", {"score": score_final})
@@ -896,6 +899,15 @@ def give_to_winner(winner, all_ids, bet):
 class Turns_rr(discord.ui.View):
   def __init__(self):
     super().__init__(timeout=None)
+
+  async def handle_bot_action(self, interaction):
+    current_player = f"player{turn}"
+    random_shoot = 1
+
+    if random_shoot == 1:
+      await self.shoot(self, None, interaction)
+    else:
+      await self.spinshoot(self, self.spinshoot, interaction)
 
   @discord.ui.button(label="Shoot", style=discord.ButtonStyle.gray, custom_id="shoot", disabled=False)
   async def shoot(self, button, interaction):
@@ -1091,7 +1103,7 @@ class Turns_rr(discord.ui.View):
       if winner == 0:
         if rrdata[f'player{next_turn}']['id'] == "bot":
           await asyncio.sleep(2)
-          await self.handle_bot_action(next_turn, interaction)
+          await self.handle_bot_action(interaction)
 
         else:
           await interaction.message.edit(content=None, embed=embed, view=Turns_rr(), file=f)
@@ -1099,7 +1111,6 @@ class Turns_rr(discord.ui.View):
         self.spinshoot.disabled = True
         button.disabled = True
         await interaction.message.edit(content=None, embed=embed, view=self, file=f)
-
 
   @discord.ui.button(label="Spin & Shoot", style=discord.ButtonStyle.gray, custom_id="spinshoot", disabled=False)
   async def spinshoot(self, button, interaction):
@@ -1294,15 +1305,6 @@ class Turns_rr(discord.ui.View):
         await interaction.response.defer()
       except:
         return
-
-  async def handle_bot_action(self, turn, interaction):
-    current_player = f"player{turn}"
-    random_shoot = 1
-
-    if random_shoot == 1:
-      await self.shoot(self, self.shoot, interaction)
-    else:
-      await self.spinshoot(self, self.spinshoot, interaction)
 
 class Join_rr(discord.ui.View):
   def __init__(self):
