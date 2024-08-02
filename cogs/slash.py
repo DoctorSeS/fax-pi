@@ -903,7 +903,7 @@ class Turns_rr(discord.ui.View):
     turn = rrdata['turn']
     next_turn = turn + 1
 
-    if interaction.user.id == rrdata[f'player{turn}']['id']:
+    if (interaction.user.id == rrdata[f'player{turn}']['id']) or (rrdata[f'player{turn}']['id'] == "bot"):
       embed_color = discord.Color.dark_theme()
 
       if rrdata.get(f"bullet") is None:
@@ -954,8 +954,13 @@ class Turns_rr(discord.ui.View):
           count += 1
           continue
 
-        asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
-        data = BytesIO(await asset.read())
+        if rrdata[f'player{count}']['id'] == "bot":
+          asset = requests.get(rrdata[f'player{count}']['avatar_url'])
+          data = BytesIO(asset.content)
+        else:
+          asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{count}']['id'])).display_avatar
+          data = BytesIO(await asset.read())
+
         player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
 
         if rrdata[f'player{count}']['dead'] is True:
@@ -1038,8 +1043,13 @@ class Turns_rr(discord.ui.View):
 
       outline = Image.new('RGBA', (262, 312), color)
 
-      asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{next_turn}']['id'])).display_avatar
-      data = BytesIO(await asset.read())
+      if rrdata[f'player{next_turn}']['id'] == "bot":
+        asset = requests.get(rrdata[f'player{next_turn}']['avatar_url'])
+        data = BytesIO(asset.content)
+      else:
+        asset = client.get_guild(interaction.guild.id).get_member(int(rrdata[f'player{next_turn}']['id'])).display_avatar
+        data = BytesIO(await asset.read())
+
       player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
 
       img.paste(smooth_corners(outline, 30), (get_coords(next_turn)[0][0]-6, get_coords(next_turn)[0][1]-6), smooth_corners(outline, 30))
@@ -1079,7 +1089,16 @@ class Turns_rr(discord.ui.View):
       embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
       embed.set_footer(text=f"Total Turns: {int(rrdata['total_turns']) + 1}\nCurrent Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
       if winner == 0:
-        await interaction.message.edit(content=None, embed=embed, view=Turns_rr(), file=f)
+        if rrdata[f'player{next_turn}']['id'] == "bot":
+          time.sleep(2)
+          random_shoot = 1
+          if random_shoot == 1:
+            await self.shoot.callback(self.shoot, interaction=None)
+          else:
+            await self.spinshoot.callback(self.spinshoot, interaction=None)
+
+        else:
+          await interaction.message.edit(content=None, embed=embed, view=Turns_rr(), file=f)
       else:
         self.spinshoot.disabled = True
         button.disabled = True
@@ -1312,6 +1331,7 @@ class Join_rr(discord.ui.View):
       count = int(rrdata['total_players']) + 1
 
       if count >= 6:
+        self.add_bot.disabled = True
         button.disabled = True
 
       asset = interaction.user.display_avatar
@@ -1325,8 +1345,8 @@ class Join_rr(discord.ui.View):
       img.paste(smooth_corners(player_pfp, 30), coords_final, smooth_corners(player_pfp, 30))
 
       draw = ImageDraw.Draw(img)
-      _, _, w, h = draw.textbbox((0, 0), f"Bot", font=ImageFont.truetype("images/assets/que.otf", 40))
-      draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"Bot", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
+      _, _, w, h = draw.textbbox((0, 0), f"{interaction.user.display_name}", font=ImageFont.truetype("images/assets/que.otf", 40))
+      draw.text(((text_x_final - w) / 2, coords_final[1] + 260), f"{interaction.user.display_name}", (200, 200, 200), font=ImageFont.truetype("images/assets/que.otf", 40), stroke_fill=(0, 0, 0), stroke_width=4)
 
       rrdata.update({'all_ids': rrdata['all_ids'].append(interaction.user.id)})
       rrdata.update({'player_count': int(rrdata['player_count']) + 1})
@@ -1446,6 +1466,7 @@ class Join_rr(discord.ui.View):
 
       if count >= 6:
         button.disabled = True
+        self.join.disabled = True
 
       cprint("reached else", 'green')
       nmb = randint(0, 19)
