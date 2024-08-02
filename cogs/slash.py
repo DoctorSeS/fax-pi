@@ -1092,10 +1092,11 @@ class Turns_rr(discord.ui.View):
         if rrdata[f'player{next_turn}']['id'] == "bot":
           time.sleep(2)
           random_shoot = 1
+          fake_interaction = None
           if random_shoot == 1:
-            await self.shoot.callback(self.shoot, interaction=None)
+            await self.shoot.callback(self.shoot, fake_interaction)
           else:
-            await self.spinshoot.callback(self.spinshoot, interaction=None)
+            await self.spinshoot.callback(self.spinshoot, fake_interaction)
 
         else:
           await interaction.message.edit(content=None, embed=embed, view=Turns_rr(), file=f)
@@ -1469,7 +1470,6 @@ class Join_rr(discord.ui.View):
         self.join.disabled = True
 
       cprint("reached else", 'green')
-      nmb = randint(0, 19)
       url = "https://google-search83.p.rapidapi.com/google/search_image"
 
       pfp_to_search = ["neco arc", 'neco arc profile picture', 'neco arc chaos', 'neco arc chaos pfp', 'kratos face', 'neco arc face']
@@ -1482,8 +1482,17 @@ class Join_rr(discord.ui.View):
 
       googleresponse = requests.request("GET", url, headers=headers, params=querystring)
 
-      asset = requests.get(googleresponse.json()[nmb]['url'])
-      data = BytesIO(asset.content)
+      data = None
+      while data is None:
+        nmb = randint(0, 19)
+        try:
+          asset = requests.get(googleresponse.json()[nmb]['url'])
+          data = BytesIO(asset.content)
+        except:
+          continue
+        else:
+          break
+
       player_pfp = Image.open(data).convert("RGBA").resize((250, 250))
       color = (30, 30, 30)
 
