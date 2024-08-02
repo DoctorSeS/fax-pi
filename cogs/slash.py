@@ -1093,10 +1093,11 @@ class Turns_rr(discord.ui.View):
           time.sleep(2)
           random_shoot = 1
           fake_interaction = None
+          button = None
           if random_shoot == 1:
-            await self.shoot.callback(self.shoot, fake_interaction)
+            await self.shoot.callback(button, fake_interaction)
           else:
-            await self.spinshoot.callback(self.spinshoot, fake_interaction)
+            await self.spinshoot.callback(button, fake_interaction)
 
         else:
           await interaction.message.edit(content=None, embed=embed, view=Turns_rr(), file=f)
@@ -1104,16 +1105,6 @@ class Turns_rr(discord.ui.View):
         self.spinshoot.disabled = True
         button.disabled = True
         await interaction.message.edit(content=None, embed=embed, view=self, file=f)
-      try:
-        await interaction.response.defer()
-      except:
-        return
-
-    else:
-      try:
-        await interaction.response.defer()
-      except:
-        return
 
 
   @discord.ui.button(label="Spin & Shoot", style=discord.ButtonStyle.gray, custom_id="spinshoot", disabled=False)
@@ -1364,7 +1355,6 @@ class Join_rr(discord.ui.View):
       embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
 
       await interaction.message.edit(embed=embed, content=None, view=self, file=f)
-      await interaction.response.defer()
 
   @discord.ui.button(label="Start", style=discord.ButtonStyle.green, custom_id="ForceStart", disabled=False)
   async def fs(self, button, interaction):
@@ -1447,8 +1437,6 @@ class Join_rr(discord.ui.View):
         embed.set_footer(text=f"Current Bet: {rrdata['bet']} {check_currency(interaction.guild.id)}")
 
         await interaction.message.edit(content=f"Game Started.", embed=embed, view=Turns_rr(), file=f)
-        await interaction.response.defer()
-        return
     else:
       return
 
@@ -1522,7 +1510,6 @@ class Join_rr(discord.ui.View):
       embed.set_image(url=f"attachment://{rrdata['player1']['id']}.png")
 
       await interaction.message.edit(embed=embed, content=None, view=self, file=f)
-      await interaction.response.defer()
 
 class Select_slash(discord.ui.View):
   def __init__(self):
