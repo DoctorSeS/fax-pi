@@ -1,17 +1,11 @@
 from discord.ext import commands, tasks
 import discord
-import logging
-import traceback
-import asyncio
 from random import randint
 from main import client, bot_prefix, round_time, ses, currency
-import fileinput
-import os
-from termcolor import cprint
-import urllib.request
 from discord.ui import InputText, Modal
 from cogs.score import check_currency, check_folder
 from database import *
+from termcolor import cprint
 
 no_badge_emoji = "<:no_badge:1138943658469634171>"
 badge_emojies = {

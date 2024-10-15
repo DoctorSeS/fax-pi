@@ -1,30 +1,23 @@
 from discord.ext import commands, tasks
 import discord
-import logging
-import traceback
-import asyncio
 import datetime
-import random
-from random import randint
-from main import client, bot_prefix, round_time, ses, currency, red, green, caught_message
-import fileinput
-from cogs.slash import guild_ids
-from discord.commands import slash_command
-from discord import Option
+
+from cogs.events import check_logs
+from main import client
 from termcolor import cprint
 import patreon
-import sys
-import os
-import glob
 from database import *
 
 
 def check_patreon():
   access_token = os.environ.get("PATREON_KEY")
   api_client = patreon.API(access_token)
-  
   # get the campaign ID
   campaign_response = api_client.fetch_campaign()
+  if "The server could not verify" in str(campaign_response):
+    print('PATREON API KEY EXPIRED, PLEASE REFRESH KEY AT https://www.patreon.com/portal/registration/register-clients')
+    return
+
   campaign_id = campaign_response.data()[0].id()
   
   all_pledges = []
@@ -77,7 +70,7 @@ class Timers(commands.Cog):
   async def patreon_check(self):
     check_patreon()
 
-  @tasks.loop(minutes=10)
+  @tasks.loop(hours=1)
   async def check_files(self):
     files = []
     dir_path = ["images/assets/backgrounds/simple", "images/assets/backgrounds/complex", "images/assets/backgrounds/very complex", "images/assets/backgrounds/special"]
@@ -89,7 +82,7 @@ class Timers(commands.Cog):
     files.append('default')
     update_db('misc', 'none', {"background_files": files})
 
-  @tasks.loop(minutes=10)
+  @tasks.loop(hours=1)
   async def check_changes(self):
     files = list(get_db('misc')['background_files'])
     bgs = get_db('misc')['shop']['backgrounds']
@@ -116,15 +109,17 @@ class Timers(commands.Cog):
               name = name + " " + word
         else:
           name = x.capitalize()
-          
-        cprint(f"File missing from Database: {path}/{x}", "red")
-        bgs[path]["name"].append(name)
-        bgs[path]["filename"].append(x)
 
-        update_db('misc/shop', 'backgrounds', bgs)
-        self.client.reload_extension(f'cogs.shop')
-        cprint(f"Background {name} has be added to the database.", "green")
-    
+        if "default" in x:
+          return
+        else:
+          cprint(f"File missing from Database: {path}/{x}", "red")
+          bgs[path]["name"].append(name)
+          bgs[path]["filename"].append(x)
+
+          update_db('misc/shop', 'backgrounds', bgs)
+          self.client.reload_extension(f'cogs.shop')
+          cprint(f"Background {name} has be added to the database.", "green")
 
   @tasks.loop(hours=2)
   async def inactive_check(self):
@@ -165,7 +160,7 @@ class Timers(commands.Cog):
           role = guild.get_role(supporter_role)
           await user.add_roles(role, atomic=True)
 
-  @tasks.loop(seconds=30)
+  @tasks.loop(seconds=20)
   async def timers(self):
     all_timers = get_db('timers')
     current = datetime.datetime.now()
@@ -214,7 +209,21 @@ class Timers(commands.Cog):
         elif "TimerRep-" in value3:
           x2 = value3.replace("TimerRep-", "")
           del_db("timers", f"TimerRep-{x2}")
-            
+
+        elif "TimerBan-" in value3:
+          x2 = value3.replace("TimerBan-", "")
+          del_db("timers", f"TimerBan-{x2}")
+
+          member_id = x2.split('/')[0]
+          guild_id = x2.split('/')[1]
+
+          if check_logs(guild_id)[0] is True:
+            chan = check_logs(guild_id)[1]
+            channel = client.get_guild(guild_id).get_channel(int(chan))
+            user = client.get_user(member_id)
+            embed2 = discord.Embed(description=f"**{user.mention} has been unbanned.**\n\n`Reason:` Temporary Ban Expired.", color=discord.Color.from_rgb(r=0, g=255, b=0))
+            embed2.set_author(name=f"{user.name} • ID: {user.id}", icon_url=user.avatar)
+            await channel.send(embed=embed2, content=None)
 
 
 def setup(client):

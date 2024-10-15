@@ -88,7 +88,6 @@ embed5.add_field(name=f"{bot_prefix}ses `None`", value="The bot's owner.")
 embed5.add_field(name=f"{bot_prefix}cats `30`", value="Cats.")
 embed5.add_field(name=f"{bot_prefix}monkey `30`", value="Monkeys.")
 embed5.add_field(name=f"{bot_prefix}suggest `120`", value="Suggest an idea for the bot.")
-embed5.add_field(name=f"{bot_prefix}random `10`", value=f"Roll between 2 numbers. Invoke with no argument to roll 1-6.")
 embed5.set_footer(text=footer + "\nPage 5/5")
 embed5.set_thumbnail(url=faxpfp)
 
@@ -96,7 +95,7 @@ embed5.set_thumbnail(url=faxpfp)
 footer3 = """The Permissions required to invoke the command are listed after the command itself, just as the cooldowns on the member tab.\nAll commands can be disabled."""
 
 mod1 = discord.Embed(title=f"Help with {faxname}", description="`Moderator Commands:`\n **`Member-Based`**", color=discord.Color.dark_green())
-mod1.add_field(name=f"{bot_prefix}ban/{bot_prefix}unban\n`Ban Members`", value="Ban/Unban someone.")
+mod1.add_field(name=f"{bot_prefix}ban/{bot_prefix}unban\n`Ban Members`", value="(Temporary) Ban/Unban someone.")
 mod1.add_field(name=f"{bot_prefix}kick\n`Kick Members`", value="Kick someone.")
 mod1.add_field(name=f"{bot_prefix}members\n`Manage Messages`", value="Member count.")
 mod1.set_footer(text=footer3 + "\nPage 1/3")

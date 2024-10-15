@@ -184,7 +184,7 @@ class Confirm(discord.ui.View):
       embed = discord.Embed(description="Cancelled request.")
       await interaction.message.edit(embed=embed, content=None, view=None)
       return
-  
+
 class Owner(commands.Cog):
   def __init__(self, client):
     self.client = client
@@ -359,7 +359,6 @@ class Owner(commands.Cog):
       await asyncio.sleep(2)
       await channel.send(say)
       await ctx.send(embed=embed, content=None)
-      
 
   @commands.command(aliases=["search"])
   @commands.is_owner()
@@ -499,7 +498,6 @@ class Owner(commands.Cog):
     await shut.edit(embed=embed3, content=None, delete_after=20)
     await msg.delete()
     await guild.leave()
-
 
   @commands.command()
   @commands.is_owner()

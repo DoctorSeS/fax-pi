@@ -250,11 +250,11 @@ class ai_first_select(discord.ui.View):
       await interaction.message.edit(embed=embed, view=categories_before(self.ctx, options))
       await interaction.response.defer()
 
-async def on_timeout(self):
-  for child in self.children:
-    child.disabled = True
-  else:
-    await self.message.edit(view=self, content="Timed out.") 
+  async def on_timeout(self):
+    for child in self.children:
+      child.disabled = True
+    else:
+      await self.message.edit(view=self, content="Timed out.")
 
 class Currency_Choice(discord.ui.View):
   def __init__(self, response):

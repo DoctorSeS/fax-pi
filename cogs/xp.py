@@ -40,7 +40,10 @@ class Xp(commands.Cog):
       if not message.author.bot:
 
         #auto patreon #
-        patron_check = list(get_db('misc')['all_patrons'])
+        try:
+          patron_check = list(get_db('misc')['all_patrons'])
+        except:
+          patron_check = []
         if str(message.author.id) in patron_check:
           pledge = get_db('misc')['all_patrons'][f'{message.author.id}']['pledge']
           if pledge == 1000:

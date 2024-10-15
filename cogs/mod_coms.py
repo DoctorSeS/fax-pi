@@ -350,21 +350,50 @@ class Mod_coms(commands.Cog):
               await asyncio.sleep(2)
               await channel.send(f'{say}')
 
-  @commands.command()
+  @commands.command(aliases=['tempban'])
   @commands.before_invoke(disabled_check)
   @commands.has_permissions(ban_members=True)
-  async def ban(self, ctx, member: discord.Member, *, reason=None):
+  async def ban(self, ctx, member: discord.Member, time: str, *, reason=None):
       msg = ctx.message
       mod = client.get_user(id=ctx.author.id)
       if check_logs(ctx.guild.id)[0] is True:
+        duration = ""
+        if time:
+          duration = f"\n**Duration:** {time}"
         chan = check_logs(ctx.guild.id)[1]
         channel = ctx.guild.get_channel(int(chan))
-        embed2 = discord.Embed(description=f"**{member.mention} has been banned.**\n**Reason:** {reason}", color=discord.Color.from_rgb(r=255, g=0, b=0), timestamp=ctx.message.created_at)
+        embed2 = discord.Embed(description=f"**{member.mention} has been banned.**\n**Reason:** {reason}{duration}", color=discord.Color.from_rgb(r=255, g=0, b=0), timestamp=ctx.message.created_at)
         embed2.set_author(name=f"{member} • ID: {member.id}", icon_url=member.avatar)
         embed2.set_footer(text=f'Moderator: {mod} • ID: {mod.id}', icon_url=mod.avatar)
         await channel.send(embed=embed2, content=None)
 
-      embed = discord.Embed(description=f"**{member.mention} has been banned.**", color=discord.Color.from_rgb(r=255, g=0, b=0))
+      timer = "permanent"
+      if time:
+        timer = time.lower()
+        timer_number = int(time[:-1])
+
+        if timer[-1] == "s":
+          update_db('guilds', f"{ctx.guild.id}", {f'TimerBan-{member.id}/{ctx.guild.id}': add_time(timer_number)})
+
+        elif timer[-1] == "m":
+          current = datetime.datetime.now()
+          add = datetime.timedelta(minutes=int(timer_number))
+          new_time = current + add
+          update_db('guilds', f"{ctx.guild.id}", {f'TimerBan-{member.id}/{ctx.guild.id}': new_time})
+
+        elif timer[-1] == 'h':
+          current = datetime.datetime.now()
+          add = datetime.timedelta(hours=int(timer_number))
+          new_time = current + add
+          update_db('guilds', f"{ctx.guild.id}", {f'TimerBan-{member.id}/{ctx.guild.id}': new_time})
+
+        elif timer[-1] == 'd':
+          current = datetime.datetime.now()
+          add = datetime.timedelta(days=int(timer_number))
+          new_time = current + add
+          update_db('guilds', f"{ctx.guild.id}", {f'TimerBan-{member.id}/{ctx.guild.id}': new_time})
+
+      embed = discord.Embed(description=f"**{member.mention} has been banned.**\n**Duration:** {timer}", color=discord.Color.from_rgb(r=255, g=0, b=0))
       embed.set_author(name=f"{member} • ID: {member.id}", icon_url=member.avatar)
       await member.ban(reason=reason)
       await ctx.send(embed=embed, content=None, delete_after=10)
