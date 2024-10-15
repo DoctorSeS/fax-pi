@@ -133,7 +133,7 @@ class Pages(discord.ui.View):
     return ses2
   
   def setauthor(self):
-    Pages.sescheck()
+    Pages.sescheck(self)
     #set author#
     embed1.set_author(name=f"Consider supporting this project on patreon", icon_url=f"{ses2.avatar}", url="https://www.patreon.com/doctorses")
     embed2.set_author(name=f"Consider supporting this project on patreon", icon_url=f"{ses2.avatar}", url="https://www.patreon.com/doctorses")
