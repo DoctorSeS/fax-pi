@@ -496,7 +496,7 @@ class Edit_Modal(Modal):
           
       color3 = discord.Color.from_rgb(r=int(color4[0]), g=int(color4[1]), b=int(color4[2]))
       embed = discord.Embed(description=f"**Selected color:**\nR: {color4[0]}\nG: {color4[1]}\nB: {color4[2]}", color=color3)
-      update_db(f"users", f"{interaction.user.id}", {"edited_background": f"{color4[0]},{color4[1]},{color4[2]}"})
+      update_db(f"users", f"{interaction.user.id}", {"edited_background": [{color4[0]}, {color4[1]}, {color4[2]}]})
     else:
       color3 = discord.Color.random()
       embed = discord.Embed(description=f"**Selected color:** Random\n\nYour Background will always have a different color.")

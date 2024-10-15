@@ -572,7 +572,6 @@ class Scores(commands.Cog):
 
           else:
             update_db('misc', "all_scores", {f'{message.author.id}': score})
-  
 
   @commands.command(aliases=[f"{currency}", "money", "wallet", "balance", "bal"])
   @commands.before_invoke(disabled_check)
@@ -628,8 +627,7 @@ class Scores(commands.Cog):
         img = ImageOps.colorize(img, black=black, white="white")
       else:
         img = img.convert("L")
-        colors = edited_background.split(",")
-        black = (int(colors[0]), int(colors[1]), int(colors[2]))
+        black = (int(edited_background[0]), int(edited_background[1]), int(edited_background[2]))
         img = ImageOps.colorize(img, black=black, white="white")
     
     img = img.convert("RGBA")
@@ -756,8 +754,7 @@ class Scores(commands.Cog):
         img = ImageOps.colorize(img, black=black, white="white")
       else:
         img = img.convert("L")
-        colors = edited_background.split(",")
-        black = (int(colors[0]), int(colors[1]), int(colors[2]))
+        black = (int(edited_background[0]), int(edited_background[1]), int(edited_background[2]))
         img = ImageOps.colorize(img, black=black, white="white")
     
     img = img.convert("RGBA")
@@ -1151,14 +1148,13 @@ class Scores(commands.Cog):
     except:
       pass
     else:
-      if "random" in edited_background:
+      if "random" in str(edited_background):
         img = img.convert("L")
         black = randint(0, 200), randint(0, 200), randint(0, 200)
         img = ImageOps.colorize(img, black=black, white="white")
       else:
         img = img.convert("L")
-        colors = edited_background.split(",")
-        black = (int(colors[0]), int(colors[1]), int(colors[2]))
+        black = (int(edited_background[0]), int(edited_background[1]), int(edited_background[2]))
         img = ImageOps.colorize(img, black=black, white="white")
     
     img = img.convert("RGBA")
@@ -1378,14 +1374,13 @@ class Scores(commands.Cog):
     except:
       pass
     else:
-      if "random" in edited_background:
+      if "random" in str(edited_background):
         img = img.convert("L")
         black = randint(0, 200), randint(0, 200), randint(0, 200)
         img = ImageOps.colorize(img, black=black, white="white")
       else:
         img = img.convert("L")
-        colors = edited_background.split(",")
-        black = (int(colors[0]), int(colors[1]), int(colors[2]))
+        black = (int(edited_background[0]), int(edited_background[1]), int(edited_background[2]))
         img = ImageOps.colorize(img, black=black, white="white")
 
     img = img.convert("RGBA")
@@ -1508,7 +1503,7 @@ class Scores(commands.Cog):
     draw.text((320, 80), f"{check_name(ctx.author)}", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
     draw.text((320, 210), f"{role['name']}\n({role['multiplier']}x)", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
     draw.text(position4, f"{rep} rep", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
-    draw.text((40, 540),f"Chance: {profile.split('/')[1].lstrip().split('-')[0]}%\nEarning: {round(float(profile.split('-')[1].lstrip().split('=')[0]), 1)} - {round(float(profile.split('=')[1]), 1)}", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
+    draw.text((40, 540), f"Chance: {profile.split('/')[1].lstrip().split('-')[0]}%\nEarning: {round(float(profile.split('-')[1].lstrip().split('=')[0]), 1)} - {round(float(profile.split('=')[1]), 1)}", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
     draw.text((40, 470), f"Wallet: {score} {check_currency(ctx.guild.id)}", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
 
     try:
