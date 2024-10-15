@@ -121,12 +121,11 @@ async def on_ready():
         print(f"Number of lines in ai.txt: {nm_lines}")
         update_db("misc", 'none', {"ai_lines": nm_lines})
 
-        """
         global ch, msggg, cl, count
         ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
         msggg = await ch.fetch_message(831865097726328833)
         cl = client.get_guild(msggg.guild.id)
-        bot_data.start()"""
+        bot_data.start()
 
         change_status.start()
 
@@ -167,51 +166,44 @@ async def on_ready():
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
 loop = 5
-seconds = 0
-minutes = 0
-hours = 0
-nm = 0
-counter = 3
+
+def format_minutes(total_minutes):
+    days = total_minutes // 1440  # 1440 minutes in a day
+    hours = (total_minutes % 1440) // 60
+    minutes = total_minutes % 60
+
+    result = []
+
+    if days > 0:
+        result.append(f"{days} day{'s' if days > 1 else ''}")
+    if hours > 0:
+        result.append(f"{hours} hour{'s' if hours > 1 else ''}")
+    if minutes > 0:
+        result.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
+
+    return ', '.join(result)
 
 @tasks.loop(minutes=loop)
 async def bot_data():
-    global minutes, hours
-    minutes += loop
-    if minutes > 55:
-        hours += 1
-        minutes = 0
-    total = f"\n**{hours} Hours,\n{minutes} Minutes**"
+    data = get_db('misc')
+    total_time = loop
+    try:
+        time = data['time_alive']
+        time += 5
+    except:
+        update_db('misc', 'none', {'time_alive': 5})
+    else:
+        total_time = format_minutes(time)
+        update_db('misc', 'none', {'time_alive': time})
 
-    buttons = get_db('misc')['buttons']
-    helpcount = get_db('misc')['helped']
-    for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
-            global nm, counter
-            nm += 1
-            filename2 = filename.replace('.py', '')
-            cgs.append(filename2)
-            update_db("misc", "none", {"laur-server-icon": f"{cl.icon}"})
-            if nm == len(listofcogs):
-                embed = discord.Embed(color=discord.Color.from_rgb(
-                    r=randint(0, 255), g=randint(0, 255), b=randint(0, 255)),
-                                      timestamp=msggg.edited_at)
-                embed.set_footer(
-                    text=
-                    f"This data is updated every {loop} minutes.\nLast restart: "
-                )
-                embed.set_thumbnail(url=cl.icon)
-                embed.add_field(
-                    name=f"**`Data:`**",
-                    value=
-                    f"`Ping:` **{round_int(client.latency * 1000)}**\n`Version:` **{discord.__version__}**\n`Guilds:` **{len(client.guilds)}**\n`Helped:` **{helpcount}**\n`Cogs:` **{nm}**\n\n**`{msggg.guild}:`**\n`Members:` **{round_int(msggg.guild.member_count)}**\n`Boosts:` **{msggg.guild.premium_subscription_count}**\n`Roles:` **{round_int(len(msggg.guild.roles))}**",
-                    inline=True)
-                embed.add_field(
-                    name=f"**`Other:`**",
-                    value=f"`Run-time:` {total}\n`Buttons:` **{buttons}**")
-                await msggg.edit(embed=embed, content=None)
-                nm = 0
-            else:
-                pass
+    buttons = data['buttons']
+    helpcount = data['helped']
+    embed = discord.Embed(color=discord.Color.from_rgb(r=randint(0, 255), g=randint(0, 255), b=randint(0, 255)), timestamp=msggg.edited_at)
+    embed.set_footer(text=f"This data is updated every {loop} minutes.\nLast restart: ")
+    embed.set_thumbnail(url=cl.icon)
+    embed.add_field(name=f"**`Data:`**", value=f"`Ping:` **{round_int(client.latency * 1000)}**\n`Version:` **{discord.__version__}**\n`Guilds:` **{len(client.guilds)}**\n`Helped:` **{helpcount}**\n`Cogs:` **{len(client.cogs)}**\n\n**`{msggg.guild}:`**\n`Members:` **{round_int(msggg.guild.member_count)}**\n`Boosts:` **{msggg.guild.premium_subscription_count}**\n`Roles:` **{round_int(len(msggg.guild.roles))}**", inline=True)
+    embed.add_field(name=f"**`Other:`**", value=f"`Run-time:` {total_time}\n`Buttons:` **{buttons}**")
+    await msggg.edit(embed=embed, content=None)
 
 @tasks.loop(seconds=20)
 async def change_status():
@@ -303,22 +295,18 @@ async def on_message(message):
 
 @client.event
 async def on_error(event, *args, **kwargs):
-    global error_counter2
     message = args[0]  #Gets the message object
     logging.warning(traceback.format_exc())  #logs the error
     server = client.get_guild(863561097604497438)
     channel = server.get_channel(943488712405291008)
-    embed = discord.Embed(
-        description=f"**`ERROR:`** ```python\n{message}\n```", color=0xc40000)
+    embed = discord.Embed(description=f"**`ERROR:`** ```python\n{message}\n```", color=0xc40000)
     await channel.send(embed=embed, content=None)
 
-token = os.environ.get("DISCORD_BOT_SECRET_TEST")
+token = os.environ.get("DISCORD_BOT_SECRET")
 
 def exception_handler(loop, context):
   cprint("Caught the following exception", "red")
   cprint(context['message'], "red")
-
-
 
 
 def run_bot():
