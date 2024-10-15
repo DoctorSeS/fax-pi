@@ -131,7 +131,8 @@ class On_msg(commands.Cog):
   
     ### nickname check ###
     if message.guild is not None:
-      if get_db('guilds')[str(message.guild.id)].get('nick') is True:
+
+      if get_db('guilds').get(str(message.guild.id)).get('nick') is True:
         user = message.guild.get_member(message.author.id)
         if user is None:
           return
