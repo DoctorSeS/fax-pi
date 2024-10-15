@@ -1,22 +1,29 @@
-import fileinput
-from termcolor import colored, cprint
-import os
+from threading import Thread
+from flask import Flask
+import socket
+from termcolor import cprint
+import main
+import server
 
-def enrole():
-  file = open("all_servers.txt", "r")
-  all = file.read()
-  all2 = str(all).replace("[", "")
-  all3 = str(all2).replace("]", "")
-  all4 = str(all3).replace(",", "")
-  all5 = str(all4).replace("'", "")
-  cprint("Enroling executed.", "blue")
-  return list(all5.split(" "))
+def run_flask():
+    server.run_site()
 
-all = enrole()
+def run_discord_bot():
+    # This starts your Discord bot
+    main.run_bot()
 
-if all:
-  cprint("Running main...", "green")
-  exec(open('main.py').read())
-else:
-  cprint("DEPLOYMENT FAILED, CANNOT READ ALL SERVERS\nPLEASE RESOLVE THIS ISSUE ASAP", "red")
-  os.system("kill 1")
+if __name__ == "__main__":
+    # Print the IP and notify about the running site
+    cprint(f"Running Site... IP: {socket.gethostbyname(socket.gethostname())}", "light_green")
+
+    # Start both the Flask app and the bot in separate threads
+    flask_thread = Thread(target=run_flask)
+    bot_thread = Thread(target=run_discord_bot)
+
+    # Start the threads
+    flask_thread.start()
+    bot_thread.start()
+
+    # Join the threads to wait for their completion
+    flask_thread.join()
+    bot_thread.join()

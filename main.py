@@ -1,35 +1,28 @@
 import logging
 import discord
-import sys
-import asyncio
-from os import system
-import os
-import socket
+from discord.ext import commands, tasks
+import random
+import datetime
+from random import randint
+import traceback
+from rea import prefixresponse
+from termcolor import cprint
+import requests
+from database import *
+import tracemalloc
+
+tracemalloc.start()
 
 os.environ["DISCORD_BOT_SECRET"] = "ODMwMTk5NTEyNTcyMTAwNjA5.GyR50E.sFezI207cDpL-hyhPGocIPxuiKbAD0unNV6IiE"
 os.environ["DISCORD_BOT_SECRET_TEST"] = "MTI1MjYzMDY4NTI4MjQ3MjAyNg.GBTiJG.B__cmQkImH866KCuZmPeLiuMqLxcTOcoB71LiI"
-os.environ["C.AI_TOKEN"] = "b1ffb8024bf5e453260524dc439ca62b1e61e145"
-os.environ["C.AI_FAX"] = "6rUveGFqEg9-HZY5K14LS4Qxzw4dQcSIe8208XOowfQ"
-os.environ["PATREON_KEY"] = "13f3cB16LgqzalPNsC1VmY1XDZe9zNPmUTDVF6bdjCE"
+os.environ["C.AI_TOKEN"] = "9d8224253e0afc39e09a9b8dfdef59f86c5b96a5"
+os.environ["C.AI_FAX"] = "eAit4xbYC5wLNLaSxmtDMzwXW6X8XyxY01c35ZHZ77U"
+os.environ["PATREON_KEY"] = "GLnoZ6C32T69k5gt4pD4PFEJBSTLd_UrH9cfs4_5vfw"
 os.environ["API_NINJAS_KEY"] = "8LxAVyDMAusp/1SV/svJjw==eIMYqUC8KOH6dHK5"
 os.environ["OAUTH2_CLIENT_ID"] = "830199512572100609"
 os.environ["OAUTH2_CLIENT_SECRET"] = "CZTQl12s2hPnC2hggCMIZusC3Ej7_kWZ"
 
 patreon_id = 20100324
-
-from discord.ext import commands, tasks
-import random
-from itertools import cycle
-import datetime
-from random import randint
-import traceback
-import urllib.request
-import json
-from rea import prefixresponse
-import fileinput
-from termcolor import cprint
-import requests
-from database import *
 
 currency = "Kromer"
 
@@ -44,7 +37,7 @@ def check_name(name):
 
 def get_prefix(bot, message):
     try:
-        value = get_db('guilds')["prefix"]
+        value = get_db('guilds')[f'{message.guild.id}']["prefix"]
     except:
         prefixes = ['g!', 'G!']
         return commands.when_mentioned_or(*prefixes)(bot, message)
@@ -55,7 +48,7 @@ def get_prefix(bot, message):
 def server_prefix(guild_id):
   serv_pref = "g!"
   try:
-    value = get_db('guilds')["prefix"]
+    value = get_db('guilds')[f'{guild_id}']["prefix"]
   except:
     return serv_pref
   else:
@@ -80,7 +73,6 @@ laure = 339823622774456322
 faxname = f"Lauren's Fax Machine"
 faxpfp = f"https://cdn.discordapp.com/attachments/863561097604497441/911788874349555732/fax.png"
 cgs = []
-listofcogs = client.cogs
 words = []
 ses = 645660675334471680
 DIR = '/cogs'
@@ -115,7 +107,9 @@ all_databases = ['Battleship', 'rr', 'TTT', 'Snipe', 'Hilo', 'Slots', 'RPS']
 async def on_ready():
       cprint('----------------------------------', 'blue')
       cprint("The bot is now online.", "green")
-      print(f"Logged in as: {client.user.name}\nID: {client.user.id}\nVersion: {discord.__version__}")
+      print(f"Logged in as: {client.user.name}")
+      print(f"ID: {client.user.id}")
+      print(f"Version: {discord.__version__}")
       print(f"Watching {len(client.guilds)} guilds.")
       print(f'Date and time: {round_time(datetime.datetime.now())}')
       await client.wait_until_ready()
@@ -123,7 +117,6 @@ async def on_ready():
       if client.is_ready():
         cprint("Client ready.", "green")
 
-        print(f"Cogs Available: {len(listofcogs)}")
         nm_lines = len(open(r"ai.txt", "r", encoding='unicode_escape').readlines())
         print(f"Number of lines in ai.txt: {nm_lines}")
         update_db("misc", 'none', {"ai_lines": nm_lines})
@@ -151,13 +144,29 @@ async def on_ready():
 
         print(create_directories())
 
+        unloaded_cogs = []
+        all_files_num = 0
+        ### LOAD COGS HERE TO MAKE TIMERS WORK ###
+        for filename in os.listdir('./cogs'):
+            if filename.endswith('.py'):
+                try:
+                    all_files_num += 1
+                    client.load_extension(f'cogs.{filename[:-3]}')
+                except Exception as e:
+                    unloaded_cogs.append((f"{filename[:-3]}", f"{e}", f"{e.__traceback__.tb_lineno}"))
+        else:
+            errors = ""
+            if unloaded_cogs:
+                for x in unloaded_cogs:
+                    errors += f"- ERROR - COG: {x[0]}\n- ERROR - REASON: {x[1]}\n- ERROR - LINE: {x[2]}"
+
+            print(f"Finished cog loading. {len(client.cogs)}/{all_files_num}\n{errors}")
         cprint('----------------------------------', 'blue')
 
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
 loop = 5
-
 seconds = 0
 minutes = 0
 hours = 0
@@ -244,10 +253,6 @@ def fact_generator():
 
 @client.event
 async def on_message(message):
-    ### REMOVE THIS AFTER UPDATE ###
-    if message.author.id != 645660675334471680:
-        return
-
     ### prefix response ###
     global lastuser
     if lastuser != message.author.id:
@@ -306,15 +311,6 @@ async def on_error(event, *args, **kwargs):
     embed = discord.Embed(
         description=f"**`ERROR:`** ```python\n{message}\n```", color=0xc40000)
     await channel.send(embed=embed, content=None)
-    error_counter2 += 1
-
-
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        if "ai.py" in filename:
-            continue
-        else:
-            client.load_extension(f'cogs.{filename[:-3]}')
 
 token = os.environ.get("DISCORD_BOT_SECRET_TEST")
 
@@ -322,12 +318,15 @@ def exception_handler(loop, context):
   cprint("Caught the following exception", "red")
   cprint(context['message'], "red")
 
-try:
-  client.run(token)
-except discord.errors.HTTPException:
-  cprint("\n\n\nBLOCKED BY RATE LIMITS\nRESTARTING NOW\n\n\n", "red")
-  system("python restarter.py")
-  system('kill 1')
+
+
+
+def run_bot():
+    try:
+        client.run(token)
+    except discord.errors.HTTPException:
+        print("\n\n\nBLOCKED BY RATE LIMITS\nRESTARTING NOW\n\n\n")
+        os.system("python restarter.py")
 
 # https://discordapp.com/oauth2/authorize?client_id=830199512572100609&scope=bot&permissions=8
 # id=830199512572100609

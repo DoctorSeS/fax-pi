@@ -1,19 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Live Logs</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            var socket = io();
-            socket.on('log', function(data) {
-                var logDiv = document.getElementById('log');
-                logDiv.innerHTML += '<p>' + data.msg + '</p>';
-            });
-        });
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fax Machine's Logs</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='logo.png') }}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff00;
+            overflow: hidden; /* Prevent body scroll */
+        }
+
+        #cmd-window {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            background-color: #000000;
+            padding: 0% 0% 1% 0%;
+            box-sizing: border-box;
+            resize: both;
+            overflow: auto;
+            cursor: move;
+        }
+
+        #cmd-header {
+            background-color: #222;
+            padding: 10px;
+            color: white;
+            cursor: grab;
+            user-select: none;
+            text-align: center;
+        }
+
+        .info {
+            color: white;
+        }
+
+        .error {
+            color: red;
+        }
+
+        p {
+            margin: 5px 0;
+        }
+
+        p {
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
-    <div id="log"></div>
+    <div id="cmd-window">
+        <div id="cmd-header">Bot Logs</div>
+        <div id="log-content" style="padding:1%;">
+            {% for log in logs %}
+                <p class="{{ 'info' if '- INFO -' in log else 'error' if '- ERROR -' in log else '' }}">{{ log }}</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        const cmdWindow = document.getElementById("cmd-window");
+        const cmdHeader = document.getElementById("cmd-header");
+        const logContent = document.getElementById("log-content");
+        let isDragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        cmdHeader.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - cmdWindow.offsetLeft;
+            offsetY = e.clientY - cmdWindow.offsetTop;
+            cmdHeader.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                cmdWindow.style.left = `${Math.max(0, e.clientX - offsetX)}px`;
+                cmdWindow.style.top = `${Math.max(0, e.clientY - offsetY)}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            cmdHeader.style.cursor = 'grab';
+        });
+
+        function updateLogs() {
+            fetch('/logs')
+                .then(response => response.json())
+                .then(data => {
+                    logContent.innerHTML = ''; // Clear existing logs
+                    data.logs.forEach(log => {
+                        const p = document.createElement('p');
+                        p.className = log.includes('- ERROR -') ? 'error' : log.includes('- INFO -') ? 'info' : '';
+                        p.textContent = log.trim(); // Trim whitespace
+                        logContent.appendChild(p);
+                    });
+                })
+                .catch(error => console.error('Error fetching logs:', error));
+        }
+
+        setInterval(updateLogs, 5000); // Update logs every 5 seconds
+        updateLogs();
+    </script>
 </body>
 </html>

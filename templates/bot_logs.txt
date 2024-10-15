@@ -1,0 +1,21 @@
+2024-10-15 11:53:04,245 - INFO -  * Serving Flask app 'server'
+2024-10-15 11:53:04,245 - INFO -  * Debug mode: on
+2024-10-15 11:53:05,109 - ERROR - WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+2024-10-15 11:53:05,109 - ERROR - 
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.194:5000
+2024-10-15 11:53:05,110 - ERROR - Press CTRL+C to quit
+2024-10-15 11:53:06,958 - INFO - ----------------------------------
+2024-10-15 11:53:06,958 - INFO - The bot is now online.
+2024-10-15 11:53:06,959 - INFO - Logged in as: Fax Test Bot
+2024-10-15 11:53:06,959 - INFO - ID: 1252630685282472026
+2024-10-15 11:53:06,959 - INFO - Version: 2.6.1
+2024-10-15 11:53:06,959 - INFO - Watching 2 guilds.
+2024-10-15 11:53:06,959 - INFO - Date and time: 2024-10-15 11:53:00
+2024-10-15 11:53:06,960 - INFO - Client ready.
+2024-10-15 11:53:07,070 - INFO - Number of lines in ai.txt: 44000
+2024-10-15 11:53:07,416 - INFO - Cleaned the 'minigames' database.
+2024-10-15 11:53:07,488 - INFO - Checked and ensured directory exists
+2024-10-15 11:53:09,883 - INFO - Finished cog loading. 18/18
+2024-10-15 11:53:09,883 - INFO - ----------------------------------
