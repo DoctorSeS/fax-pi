@@ -131,38 +131,42 @@ class On_msg(commands.Cog):
   
     ### nickname check ###
     if message.guild is not None:
-
-      if get_db('guilds').get(str(message.guild.id)).get('nick') is True:
-        user = message.guild.get_member(message.author.id)
-        if user is None:
-          return
-        name = str(user.name)
-        name2 = name.strip()
-        nick = str(user.nick)
-        nick2 = nick.strip()
-        numb = randint(0, 1000)
-        stringname = letter(name2)
-        stringnick = letter(nick2)
-        if name == nick:
-          for let in stringname:
-            if let in alpha:
-              break
+      try:
+        guild_data = get_db('guilds')[str(message.guild.id)]
+      except:
+        return
+      else:
+        if guild_data.get('nick') is True:
+          user = message.guild.get_member(message.author.id)
+          if user is None:
+            return
+          name = str(user.name)
+          name2 = name.strip()
+          nick = str(user.nick)
+          nick2 = nick.strip()
+          numb = randint(0, 1000)
+          stringname = letter(name2)
+          stringnick = letter(nick2)
+          if name == nick:
+            for let in stringname:
+              if let in alpha:
+                break
+              else:
+                await message.author.edit(nick=f"Unpingable Name #{numb}", reason="Non-Latin Name.")
+                break
             else:
-              await message.author.edit(nick=f"Unpingable Name #{numb}", reason="Non-Latin Name.")
-              break
+              pass
           else:
-            pass
-        else:
-          for let in stringnick:
-            if let in alpha:
-              break
-            else:
-              for let in stringname:
-                if let in alpha:
-                  break
-                else:
-                  await message.author.edit(nick=f"Unpingable Name #{numb}", reason="Non-Latin Name.")
-                  break
+            for let in stringnick:
+              if let in alpha:
+                break
+              else:
+                for let in stringname:
+                  if let in alpha:
+                    break
+                  else:
+                    await message.author.edit(nick=f"Unpingable Name #{numb}", reason="Non-Latin Name.")
+                    break
   
   @commands.command()
   @commands.before_invoke(disabled_check)
