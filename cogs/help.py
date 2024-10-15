@@ -133,7 +133,7 @@ class Pages(discord.ui.View):
     return ses2
   
   def setauthor(self):
-    Pages.sescheck(self)
+    self.sescheck()
     #set author#
     embed1.set_author(name=f"Consider supporting this project on patreon", icon_url=f"{ses2.avatar}", url="https://www.patreon.com/doctorses")
     embed2.set_author(name=f"Consider supporting this project on patreon", icon_url=f"{ses2.avatar}", url="https://www.patreon.com/doctorses")
@@ -352,7 +352,7 @@ class Pages_slash(discord.ui.View):
     return ses2
   
   def setauthor(self):
-    Pages.sescheck()
+    self.sescheck()
     #set author#
     embed1.set_author(name=f"Consider supporting this project on patreon", icon_url=f"{ses2.avatar}", url="https://www.patreon.com/doctorses")
     embed2.set_author(name=f"Consider supporting this project on patreon", icon_url=f"{ses2.avatar}", url="https://www.patreon.com/doctorses")
@@ -511,8 +511,8 @@ class Help(commands.Cog):
 
   @commands.command(aliases=['cmds', 'commands'])
   async def help(self, ctx):
-    Pages.setauthor()
-    Pages.sescheck()
+    Pages.setauthor(self)
+    Pages.sescheck(self)
 
     value = get_db('misc')['helped']
     update_db('misc', 'none', {'helped': int(value) + 1})
@@ -534,8 +534,8 @@ class Help(commands.Cog):
   
   @slash_command(name="help", description=f"Help with {faxname}")
   async def help_slash(self, ctx):
-    Pages.setauthor()
-    Pages.sescheck()
+    Pages.setauthor(self)
+    Pages.sescheck(self)
     if ctx.guild:
       if check_logs(ctx.guild.id)[0] == True:
         logs2 = ctx.guild.get_channel(int(check_logs(ctx.guild.id)[2]))
