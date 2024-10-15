@@ -126,6 +126,7 @@ async def on_ready():
         msggg = await ch.fetch_message(831865097726328833)
         cl = client.get_guild(msggg.guild.id)
         bot_data.start()
+        del_db('misc', 'time_alive')
 
         change_status.start()
 
@@ -186,7 +187,7 @@ def format_minutes(total_minutes):
 @tasks.loop(minutes=loop)
 async def bot_data():
     data = get_db('misc')
-    total_time = loop
+    total_time = format_minutes(loop)
     try:
         time = data['time_alive']
         time += 5
