@@ -227,40 +227,15 @@ class Pages(discord.ui.View):
     mod4.set_thumbnail(url=interaction.user.avatar)
     mod5.set_thumbnail(url=interaction.user.avatar)
     ###
-    global perms
-    matches = db.prefix(f"help-{interaction.user.id}")
-    if "help-" in str(matches):
-      perms = True
-      pass
-    else:
-      perms = False
-      button.disabled = True
+    if button.label == "Member Commands":
+      button.label = f"Moderator Commands"
       self.value = 1
-      button.label = f"Unavailable"
       await interaction.message.edit(content=None, embed=embed1, view=self)
-      await interaction.response.defer()
       return
-    #wait
-    if perms == True:
-      button.disabled = False
-      if button.label == "Member Commands":
-        button.label = f"Moderator Commands"
-        self.value = 1
-        await interaction.message.edit(content=None, embed=embed1, view=self)
-        await interaction.response.defer()
-        return
-      elif button.label == "Moderator Commands":
-        button.label = f"Member Commands"
-        self.value = 1
-        await interaction.message.edit(content=None, embed=mod1, view=self)
-        await interaction.response.defer()
-        return
-    else:
-      button.disabled = True
-      button.label = f"Unavailable"
+    elif button.label == "Moderator Commands":
+      button.label = f"Member Commands"
       self.value = 1
-      await interaction.message.edit(content=None, embed=embed1, view=self)
-      await interaction.response.defer()
+      await interaction.message.edit(content=None, embed=mod1, view=self)
       return
 
   @discord.ui.button(label=">", style=discord.ButtonStyle.green, custom_id="Next Page")
@@ -422,34 +397,15 @@ class Pages_slash(discord.ui.View):
     mod2.set_thumbnail(url=interaction.user.avatar)
     mod3.set_thumbnail(url=interaction.user.avatar)
     mod4.set_thumbnail(url=interaction.user.avatar)
-    ###
-    global perms
-    matches = db.prefix(f"help-{interaction.user.id}")
-    if "help-" in str(matches):
-      perms = True
-      pass
-    else:
-      perms = False
-      button.disabled = True
-      self.value = 1
-      button.label = f"Unavailable"
-      await interaction.response.edit_message(content=None, embed=embed1, view=self)
-    #wait
-    if perms == True:
-      button.disabled = False
-      if button.label == "Member Commands":
-        button.label = f"Moderator Commands"
-        self.value = 1
-        await interaction.response.edit_message(content=None, embed=embed1, view=self)
-      elif button.label == "Moderator Commands":
-        button.label = f"Member Commands"
-        self.value = 1
-        await interaction.response.edit_message(content=None, embed=mod1, view=self)
-    else:
-      button.disabled = True
-      button.label = f"Unavailable"
+    button.disabled = False
+    if button.label == "Member Commands":
+      button.label = f"Moderator Commands"
       self.value = 1
       await interaction.response.edit_message(content=None, embed=embed1, view=self)
+    elif button.label == "Moderator Commands":
+      button.label = f"Member Commands"
+      self.value = 1
+      await interaction.response.edit_message(content=None, embed=mod1, view=self)
 
   @discord.ui.button(label=">", style=discord.ButtonStyle.green, custom_id="Next Page")
   async def pageup(self, button, interaction):

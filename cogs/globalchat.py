@@ -288,7 +288,7 @@ class Globalchat(commands.Cog):
                 return
               else:
 
-                if message.channel.id == int(channel):
+                if str(message.channel.id) == str(channel):
                   if message is None:
                     return
                   else:
@@ -298,7 +298,12 @@ class Globalchat(commands.Cog):
                       if guild == '':
                           continue
 
-                      if get_db('guilds')[f'{guild}']['global_chat']['active'] is True:
+                      try:
+                          gb_settings = get_db('guilds')[f'{guild}']['global_chat']
+                      except:
+                          return
+
+                      if gb_settings.get('active') is True:
                           ##check banned##
                           server = client.get_guild(int(guild))
                           try:

@@ -236,7 +236,7 @@ class Events(commands.Cog):
             if 'image' in value:
               image = value['image']
             else:
-              image = None
+              image = "None"
 
             if 'color' in value:
               color = str(value['color']).replace('#', "0x")
@@ -253,7 +253,10 @@ class Events(commands.Cog):
             welcome = discord.Embed(title="New Member!", description=f"{mess}", color=color)
             welcome.set_footer(text=f"{member} • ID: {member.id}", icon_url=member.avatar)
             if image != "None":
-              welcome.set_image(url=f"{image}")
+              try:
+                welcome.set_image(url=f"{image}")
+              except:
+                welcome.set_footer(text=f"{member} • ID: {member.id}\nFailed to set image. Consider re-adding it.", icon_url=member.avatar)
 
             await wm_channel.send(embed=welcome, content=None)
             await wm_channel.send(member.mention, delete_after=0.1)
