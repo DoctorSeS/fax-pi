@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shard Latency Monitor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #121212; /* Dark mode background */
+            color: white; /* Text color */
+            font-family: Arial, sans-serif;
+        }
+        .chart-container {
+            display: flex;
+            flex-direction: column; /* Stack vertically on small screens */
+            align-items: center; /* Center the charts */
+            padding: 20px; /* Add some padding */
+        }
+        .charts {
+            display: flex; /* Use flexbox for side by side layout on larger screens */
+            justify-content: center;
+            gap: 20px; /* Space between charts */
+        }
+        canvas {
+            border: 1px solid #fff; /* Border around canvas for better visibility */
+            width: 400px; /* Fixed width for charts on larger screens */
+            height: 300px; /* Fixed height for charts */
+            max-width: 50%; /* Ensure canvas doesn't exceed the container */
+        }
+
+        /* Media Query for responsive design */
+        @media (max-width: 768px) {
+            .charts {
+                flex-direction: column; /* Stack vertically on smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 style="display:flex;justify-content:center;">Shard Latency Monitor</h1>
+    <div class="chart-container" style="background-color:black;border-radius:30px;">
+        <div class="charts">
+            <canvas id="shard0Chart"></canvas>
+            <canvas id="shard1Chart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const shard0Data = {
+            labels: [],
+            datasets: [{
+                label: 'Shard 0 Latency (ms)',
+                data: [],
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                fill: true,
+            }]
+        };
+
+        const shard1Data = {
+            labels: [],
+            datasets: [{
+                label: 'Shard 1 Latency (ms)',
+                data: [],
+                borderColor: 'rgba(153, 102, 255, 1)',
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                fill: true,
+            }]
+        };
+
+        const ctx0 = document.getElementById('shard0Chart').getContext('2d');
+        const ctx1 = document.getElementById('shard1Chart').getContext('2d');
+
+        const shard0Chart = new Chart(ctx0, {
+            type: 'line',
+            data: shard0Data,
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Latency (ms)'
+                        }
+                    }
+                }
+            }
+        });
+
+        const shard1Chart = new Chart(ctx1, {
+            type: 'line',
+            data: shard1Data,
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Latency (ms)'
+                        }
+                    }
+                }
+            }
+        });
+
+        async function loadInitialData() {
+            const response = await fetch('/latency_data');
+            const data = await response.json();
+            data.forEach(item => {
+                const time = new Date(item.time * 1000).toLocaleTimeString(); // Convert timestamp to time string
+                if (item.shard_id === 0) {
+                    shard0Data.labels.push(time);
+                    shard0Data.datasets[0].data.push(item.ping);
+                } else if (item.shard_id === 1) {
+                    shard1Data.labels.push(time);
+                    shard1Data.datasets[0].data.push(item.ping);
+                }
+            });
+
+            // Update charts with initial data
+            shard0Chart.update();
+            shard1Chart.update();
+        }
+
+        async function updateChart() {
+            const response = await fetch('/latency_data');
+            const data = await response.json();
+            if (data.length > 0) {
+                const now = new Date().toLocaleTimeString();
+
+                // Get the latest ping data
+                let latestShard0Ping = null;
+                let latestShard1Ping = null;
+
+                data.forEach(item => {
+                    if (item.shard_id === 0) {
+                        latestShard0Ping = item.ping; // Store the latest ping for shard 0
+                    } else if (item.shard_id === 1) {
+                        latestShard1Ping = item.ping; // Store the latest ping for shard 1
+                    }
+                });
+
+                // Push the latest values and current timestamp
+                if (latestShard0Ping !== null) {
+                    shard0Data.labels.push(now);
+                    shard0Data.datasets[0].data.push(latestShard0Ping);
+                }
+                if (latestShard1Ping !== null) {
+                    shard1Data.labels.push(now);
+                    shard1Data.datasets[0].data.push(latestShard1Ping);
+                }
+
+                // Limit the number of displayed points to the last 100
+                const maxEntries = 100;
+                if (shard0Data.labels.length > maxEntries) {
+                    shard0Data.labels.shift(); // Remove the oldest label
+                    shard0Data.datasets[0].data.shift(); // Remove the oldest data point
+                }
+                if (shard1Data.labels.length > maxEntries) {
+                    shard1Data.labels.shift(); // Remove the oldest label
+                    shard1Data.datasets[0].data.shift(); // Remove the oldest data point
+                }
+
+                // Update charts
+                shard0Chart.update();
+                shard1Chart.update();
+            }
+        }
+
+        // Load initial data from latencies.json when the page loads
+        loadInitialData();
+        setInterval(updateChart, 30000);
+    </script>
+</body>
+</html>
