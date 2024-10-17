@@ -105,6 +105,7 @@ def create_directories():
 
 caught_message = None
 all_databases = ['Battleship', 'rr', 'TTT', 'Snipe', 'Hilo', 'Slots', 'RPS']
+PING_DATA_FILE = 'templates/latencies.json'
 
 @client.event
 async def on_ready():
@@ -124,12 +125,12 @@ async def on_ready():
         print(f"Number of lines in ai.txt: {nm_lines}")
         update_db("misc", 'none', {"ai_lines": nm_lines})
 
-        """global ch, msggg, cl, count
+        global ch, msggg, cl, count
         ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
         msggg = await ch.fetch_message(831865097726328833)
         cl = client.get_guild(msggg.guild.id)
         bot_data.start()
-        del_db('misc', 'time_alive')"""
+        del_db('misc', 'time_alive')
 
         change_status.start()
 
@@ -166,7 +167,8 @@ async def on_ready():
             print(f"Finished cog loading. {len(client.cogs)}/{all_files_num}\n{errors}")
 
         ### START LATENCY GRAPH ###
-        open(PING_DATA_FILE, "w").close()
+        if os.path.exists(PING_DATA_FILE):
+            open(PING_DATA_FILE, "w").close()
         monitor_shard_latency.start()
         cprint('----------------------------------', 'blue')
 
@@ -183,7 +185,6 @@ async def on_shard_ready(shard_id):
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
 loop = 5
-PING_DATA_FILE = 'templates/latencies.json'
 
 def format_minutes(total_minutes):
     days = total_minutes // 1440  # 1440 minutes in a day
@@ -354,7 +355,7 @@ async def on_error(event, *args, **kwargs):
     embed = discord.Embed(description=f"**`ERROR:`** ```python\n{message}\n```", color=0xc40000)
     await channel.send(embed=embed, content=None)
 
-token = os.environ.get("DISCORD_BOT_SECRET_TEST")
+token = os.environ.get("DISCORD_BOT_SECRET")
 
 def exception_handler(loop, context):
   cprint("Caught the following exception", "red")
