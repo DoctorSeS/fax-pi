@@ -1,4 +1,7 @@
+import json
 import logging
+import time
+
 import discord
 from discord.ext import commands, tasks
 import random
@@ -59,8 +62,8 @@ def round_int(x):
         return float('nan')  # or x or return whatever makes sense
     return int(round(x))
 
-
-client = commands.Bot(command_prefix=get_prefix, description=f"The funny bot for the funny servers", case_insensitive=True, intents=discord.Intents.all())
+client = commands.AutoShardedBot(command_prefix=get_prefix, description="The funny bot for the funny servers", case_insensitive=True, shard_count=2, shard_ids=[0, 1], intents=discord.Intents.all())
+#lient = commands.Bot(command_prefix=get_prefix, description=f"The funny bot for the funny servers", case_insensitive=True, intents=discord.Intents.all())
 Client = discord.Client(intents=discord.Intents.all())
 client.remove_command('help')
 
@@ -121,12 +124,12 @@ async def on_ready():
         print(f"Number of lines in ai.txt: {nm_lines}")
         update_db("misc", 'none', {"ai_lines": nm_lines})
 
-        global ch, msggg, cl, count
+        """global ch, msggg, cl, count
         ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
         msggg = await ch.fetch_message(831865097726328833)
         cl = client.get_guild(msggg.guild.id)
         bot_data.start()
-        del_db('misc', 'time_alive')
+        del_db('misc', 'time_alive')"""
 
         change_status.start()
 
@@ -161,12 +164,26 @@ async def on_ready():
                     errors += f"- ERROR - COG: {x[0]}\n- ERROR - REASON: {x[1]}\n- ERROR - LINE: {x[2]}"
 
             print(f"Finished cog loading. {len(client.cogs)}/{all_files_num}\n{errors}")
+
+        ### START LATENCY GRAPH ###
+        open(PING_DATA_FILE, "w").close()
+        monitor_shard_latency.start()
         cprint('----------------------------------', 'blue')
 
+@client.event
+async def on_shard_ready(shard_id):
+    cprint('----------------------------------', 'blue')
+    shard_ids = [0, 1]
+    for x in shard_ids:
+        shard = client.get_shard(x)
+        print(f"Shard {x} is ready and running.")
+        print(f"Ping: {round(shard.latency * 1000)}")
+        print(f"Count: {shard.shard_count}")
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
 loop = 5
+PING_DATA_FILE = 'templates/latencies.json'
 
 def format_minutes(total_minutes):
     days = total_minutes // 1440  # 1440 minutes in a day
@@ -183,6 +200,40 @@ def format_minutes(total_minutes):
         result.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
 
     return ', '.join(result)
+
+@tasks.loop(seconds=30)
+async def monitor_shard_latency():
+    shard_ids = [0, 1]
+    shard_data = []
+
+    for shard_id in shard_ids:
+        shard = client.get_shard(shard_id)
+        if shard:
+            ping = round(shard.latency * 1000)
+            shard_info = {
+                'shard_id': shard_id,
+                'ping': ping,
+                'time': time.time()
+            }
+            shard_data.append(shard_info)
+
+    # Read existing data from latencies.json
+    if os.path.exists(PING_DATA_FILE):
+        with open(PING_DATA_FILE, 'r') as f:
+            try:
+                existing_data = json.load(f)
+            except json.JSONDecodeError:
+                existing_data = []
+    else:
+        existing_data = []
+
+    # Append new data and limit to the last 100 entries
+    existing_data.extend(shard_data)
+    if len(existing_data) > 100:
+        existing_data = existing_data[-100:]  # Keep only the last 100 entries
+
+    with open(PING_DATA_FILE, 'w') as f:
+        json.dump(existing_data, f)
 
 @tasks.loop(minutes=loop)
 async def bot_data():
@@ -303,7 +354,7 @@ async def on_error(event, *args, **kwargs):
     embed = discord.Embed(description=f"**`ERROR:`** ```python\n{message}\n```", color=0xc40000)
     await channel.send(embed=embed, content=None)
 
-token = os.environ.get("DISCORD_BOT_SECRET")
+token = os.environ.get("DISCORD_BOT_SECRET_TEST")
 
 def exception_handler(loop, context):
   cprint("Caught the following exception", "red")

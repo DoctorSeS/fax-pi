@@ -1,3 +1,4 @@
+import json
 import os
 import socket
 import logging
@@ -78,6 +79,20 @@ def get_logs():
     with open("templates/bot_logs.txt", "r") as f:
         logs = f.readlines()
     return jsonify(logs=logs)
+
+@app.route('/ping')
+def latency():
+    return render_template('ping.html')
+
+@app.route('/latency_data', methods=['GET'])
+def latency_data():
+    # Load latency data from the JSON file
+    try:
+        with open("templates/latencies.json", 'r') as f:
+            data = json.load(f)
+        return jsonify(data)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return jsonify([])
 
 def run_site():
     open("templates/bot_logs.txt", "w").close()
