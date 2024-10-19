@@ -3,7 +3,7 @@ import discord
 from random import randint
 from main import client, bot_prefix, round_time, ses, currency
 from discord.ui import InputText, Modal
-from cogs.score import check_currency, check_folder
+from cogs.score import check_currency, check_folder, check_level
 from database import *
 from termcolor import cprint
 
@@ -51,8 +51,6 @@ def get_filename(name):
     return "dumbass"
   elif "Hunter" in name:
     return "bug_hunter"
-  
-
 
 def role_pos(role):
   if "Common" in role:
@@ -835,7 +833,7 @@ class Use(discord.ui.Select):
             if "Games" in x:
               if games_used == 0:
                 games_used += 1
-                embed.add_field(name="Mini-Game Wins Badge", value=f"Level {milestones['Mini-Games Won']['level']}/6 {badge_emojies['game'][milestones['Mini-Games Won']['level'] - 1]}\n{milestones['Mini-Games Won']['amount']}/{milestones['Mini-Games Won']['next']} wins")
+                embed.add_field(name="Mini-Game Wins Badge", value=f"Level {milestones['Mini-Games Won']['level']}/6 {badge_emojies['game'][milestones['Mini-Games Won']['level'] - 1]}\n{check_level('Mini-Games Won', interaction.user.id)} wins")
             if "Role" in x:
               if role_used == 0:
                 role_used += 1
@@ -844,7 +842,7 @@ class Use(discord.ui.Select):
             if "Gambler" in x:
               if gambler_used == 0:
                 gambler_used += 1
-                embed.add_field(name="Compulsive Gambler Badge", value=f"Level {milestones['Compulsive Gambler']['level']}/6 {badge_emojies['gambler'][milestones['Compulsive Gambler']['level'] - 1]}")
+                embed.add_field(name="Compulsive Gambler Badge", value=f"Level {milestones['Compulsive Gambler']['level']}/6 {badge_emojies['gambler'][milestones['Compulsive Gambler']['level'] - 1]}\n{check_level('Compulsive Gambler', interaction.user.id)}")
 
             if "Hunter" in x:
               if bug_hunter_used == 0:

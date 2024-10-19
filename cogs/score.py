@@ -101,42 +101,42 @@ def check_level(name, userid):
   if "gamble" in name.lower():
     num = milestones['Compulsive Gambler']['amount']
     if num >= 10000:
-      return 6
+      return {'level': 6, "next": f"{num}"}
     elif num >= 5000:
-      return 5
+      return {'level': 5, "next": f"{num}/10000"}
     elif num >= 2500:
-      return 4
+      return {'level': 4, "next": f"{num}/5000"}
     elif num >= 1000:
-      return 3
+      return {'level': 3, "next": f"{num}/2500"}
     elif num >= 500:
-      return 2
+      return {'level': 2, "next": f"{num}/1000"}
     elif num >= 100:
-      return 1
+      return {'level': 1, "next": f"{num}/500"}
     else:
-      return 1
+      return {'level': 0, "next": f"{num}/100"}
   if "game" in name.lower():
     num = milestones['Mini-Games Won']['amount']
     if num >= 1000:
-      return 6
+      return {'level': 6, "next": f"{num}"}
     elif num >= 750:
-      return 5
+      return {'level': 5, "next": f"{num}/1000"}
     elif num >= 500:
-      return 4
+      return {'level': 4, "next": f"{num}/750"}
     elif num >= 250:
-      return 3
+      return {'level': 3, "next": f"{num}/500"}
     elif num >= 100:
-      return 2
+      return {'level': 2, "next": f"{num}/250"}
     elif num >= 50:
-      return 1
+      return {'level': 1, "next": f"{num}/100"}
     else:
-      return 1
+      return {'level': 0, "next": f"{num}/50"}
 
   elif "role" in name:
     num = milestones['Beta Role']['level']
     return num
 
   else:
-    return 1
+    return {'level': 0, "next": "Error."}
 
 def check_role(name):
   if "None" in name:

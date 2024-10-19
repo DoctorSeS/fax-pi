@@ -84,48 +84,6 @@ def next_reward(current, to, guild_id):
   else:
     return f"{int(to / 40)} {check_currency(guild_id)}"
 
-def check_level(name, userid):
-  milestones = get_db('users')[f'{userid}']['milestones']
-  if "gamble" in name.lower():
-    num = milestones['Compulsive Gambler']['amount']
-    if num >= 10000:
-      return 6
-    elif num >= 5000:
-      return 5
-    elif num >= 2500:
-      return 4
-    elif num >= 1000:
-      return 3
-    elif num >= 500:
-      return 2
-    elif num >= 100:
-      return 1
-    else:
-      return 1
-  if "game" in name.lower():
-    num = milestones['Mini-Games Won']['amount']
-    if num >= 1000:
-      return 6
-    elif num >= 750:
-      return 5
-    elif num >= 500:
-      return 4
-    elif num >= 250:
-      return 3
-    elif num >= 100:
-      return 2
-    elif num >= 50:
-      return 1
-    else:
-      return 1
-      
-  elif "role" in name:
-    num = milestones['Beta Role']['level']
-    return num
-  
-  else:
-    return 1
-
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
