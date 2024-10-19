@@ -839,7 +839,7 @@ class Use(discord.ui.Select):
             if "Role" in x:
               if role_used == 0:
                 role_used += 1
-                embed.add_field(name="Beta Role Badge", value=f"Level {milestones['Beta Role']['level']} {badge_emojies['role'][milestones['Beta Role']['level']]}")
+                embed.add_field(name="Beta Role Badge", value=f"Level {milestones['Beta Role']['level']} {badge_emojies['role'][milestones['Beta Role']['level'] - 1]}")
 
             if "Gambler" in x:
               if gambler_used == 0:
