@@ -210,7 +210,10 @@ async def monitor_shard_latency():
     for shard_id in shard_ids:
         shard = client.get_shard(shard_id)
         if shard:
-            ping = round(shard.latency * 1000)
+            try:
+                ping = round(shard.latency * 1000)
+            except:
+                ping = 10000
             shard_info = {
                 'shard_id': shard_id,
                 'ping': ping,
