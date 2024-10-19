@@ -9,7 +9,7 @@ from termcolor import cprint
 
 no_badge_emoji = "<:no_badge:1138943658469634171>"
 badge_emojies = {
-  "role": ["<:role_badge2:1138939944023376025>","<:role_badge3:1138939947328491622>", "<:role_badge4:1138939949274636328>", "<:role_badge5:1138939953296982257>", "<:role_badge6:1138939957281574962>"],
+  "role": ["<:role_badge2:1138939944023376025>", "<:role_badge3:1138939947328491622>", "<:role_badge4:1138939949274636328>", "<:role_badge5:1138939953296982257>", "<:role_badge6:1138939957281574962>"],
   "game": ["<:game_badge1:1139236149248938014>", "<:game_badge2:1139236151702601890>", "<:game_badge3:1139236153795555378>", "<:game_badge4:1139236156366671872>", "<:game_badge5:1139236157738205217>", "<:game_badge6:1139236160632262656>"],
   "patreon": ["<:patreon_badge1:1139515938929115307>", "<:patreon_badge2:1139515941491834940>", "<:patreon_badge3:1139515943857438770>", "<:patreon_badge4:1139515946738929665>"],
   "gambler": ["<:gambler_badge1:1205843114691010581>", "<:gambler_badge2:1205843116016271370>", "<:gambler_badge3:1205843117773951047>", "<:gambler_badge4:1205843119778824202>", "<:gambler_badge5:1205843122182164500>", "<:gambler_badge6:1205843124514193449>"],
@@ -833,21 +833,21 @@ class Use(discord.ui.Select):
             if "Games" in x:
               if games_used == 0:
                 games_used += 1
-                embed.add_field(name="Mini-Game Wins Badge", value=f"Level {milestones['Mini-Games Won']['level']}/6 {badge_emojies['game'][milestones['Mini-Games Won']['level'] - 1]}\n{check_level('Mini-Games Won', interaction.user.id)} wins")
+                embed.add_field(name="Mini-Game Wins Badge", value=f"Level {milestones['Mini-Games Won']['level']}/6 {badge_emojies['game'][milestones['Mini-Games Won']['level']]}\n{check_level('Mini-Games Won', interaction.user.id)['next']} wins")
             if "Role" in x:
               if role_used == 0:
                 role_used += 1
-                embed.add_field(name="Beta Role Badge", value=f"Level {milestones['Beta Role']['level']} {badge_emojies['role'][milestones['Beta Role']['level'] - 1]}")
+                embed.add_field(name="Beta Role Badge", value=f"Level {milestones['Beta Role']['level']} {badge_emojies['role'][milestones['Beta Role']['level']]}")
 
             if "Gambler" in x:
               if gambler_used == 0:
                 gambler_used += 1
-                embed.add_field(name="Compulsive Gambler Badge", value=f"Level {milestones['Compulsive Gambler']['level']}/6 {badge_emojies['gambler'][milestones['Compulsive Gambler']['level'] - 1]}\n{check_level('Compulsive Gambler', interaction.user.id)}")
+                embed.add_field(name="Compulsive Gambler Badge", value=f"Level {milestones['Compulsive Gambler']['level']}/6 {badge_emojies['gambler'][milestones['Compulsive Gambler']['level']]}\n{check_level('Compulsive Gambler', interaction.user.id)['next']}")
 
             if "Hunter" in x:
               if bug_hunter_used == 0:
                 bug_hunter_used += 1
-                embed.add_field(name="Bug Hunter Badge", value=f"Level {milestones['Bug Hunter']['level']}/3 {badge_emojies['bug_hunter'][milestones['Bug Hunter']['level'] - 1]}")
+                embed.add_field(name="Bug Hunter Badge", value=f"Level {milestones['Bug Hunter']['level']}/3 {badge_emojies['bug_hunter'][milestones['Bug Hunter']['level']]}")
 
             if f"{interaction.user.id}" in list(patrons):
               if supporter_used == 0:
