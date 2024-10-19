@@ -14,7 +14,8 @@ badge_emojies = {
   "patreon": ["<:patreon_badge1:1139515938929115307>", "<:patreon_badge2:1139515941491834940>", "<:patreon_badge3:1139515943857438770>", "<:patreon_badge4:1139515946738929665>"],
   "gambler": ["<:gambler_badge1:1205843114691010581>", "<:gambler_badge2:1205843116016271370>", "<:gambler_badge3:1205843117773951047>", "<:gambler_badge4:1205843119778824202>", "<:gambler_badge5:1205843122182164500>", "<:gambler_badge6:1205843124514193449>"],
   "bug_hunter": ["<:bug_hunter1:1176633062419865720>", "<:bug_hunter2:1176633068178645122>", "<:bug_hunter3:1176633077603250296>"],
-  "no_badge": "<:no_badge:1176626089901162647>"
+  "no_badge": "<:no_badge:1176626089901162647>",
+  "ARG1": "<:arg1:1297283944806613003>"
 }
 
 
@@ -828,6 +829,7 @@ class Use(discord.ui.Select):
           gambler_used = 0
           owner_used2 = 0
           bug_hunter_used = 0
+          arg1_badge_used = 0
           
           for x in milestones:
             if "Games" in x:
@@ -863,6 +865,11 @@ class Use(discord.ui.Select):
                   embed.add_field(name="Supporter Badge", value=f"Max Tier {badge_emojies['patreon'][3]}")
                 else:
                   pass
+
+            if "ARG" in x:
+              if arg1_badge_used == 0:
+                arg1_badge_used += 1
+                embed.add_field(name="ARG Winner Badge", value=f"Level {milestones['ARG']['level']}/3 {badge_emojies['ARG1']}")
 
             if interaction.user.id == ses:
               if owner_used == 0:
