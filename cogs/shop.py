@@ -10,9 +10,9 @@ from termcolor import cprint
 no_badge_emoji = "<:no_badge:1138943658469634171>"
 badge_emojies = {
   "role": ["<:role_badge2:1138939944023376025>", "<:role_badge3:1138939947328491622>", "<:role_badge4:1138939949274636328>", "<:role_badge5:1138939953296982257>", "<:role_badge6:1138939957281574962>"],
-  "game": ["<:game_badge1:1139236149248938014>", "<:game_badge2:1139236151702601890>", "<:game_badge3:1139236153795555378>", "<:game_badge4:1139236156366671872>", "<:game_badge5:1139236157738205217>", "<:game_badge6:1139236160632262656>"],
+  "game": ["<:game_badge1:1139236149248938014>", "<:game_badge2:1139236151702601890>", "<:game_badge3:1139236153795555378>", "<:game_badge4:1139236156366671872>", "<:game_badge5:1139236157738205217>", "<:game_badge6:1139236160632262656>", "<:no_badge:1138943658469634171>"],
   "patreon": ["<:patreon_badge1:1139515938929115307>", "<:patreon_badge2:1139515941491834940>", "<:patreon_badge3:1139515943857438770>", "<:patreon_badge4:1139515946738929665>"],
-  "gambler": ["<:gambler_badge1:1205843114691010581>", "<:gambler_badge2:1205843116016271370>", "<:gambler_badge3:1205843117773951047>", "<:gambler_badge4:1205843119778824202>", "<:gambler_badge5:1205843122182164500>", "<:gambler_badge6:1205843124514193449>"],
+  "gambler": ["<:gambler_badge1:1205843114691010581>", "<:gambler_badge2:1205843116016271370>", "<:gambler_badge3:1205843117773951047>", "<:gambler_badge4:1205843119778824202>", "<:gambler_badge5:1205843122182164500>", "<:gambler_badge6:1205843124514193449>", "<:no_badge:1138943658469634171>"],
   "bug_hunter": ["<:bug_hunter1:1176633062419865720>", "<:bug_hunter2:1176633068178645122>", "<:bug_hunter3:1176633077603250296>"],
   "no_badge": "<:no_badge:1176626089901162647>",
   "ARG1": "<:arg1:1297283944806613003>"
@@ -869,7 +869,7 @@ class Use(discord.ui.Select):
             if "ARG" in x:
               if arg1_badge_used == 0:
                 arg1_badge_used += 1
-                embed.add_field(name="ARG Winner Badge", value=f"Level {milestones['ARG']['level']}/3 {badge_emojies['ARG1']}")
+                embed.add_field(name="ARG Winner Badge", value=f"Level {milestones['ARG']['level']} {badge_emojies['ARG1']}")
 
             if interaction.user.id == ses:
               if owner_used == 0:
