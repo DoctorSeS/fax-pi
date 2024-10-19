@@ -835,7 +835,7 @@ class Use(discord.ui.Select):
             if "Games" in x:
               if games_used == 0:
                 games_used += 1
-                embed.add_field(name="Mini-Game Wins Badge", value=f"Level {milestones['Mini-Games Won']['level']}/6 {badge_emojies['game'][milestones['Mini-Games Won']['level']]}\n{check_level('Mini-Games Won', interaction.user.id)['next']} wins")
+                embed.add_field(name="Mini-Game Wins Badge", value=f"Level {milestones['Mini-Games Won']['level']}/6 {badge_emojies['game'][milestones['Mini-Games Won']['level'] - 1]}\n{check_level('Mini-Games Won', interaction.user.id)['next']} wins")
             if "Role" in x:
               if role_used == 0:
                 role_used += 1
@@ -844,12 +844,12 @@ class Use(discord.ui.Select):
             if "Gambler" in x:
               if gambler_used == 0:
                 gambler_used += 1
-                embed.add_field(name="Compulsive Gambler Badge", value=f"Level {milestones['Compulsive Gambler']['level']}/6 {badge_emojies['gambler'][milestones['Compulsive Gambler']['level']]}\n{check_level('Compulsive Gambler', interaction.user.id)['next']}")
+                embed.add_field(name="Compulsive Gambler Badge", value=f"Level {milestones['Compulsive Gambler']['level']}/6 {badge_emojies['gambler'][milestones['Compulsive Gambler']['level'] - 1]}\n{check_level('Compulsive Gambler', interaction.user.id)['next']}")
 
             if "Hunter" in x:
               if bug_hunter_used == 0:
                 bug_hunter_used += 1
-                embed.add_field(name="Bug Hunter Badge", value=f"Level {milestones['Bug Hunter']['level']}/3 {badge_emojies['bug_hunter'][milestones['Bug Hunter']['level']]}")
+                embed.add_field(name="Bug Hunter Badge", value=f"Level {milestones['Bug Hunter']['level']}/3 {badge_emojies['bug_hunter'][milestones['Bug Hunter']['level'] - 1]}")
 
             if f"{interaction.user.id}" in list(patrons):
               if supporter_used == 0:
