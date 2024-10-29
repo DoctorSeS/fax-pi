@@ -109,6 +109,11 @@ class Globalchat(commands.Cog):
                         if val is True:
                             embed2 = discord.Embed(description=f"**`SUCCESS:`** ```python\nGlobal chat has been deactivated.\nYou can re-enable this at anytime with the {bot_prefix}config command.\n```", color=0x1bd13a)
 
+                            all_gc = get_db('misc')['global_chat_all']
+                            if str(ctx.guild.id) in all_gc:
+                                all_gc = all_gc.replace(f"{ctx.guild.id},", '')
+                                update_db(f'misc', "none", {"global_chat_all": f"{all_gc}"})
+
                             update_db(f'guilds/{ctx.guild.id}', "global_chat", {"active": False})
                             await ctx.send(embed=embed2, content=None)
                         else:
@@ -164,6 +169,11 @@ class Globalchat(commands.Cog):
                     color=green)
 
                 update_db(f'guilds/{ctx.guild.id}', "global_chat", {"channel": f"{msg4}"})
+
+                all_gc = get_db('misc')['global_chat_all']
+                if not str(ctx.guild.id) in all_gc:
+                    update_db(f'misc', "none", {"global_chat_all": f"{all_gc}{ctx.guild.id},"})
+
                 await mes.edit(embed=embed2, content=None)
                 await channel.edit(slowmode_delay=10, topic=f"A Text Channel for all the servers that <@{client.user.id}> is in. Make sure to respect discord's TOS. This does not allow nsfw.")
 
