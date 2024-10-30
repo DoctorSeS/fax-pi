@@ -381,7 +381,12 @@ class Globalchat(commands.Cog):
                                     elif message.author.id == ses:
                                       col = 0xad0000
 
-                                    embed = discord.Embed(description=f"Replying to **{embeddict['author']['name']}**:\n{embeddict['description']}\n\n{mes2}", timestamp=message.created_at, color=col)
+                                    try:
+                                        desc = embeddict['description']
+                                    except:
+                                        desc = ""
+
+                                    embed = discord.Embed(description=f"Replying to **{embeddict['author']['name']}**:\n{desc}\n\n{mes2}", timestamp=message.created_at, color=col)
                                     pass
                                   else:
                                     embed = discord.Embed(description=f"Replying to **{msg.author}**:\n{msg.content}\n\n{mes2}", timestamp=message.created_at, color=col)

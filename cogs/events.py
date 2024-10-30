@@ -183,8 +183,6 @@ class Events(commands.Cog):
   async def on_guild_unavailable(self, guild):
     ses2 = client.get_user(ses)
     try:
-      global unguilds
-      unguilds += 1
       embed = discord.Embed(description=f"Guild {guild.name} • ID: {guild.id} has become unavailable.\n`Reason:` Unknown.", timestamp=datetime.datetime.now())
       embed.set_footer(text="Last restart:", icon_url=client.user.avatar)
       await ses2.send(embed=embed, content=None)
