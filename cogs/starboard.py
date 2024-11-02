@@ -1,15 +1,8 @@
 import discord
 from discord.ext import commands, tasks
-import logging
-import traceback
 import random
 from random import randint
 from main import client, bot_prefix, ses, round_time, check_name, green, red
-import fileinput
-from termcolor import cprint
-import os
-from PIL import Image, ImageFont, ImageDraw, ImageOps
-from io import BytesIO
 from discord.ui import InputText, Modal
 from database import *
 
@@ -270,9 +263,8 @@ class Starboard(commands.Cog):
     if not message.guild:
       return
 
-
     try:
-      active = get_db('guilds')[f'{reaction.guild.id}']['starboard']['active']
+      active = get_db('guilds')[f'{message.guild.id}']['starboard']['active']
     except:
       return
       
@@ -289,21 +281,19 @@ class Starboard(commands.Cog):
       
       counter = 5
       try:
-        count = get_db('guilds')[f'{reaction.guild.id}']['starboard']['count']
+        counter = int(get_db('guilds')[f'{message.guild.id}']['starboard']['count'])
       except:
         pass
-      else:
-        counter = int(count)
-        pass
 
+      editor = ""
       try:
-        editor = get_db('guilds')[f'{reaction.guild.id}']['starboard_messages']
+        editor = get_db('guilds')[f'{message.guild.id}']['starboard_messages']
       except:
         pass
       else:
         if str(message.id) in editor:
           try:
-            find_channel = int(get_db('guilds')[f'{reaction.guild.id}']['starboard']['channel'])
+            find_channel = int(get_db('guilds')[f'{message.guild.id}']['starboard']['channel'])
           except:
             return
           
@@ -324,10 +314,10 @@ class Starboard(commands.Cog):
             return
           else:
             return
-      
-      if f"count={counter}" in str(message.reactions):
+
+      if (counter == reaction.count) and (f"{message.id}" not in editor):
         try:
-          find_channel = int(get_db('guilds')[f'{reaction.guild.id}']['starboard']['channel'])
+          find_channel = int(get_db('guilds')[f'{message.guild.id}']['starboard']['channel'])
         except:
           return
 
@@ -335,7 +325,7 @@ class Starboard(commands.Cog):
           return
 
         try:
-          find_mes = get_db('guilds')[f'{reaction.guild.id}']['starboard_messages']
+          find_mes = get_db('guilds')[f'{message.guild.id}']['starboard_messages']
         except:
           find_mes = ""
 
@@ -386,9 +376,9 @@ class Starboard(commands.Cog):
         try:
           editor = get_db('guilds')[f'{message.guild.id}']['starboard_messages']
         except:
-          update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{reaction.message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
+          update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
         else:
-          update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{editor}{reaction.message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
+          update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{editor}{message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
 
         if_100(message.guild.id)
 

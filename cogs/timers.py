@@ -59,12 +59,16 @@ def add_time(time_add):
 class Timers(commands.Cog):
   def __init__(self, client):
     self.client = client
-    self.timers.start()
-    self.patreon_check.start()
-    self.active_check.start()
-    self.inactive_check.start()
-    self.check_files.start()
-    self.check_changes.start()
+
+  @commands.Cog.listener()
+  async def on_ready(self):
+    if client.is_ready():
+      self.timers.start()
+      self.patreon_check.start()
+      self.active_check.start()
+      self.inactive_check.start()
+      self.check_files.start()
+      self.check_changes.start()
   
   @tasks.loop(hours=2)
   async def patreon_check(self):
@@ -170,8 +174,11 @@ class Timers(commands.Cog):
 
       if "Remind" in x:
         continue
-          
-      value = get_db('timers')[x]
+
+      try:
+        value = get_db('timers')[x]
+      except:
+        continue
       value2 = str(value)
 
       if "Streak" in x:

@@ -1,17 +1,6 @@
 from discord.ext import commands, tasks
 import discord
-import logging
-import traceback
-import asyncio
-import datetime
-import random
-from random import randint
 from main import client, bot_prefix, round_time, ses, currency, check_name, red, green
-import fileinput
-from cogs.slash import guild_ids
-from discord.commands import slash_command
-from discord import Option
-from termcolor import cprint
 import time
 from PIL import Image, ImageFont, ImageDraw, ImageOps, ImageEnhance
 import os

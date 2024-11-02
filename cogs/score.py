@@ -1,5 +1,5 @@
 #Score (Fax Machine's Communist Republic of Lauren's Lair's Social Credit Score)
-from discord.ext import commands, tasks
+from discord.ext import commands, tasks, bridge
 import discord
 import logging
 import traceback
@@ -9,7 +9,6 @@ import random
 from random import randint
 from main import client, bot_prefix, round_time, ses, currency, check_name, green, red
 import fileinput
-from discord.commands import slash_command
 from discord import Option
 from termcolor import cprint
 from PIL import Image, ImageFont, ImageDraw, ImageOps
@@ -155,7 +154,7 @@ def check_role(name):
     return "role6"
   elif "Prophet" in name:
     return "role7"
-  
+
 
 def check_folder(name):
   bgs = get_db('misc')['shop']['backgrounds']
@@ -168,7 +167,7 @@ def check_folder(name):
       return f"custom/{name}"
     else:
       return "default_background"
-  
+
 
 def add_time(time_add):
   current = datetime.datetime.now()
@@ -193,7 +192,7 @@ class Edit_Profile(discord.ui.View):
   async def edit(self, button, interaction):
     await self.ctx.invoke(client.get_command("inventory"))
     await interaction.message.delete()
-    
+
 
 class Confirm(discord.ui.View):
   def __init__(self, ctx, amount, user, yourvaluefinal, uservaluefinal, yourvalueint, uservalueint):
@@ -220,7 +219,7 @@ class Confirm(discord.ui.View):
       await self.user.send(embed=finalembed2, content=None, view=None)
     else:
       return
-  
+
   @discord.ui.button(label="No", style=discord.ButtonStyle.red, custom_id="No")
   async def no(self, button, interaction):
     if interaction.user.id == self.ctx.author.id:
@@ -228,46 +227,7 @@ class Confirm(discord.ui.View):
       await interaction.message.edit(embed=finalembed, content=None, view=None)
     else:
       return
-  
-  async def on_timeout(self):
-    for child in self.children:
-      child.disabled = True
-    else:
-      await self.message.edit(view=self, content="Timed out.")
 
-class Confirm_slash(discord.ui.View):
-  def __init__(self, ctx, amount, user, yourvaluefinal, uservaluefinal, yourvalueint, uservalueint):
-    super().__init__(timeout=500)
-    self.value = 0
-    self.ctx = ctx
-    self.amount = amount
-    self.user = user
-    self.yourvaluefinal = yourvaluefinal
-    self.uservaluefinal = uservaluefinal
-    self.yourvalueint = yourvalueint
-    self.uservalueint = uservalueint
-
-  @discord.ui.button(label="Yes", style=discord.ButtonStyle.green, custom_id="Yes")
-  async def yes(self, button, interaction):
-    if interaction.user.id == self.ctx.author.id:
-      update_db('users', f"{self.user.id}", {"score": self.uservaluefinal})
-      update_db('users', f"{interaction.user.id}", {"score": self.yourvaluefinal})
-      finalembed = discord.Embed(description=f"```ini\n[ {check_currency(interaction.guild.id)} has been wired successfully. ]\n\n{interaction.user.name}'s {check_currency(interaction.guild.id)}: {self.yourvalueint} ≫ {self.yourvaluefinal}\n{self.user.name}'s {check_currency(interaction.guild.id)}: {self.uservalueint} ≫ {self.uservaluefinal}```", color=green)
-      await interaction.response.edit_message(embed=finalembed, content=None, view=None)
-
-      finalembed2 = discord.Embed(description=f"```ini\n[ {check_currency(interaction.guild.id)} has been wired successfully. ]\n\n{interaction.user.name}'s {check_currency(interaction.guild.id)}: {self.yourvalueint} ≫ {self.yourvaluefinal}\n{self.user.name}'s {check_currency(interaction.guild.id)}: {self.uservalueint} ≫ {self.uservaluefinal}\n\nYou have received {self.amount} {currency} from {interaction.user.name}.```\n[Jump to the message]({interaction.message.jump_url})", color=green)
-      await self.user.send(embed=finalembed2, content=None, view=None)
-    else:
-      return
-  
-  @discord.ui.button(label="No", style=discord.ButtonStyle.red, custom_id="No")
-  async def no(self, button, interaction):
-    if interaction.user.id == self.ctx.author.id:
-      finalembed = discord.Embed(description=f"```ini\n[ {check_currency(interaction.guild.id)} transaction cancelled. ]\n\nPlease try again if you mentioned the wrong amount of {check_currency(interaction.guild.id)}.```", color=red)
-      await interaction.response.edit_message(embed=finalembed, content=None, view=None)
-    else:
-      return
-  
   async def on_timeout(self):
     for child in self.children:
       child.disabled = True
@@ -371,63 +331,7 @@ class Scores(commands.Cog):
           buttonembed = discord.Embed(description=f"```ini\n[ Are you sure you want to wire {amount} {check_currency(ctx.guild.id)} to {user.name}? ]\n\nThe values below will proceed if confirmation is received.\n{ctx.author.name}'s {check_currency(ctx.guild.id)}: {yourvalueint} ≫ {yourvaluefinal}\n{user.name}'s {check_currency(ctx.guild.id)}: {uservalueint} ≫ {uservaluefinal}```", color=0xedbc1c)
           view = Confirm(ctx, amount, user, yourvaluefinal, uservaluefinal, yourvalueint, uservalueint)
           await ctx.send(embed=buttonembed, content=None, view=view)
-  
-  @slash_command(name="transmit", description="Give someone else some of your score.")
-  async def transmit_slash(self, ctx, user:Option(discord.User, "The person you want to give score to.", required=True), amount:Option(int, "The amount of score you want to give.", required=True)):
-    if ctx.guild:
-      if check_logs(ctx.guild.id)[0] is True:
-        logs2 = check_logs(ctx.guild.id)[2]
-        embed = discord.Embed(description=f"Slash Command used in <#{ctx.channel.id}>.", color=discord.Color.random())
-        embed.add_field(name=f'Command used:', value=f"/transmit {user} {amount}")
-        embed.set_author(name=f"{ctx.author} • ID: {ctx.author.id}", icon_url=ctx.author.avatar)
-        embed.set_footer(text=f'{client.user.name}', icon_url=client.user.avatar)
-        await logs2.send(embed=embed, content=None)
-      
-    if user == None:
-      embed2 = discord.Embed(description=f"**`ERROR:`** ```python\nInvalid method.\nValid Methods: g!transmit <user> <amount>(+)```", color=red)
-      await ctx.respond(embed=embed2, content=None, delete_after=10)
-      return
-    else:
-      if user.id == ctx.author.id:
-        embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you can not give {check_currency(ctx.guild.id)} to yourself.```", color=red)
-        await ctx.respond(embed=embed2, content=None, delete_after=10)
-        return
-      else:
-        pass
-      if amount == None:
-        embed2 = discord.Embed(description=f"**`ERROR:`** ```python\nInvalid method.\nValid Methods: g!transmit <user> <amount>(+)```", color=red)
-        await ctx.respond(embed=embed2, content=None, delete_after=10)
-        return
-      else:
-        try:
-          uservalue = get_db('users')[f'{user.id}']['score']
-        except:
-          uservalue = 0
 
-        try:
-          yourvalue = get_db('users')[f'{ctx.author.id}']['score']
-        except:
-          yourvalue = 0
-
-        uservalueint = float(uservalue)
-        yourvalueint = float(yourvalue)
-        amountstr = str(amount)
-        if amountstr.startswith("-"):
-          embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you can not give someone negative {check_currency(ctx.guild.id)}.```", color=red)
-          await ctx.respond(embed=embed2, content=None, delete_after=30)
-          return
-        elif yourvalueint < amount:
-          embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you can not give someone something you do not have.\n\nYour {check_currency(ctx.guild.id)}: {yourvalueint}\nAmount needed: {amount}```", color=red)
-          await ctx.respond(embed=embed2, content=None, delete_after=30)
-          return
-        else:
-          uservaluefinal = uservalueint + amount
-          yourvaluefinal = yourvalueint - amount
-          buttonembed = discord.Embed(description=f"```ini\n[ Are you sure you want to wire {amount} {check_currency(ctx.guild.id)} to {user.name}? ]\n\nThe values below will proceed if confirmation is received.\n{ctx.author.name}'s {check_currency(ctx.guild.id)}: {yourvalueint} ≫ {yourvaluefinal}\n{user.name}'s {check_currency(ctx.guild.id)}: {uservalueint} ≫ {uservaluefinal}```", color=0xedbc1c)
-          view = Confirm_slash(ctx, amount, user, yourvaluefinal, uservaluefinal, yourvalueint, uservalueint)
-          await ctx.respond(embed=buttonembed, content=None, view=view)
-
-  
   @commands.command()
   @commands.is_owner()
   async def dbadd(self, ctx, id: str, id2: str, *, value: str):
@@ -438,7 +342,7 @@ class Scores(commands.Cog):
 
     update_db(f'{id}', f"{id2}", eval(value))
     await ctx.send(f"""Database entry {id} created:\nValue: {value} """)
-  
+
   @commands.command(aliases=["dbdel"])
   @commands.is_owner()
   async def dbdelete(self, ctx, id: str, id2: str):
@@ -449,7 +353,7 @@ class Scores(commands.Cog):
 
     del_db(f'{id}', f"{id2}")
     await ctx.send("Database key Deleted.")
-  
+
   @commands.command(aliases=['dbval'])
   @commands.is_owner()
   async def dbvalue(self, ctx, id: str):
@@ -467,7 +371,7 @@ class Scores(commands.Cog):
       await ctx.send(embed=embed)
     else:
       await ctx.send(value)
-    
+
   #score adding on_message
   @commands.Cog.listener()
   async def on_message(self, message):
@@ -485,7 +389,7 @@ class Scores(commands.Cog):
             profile = get_db('users')[f'{message.author.id}']['profile']
           except:
             profile = f"{check_name(message.author)}/"
-            
+
           try:
             score = float(get_db('users')[f'{message.author.id}']['score'])
           except:
@@ -520,7 +424,7 @@ class Scores(commands.Cog):
                 update_db(f'users', f"{message.author.id}", {f'role-{message.guild.id}': {"name": previous['name'], "multiplier": previous['multiplier']}})
                 del_db(f'users/{message.author.id}', 'previous_role')
 
-          
+
           if score <= -0.01:
             score3b = str(str(score).replace("-", ""))
             score = float(score3b)
@@ -538,7 +442,7 @@ class Scores(commands.Cog):
 
             if earn1 == 0.0:
               earn1 += 0.01
-            
+
             earning = round(random.uniform(earn1, earn2), 2)
           else:
             if booster >= 1:
@@ -554,7 +458,7 @@ class Scores(commands.Cog):
 
           if percent > 100:
             percent = 100
-            
+
           percent2 = round(random.uniform(1.00, 100.00), 4)
 
           update_db('users', f"{message.author.id}", {'profile': f"{check_name(message.author)}/{percent}-{earn1}={earn2}"})
@@ -598,11 +502,11 @@ class Scores(commands.Cog):
         position3 = (140, 520)
       else:
         position3 = (130, 520)
-    
+
     color = 255, 255, 255
     img_width = 1500
     img_height = 600
-    
+
     asset = ctx.author.display_avatar
     data = BytesIO(await asset.read())
     pfp = Image.open(data).convert("RGBA")
@@ -629,14 +533,14 @@ class Scores(commands.Cog):
         img = img.convert("L")
         black = (int(edited_background[0]), int(edited_background[1]), int(edited_background[2]))
         img = ImageOps.colorize(img, black=black, white="white")
-    
+
     img = img.convert("RGBA")
     font = ImageFont.truetype("images/assets/que.otf", 90)
 
     TINT_COLOR = (0, 0, 0)
     TRANSPARENCY = .40  # Degree of transparency, 0-100%
     OPACITY = int(255 * TRANSPARENCY)
-    
+
     overlay = Image.new('RGBA', img.size, TINT_COLOR+(0,))
     draw2 = ImageDraw.Draw(overlay)
     draw2.rectangle((60, 0, 480, 660), fill=TINT_COLOR+(OPACITY,))
@@ -645,10 +549,10 @@ class Scores(commands.Cog):
     """overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
     draw3 = ImageDraw.Draw(overlay)
     draw3.rounded_rectangle((30, 750, 1470, 970), fill=TINT_COLOR + (OPACITY,), radius=20)
-    img = Image.alpha_composite(img, overlay)""" 
-    
+    img = Image.alpha_composite(img, overlay)"""
+
     img.paste(smooth_corners(pfp, 50), (66, 86), smooth_corners(pfp, 50))
-    
+
     draw = ImageDraw.Draw(img)
     draw.text((500, 130), f"Wallet:", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
     draw.text((550, 260), f"{round(float(money), 2)} {check_currency(ctx.guild.id)}", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
@@ -688,7 +592,7 @@ class Scores(commands.Cog):
       draw.text((550, 425), f"Next Reward: {next_reward(current=current, to=to, guild_id=ctx.guild.id)} ", color, font=ImageFont.truetype("images/assets/que.otf", 50), stroke_fill=(0, 0, 0), stroke_width=3)
       _, _, w, h = draw.textbbox((0, 0), f"{current} / {to} {xpbooster}", font=ImageFont.truetype("images/assets/que.otf", 70))
       draw.text(((2000-w)/2, 500), f"{current} / {to} {xpbooster}", (255, 255, 255), font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=2)
-    
+
     img.save("images/wallet.png")
     f = discord.File(f"{os.getcwd()}/images/wallet.png", filename="wallet.png")
 
@@ -696,8 +600,8 @@ class Scores(commands.Cog):
     #embed.set_image(url="attachment://wallet.png")
 
     await ctx.send(f"> **Viewing current balance • [** {ctx.author.name} **]**", file=f)
-  
-  @slash_command(name="score", description="Display your score.")
+
+  @discord.slash_command(name="score", description="Display your score.")
   async def score_slash(self, ctx):
     if ctx.guild:
       if check_logs(ctx.guild.id)[0] is True:
@@ -725,11 +629,11 @@ class Scores(commands.Cog):
         position3 = (140, 520)
       else:
         position3 = (130, 520)
-    
+
     color = 255, 255, 255
     img_width = 1500
     img_height = 600
-    
+
     asset = ctx.author.display_avatar
     data = BytesIO(await asset.read())
     pfp = Image.open(data).convert("RGBA")
@@ -756,14 +660,14 @@ class Scores(commands.Cog):
         img = img.convert("L")
         black = (int(edited_background[0]), int(edited_background[1]), int(edited_background[2]))
         img = ImageOps.colorize(img, black=black, white="white")
-    
+
     img = img.convert("RGBA")
     font = ImageFont.truetype("images/assets/que.otf", 90)
 
     TINT_COLOR = (0, 0, 0)
     TRANSPARENCY = .40  # Degree of transparency, 0-100%
     OPACITY = int(255 * TRANSPARENCY)
-    
+
     overlay = Image.new('RGBA', img.size, TINT_COLOR+(0,))
     draw2 = ImageDraw.Draw(overlay)
     draw2.rectangle((60, 0, 480, 660), fill=TINT_COLOR+(OPACITY,))
@@ -772,10 +676,10 @@ class Scores(commands.Cog):
     """overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
     draw3 = ImageDraw.Draw(overlay)
     draw3.rounded_rectangle((30, 750, 1470, 970), fill=TINT_COLOR + (OPACITY,), radius=20)
-    img = Image.alpha_composite(img, overlay)""" 
-    
+    img = Image.alpha_composite(img, overlay)"""
+
     img.paste(smooth_corners(pfp, 50), (66, 86), smooth_corners(pfp, 50))
-    
+
     draw = ImageDraw.Draw(img)
     draw.text((500, 130), f"Wallet:", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
     draw.text((550, 260), f"{money} {check_currency(ctx.guild.id)}", color, font=font, stroke_fill=(0, 0, 0), stroke_width=4)
@@ -815,7 +719,7 @@ class Scores(commands.Cog):
       draw.text((550, 425), f"Next Reward: {next_reward(current=current, to=to, guild_id=ctx.guild.id)} ", color, font=ImageFont.truetype("images/assets/que.otf", 50), stroke_fill=(0, 0, 0), stroke_width=3)
       _, _, w, h = draw.textbbox((0, 0), f"{current} / {to} {xpbooster}", font=ImageFont.truetype("images/assets/que.otf", 70))
       draw.text(((2000-w)/2, 500), f"{current} / {to} {xpbooster}", (255, 255, 255), font=ImageFont.truetype("images/assets/que.otf", 70), stroke_fill=(0, 0, 0), stroke_width=2)
-    
+
     img.save("images/wallet.png")
     f = discord.File(f"{os.getcwd()}/images/wallet.png", filename="wallet.png")
 
@@ -827,7 +731,12 @@ class Scores(commands.Cog):
   @commands.command()
   @commands.before_invoke(disabled_check)
   @commands.cooldown(1, 30, commands.BucketType.user)
-  async def rep(self, ctx, *, member: discord.Member):
+  async def rep(self, ctx):
+    await ctx.message.reply("The **rep** command has been moved to a slash command.\nPlease type **/rep** to collect your reward.", delete_after=10)
+    await ctx.message.delete(delay=10)
+
+  @discord.slash_command(name='rep', description='Give a reputation point to someone.')
+  async def rep(self, ctx, *, member: Option(discord.Member, "The person you give a reputation point to.", required=True)):
     time_add = 86400
 
     if member.bot:
@@ -846,14 +755,14 @@ class Scores(commands.Cog):
     except:
       rep = 0
     finally:
-      
+
       try:
         check = get_db('timers')[f'TimerRep-{ctx.author.id}']
       except:
         rep2 = int(rep) + 1
 
         embed = discord.Embed(description=f"**{ctx.author.mention} has given {member.mention} a reputation point!** `({int(rep)} >> {int(rep) + 1})`", color=green)
-        
+
         patron_check = get_db('misc')['all_patrons']
         if str(ctx.author.id) in list(patron_check):
           pledge = int(patron_check[f"{ctx.author.id}"]["pledge"])
@@ -870,33 +779,30 @@ class Scores(commands.Cog):
         elif ctx.author.id == ses:
           rep2 = int(rep) + 2
           embed = discord.Embed(description=f"**{ctx.author.mention}{role7emoji} has given {member.mention} a reputation point!** `({rep} >> {int(rep) + 2})`", color=green)
-        
+
         update_db('users', f"{member.id}", {'reputation': rep2})
 
         update_db('misc', 'all_rep', {f'{member.id}': rep2})
-          
 
-        await ctx.send(embed=embed, content=None)
+        await ctx.respond(embed=embed, content=None)
         update_db("timers", f"none", {f"TimerRep-{ctx.author.id}": f"{add_time(time_add)}"})
-        
+
       else:
         current = datetime.datetime.now()
         value2 = str(check)
         date_check = datetime.datetime.strptime(value2, '%Y-%m-%d %H:%M:%S.%f')
         new_time = date_check - current
 
-        
         embed = discord.Embed(description=f"**`ERROR:`** ```python\nYou are unable to give out anymore reputation points at this time.\nTime left: {new_time}.\n```", color=red)
-        await ctx.send(embed=embed, content=None)
-  
-  
-  @slash_command(name="daily", description="Claim your daily reward.")
+        await ctx.respond(embed=embed, content=None)
+
+  @discord.slash_command(name="daily", description="Claim your daily reward.")
   async def daily_slash(self, ctx):
     earning = round(random.uniform(20.00, 60.00), 2)
 
     time_add = 86400
     time_add2 = 172800
-      
+
     try:
       check = get_db('timers')[f'TimerDaily-{ctx.author.id}']
     except:
@@ -906,14 +812,14 @@ class Scores(commands.Cog):
         streak = f"0/{add_time(time_add2)}"
       else:
         pass
-  
+
       multiplier = int(streak.split('/')[0])
-  
+
       if multiplier < 7:
         m3 = multiplier + 1
       else:
         m3 = multiplier
-  
+
       final_earning = round(earning * m3, 2)
 
       m4 = ""
@@ -935,9 +841,9 @@ class Scores(commands.Cog):
       elif ctx.author.id == ses:
         final_earning = final_earning * 2
         m4 = f" * 2 {role7emoji}"
-        
+
       update_db('timers', 'none', {f"TimerStreak-{ctx.author.id}": f"{m3}/{add_time(time_add2)}"})
-  
+
       if m3 == 1:
         daily = f"{role1emoji} > "
         color = 0xb3b3b3
@@ -963,7 +869,7 @@ class Scores(commands.Cog):
         m3 -= 1
         daily = f"{role1emoji} > {role2emoji} > {role3emoji} > {role4emoji} > {role5emoji} > {role6emoji} > {role7emoji}"
         color = 0xcf0000
-      
+
       embed = discord.Embed(description=f"**`Daily Reward Collected`**\n\n{final_earning} {check_currency(ctx.guild.id)} has been added to your wallet. (Base: {earning} * {round(float(m3), 2)}{m4})\n**`Streak: {m3}/7 Days`**\n{daily}", color=color)
       try:
         value = get_db('users')[f'{ctx.author.id}']['score']
@@ -977,107 +883,6 @@ class Scores(commands.Cog):
 
       update_db('timers', "none", {f"TimerDaily-{ctx.author.id}": f"{add_time(time_add)}"})
       await ctx.respond(embed=embed, content=None)
-          
-    else:
-      current = datetime.datetime.now()
-      value2 = str(check)
-      date_check = datetime.datetime.strptime(value2, '%Y-%m-%d %H:%M:%S.%f')
-      new_time = date_check - current
-      
-      embed = discord.Embed(description=f"**`ERROR:`** ```python\nYou are unable to claim your daily reward at this time.\nTime left: {new_time}.\n```", color=red)
-      await ctx.respond(embed=embed, content=None, delete_after=3)
-  
-  @commands.command()
-  @commands.before_invoke(disabled_check)
-  @commands.cooldown(1, 20, commands.BucketType.user)
-  async def daily(self, ctx):
-    earning = round(random.uniform(20.00, 60.00), 2)
-
-    time_add = 86400
-    time_add2 = 172800
-
-    try:
-      check = get_db('timers')[f'TimerDaily-{ctx.author.id}']
-    except:
-      try:
-        streak = get_db('timers')[f'TimerStreak-{ctx.author.id}']
-      except:
-        streak = f"0/{add_time(time_add2)}"
-      else:
-        pass
-
-      multiplier = int(streak.split('/')[0])
-
-      if multiplier < 7:
-        m3 = multiplier + 1
-      else:
-        m3 = multiplier
-
-      final_earning = round(earning * m3, 2)
-
-      m4 = ""
-      patron_check = get_db('misc')['all_patrons']
-      if str(ctx.author.id) in list(patron_check):
-        pledge = int(patron_check[f"{ctx.author.id}"]["pledge"])
-        if pledge == 100:
-          final_earning = final_earning * 1.25
-          m4 = " * 1.25"
-        elif pledge == 300:
-          final_earning = final_earning * 1.5
-          m4 = " * 1.5"
-        elif pledge == 500:
-          final_earning = final_earning * 1.75
-          m4 = f" * 1.75 {role6emoji}"
-        elif pledge == 1000:
-          final_earning = final_earning * 2
-          m4 = f" * 2 {role7emoji}"
-      elif ctx.author.id == ses:
-        final_earning = final_earning * 2
-        m4 = f" * 2 {role7emoji}"
-
-      update_db('timers', 'none', {f"TimerStreak-{ctx.author.id}": f"{m3}/{add_time(time_add2)}"})
-
-      if m3 == 1:
-        daily = f"{role1emoji} > "
-        color = 0xb3b3b3
-      elif m3 == 2:
-        daily = f"{role1emoji} > {role2emoji} > "
-        color = 0x43b512
-      elif m3 == 3:
-        daily = f"{role1emoji} > {role2emoji} > {role3emoji} > "
-        color = 0x005bb5
-      elif m3 == 4:
-        daily = f"{role1emoji} > {role2emoji} > {role3emoji} > {role4emoji} > "
-        color = 0x7300bf
-      elif m3 == 5:
-        daily = f"{role1emoji} > {role2emoji} > {role3emoji} > {role4emoji} > {role5emoji}"
-        color = 0xffdd00
-      elif m3 == 6:
-        daily = f"{role1emoji} > {role2emoji} > {role3emoji} > {role4emoji} > {role5emoji} > {role6emoji}"
-        color = 0xf29305
-      elif m3 == 7:
-        daily = f"{role1emoji} > {role2emoji} > {role3emoji} > {role4emoji} > {role5emoji} > {role6emoji} > {role7emoji}"
-        color = 0xcf0000
-      elif m3 == 8:
-        m3 -= 1
-        daily = f"{role1emoji} > {role2emoji} > {role3emoji} > {role4emoji} > {role5emoji} > {role6emoji} > {role7emoji}"
-        color = 0xcf0000
-
-      embed = discord.Embed(
-        description=f"**`Daily Reward Collected`**\n\n{final_earning} {check_currency(ctx.guild.id)} has been added to your wallet. (Base: {earning} * {round(float(m3), 2)}{m4})\n**`Streak: {m3}/7 Days`**\n{daily}",
-        color=color)
-      try:
-        value = get_db('users')[f'{ctx.author.id}']['score']
-      except:
-        update_db('users', f'{ctx.author.id}', {"score": final_earning})
-        embed.set_footer(text=f"Wallet: {final_earning}")
-      else:
-        final_money = round(float(value) + float(final_earning), 2)
-        embed.set_footer(text=f"Wallet: {value} >> {round(final_money, 2)}")
-        update_db('users', f'{ctx.author.id}', {"score": final_money})
-
-      update_db('timers', "none", {f"TimerDaily-{ctx.author.id}": f"{add_time(time_add)}"})
-      await ctx.send(embed=embed, content=None)
 
     else:
       current = datetime.datetime.now()
@@ -1090,10 +895,17 @@ class Scores(commands.Cog):
         embed = discord.Embed(description=f"**`ERROR:`** ```python\nBad date detected, please try again.```", color=red)
       else:
         embed = discord.Embed(description=f"**`ERROR:`** ```python\nYou are unable to claim your daily reward at this time.\nTime left: {new_time}.\n```", color=red)
-        
-      await ctx.send(embed=embed, content=None, delete_after=3)
 
-  @slash_command(name="profile", description="Check your profile.")
+      await ctx.respond(embed=embed, content=None, delete_after=5)
+
+  @commands.command()
+  @commands.before_invoke(disabled_check)
+  @commands.cooldown(1, 20, commands.BucketType.user)
+  async def daily(self, ctx):
+    await ctx.message.reply("The **daily** command has been moved to a slash command.\nPlease type **/daily** to collect your reward.", delete_after=10)
+    await ctx.message.delete(delay=10)
+
+  @discord.slash_command(name="profile", description="Check your profile.")
   async def profile_slash(self, ctx):
     try:
       role = get_db('users')[f'{ctx.author.id}'][f'role-{ctx.guild.id}']
@@ -1118,7 +930,7 @@ class Scores(commands.Cog):
     else:
       rep2 = int(rep)
       rep = f"+{rep}"
-      
+
     color = 255, 255, 255
 
     asset = ctx.author.display_avatar
@@ -1127,7 +939,7 @@ class Scores(commands.Cog):
     pfp = pfp.resize((250, 250))
 
     formatter = "png"
-    
+
     try:
       bought_background = get_db('users')[f'{ctx.author.id}'][f'background']
     except:
@@ -1140,9 +952,9 @@ class Scores(commands.Cog):
           if f"{ctx.author.id}" in filename:
             formatter = filename.split(".")[1]
             img = Image.open(f'images/assets/backgrounds/custom/{filename}')
-      
+
     img = img.resize((1500, 1000))
-    
+
     try:
       edited_background = get_db('users')[f'{ctx.author.id}'][f'edited_background']
     except:
@@ -1156,7 +968,7 @@ class Scores(commands.Cog):
         img = img.convert("L")
         black = (int(edited_background[0]), int(edited_background[1]), int(edited_background[2]))
         img = ImageOps.colorize(img, black=black, white="white")
-    
+
     img = img.convert("RGBA")
     font = ImageFont.truetype("images/assets/que.otf", 70)
 
@@ -1167,31 +979,31 @@ class Scores(commands.Cog):
     TINT_COLOR = (0, 0, 0)  # Black
     TRANSPARENCY = .40  # Degree of transparency, 0-100%
     OPACITY = int(255 * TRANSPARENCY)
-    
+
     overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
     draw3 = ImageDraw.Draw(overlay)
     draw3.rounded_rectangle((30, 30, 860, 400), fill=TINT_COLOR + (OPACITY,), radius=10)
     img = Image.alpha_composite(img, overlay)
-    
+
     overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
     draw3 = ImageDraw.Draw(overlay)
     draw3.rounded_rectangle((30, 440, 860, 690), fill=TINT_COLOR + (OPACITY,), radius=20)
     img = Image.alpha_composite(img, overlay)
-    
+
     overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
     draw3 = ImageDraw.Draw(overlay)
     draw3.rounded_rectangle((30, 750, 1470, 970), fill=TINT_COLOR + (OPACITY,), radius=20)
     img = Image.alpha_composite(img, overlay)
-    
+
     overlay = Image.new('RGBA', img.size, TINT_COLOR + (0,))
     draw3 = ImageDraw.Draw(overlay)
     draw3.rounded_rectangle((950, 70, 1430, 600), fill=TINT_COLOR + (OPACITY,), radius=20)
     img = Image.alpha_composite(img, overlay)
-    
+
     new_size = (252, 252)
     outline = Image.new('RGBA', new_size, (30, 30, 30))
     img.paste(smooth_corners(outline, 20), (45, 45), smooth_corners(outline, 20))
-    
+
     img.paste(smooth_corners(pfp, 20), (46, 46), smooth_corners(pfp, 20))
     img.paste(role_emoji, role_pos(role2), role_emoji)
 
@@ -1258,19 +1070,19 @@ class Scores(commands.Cog):
 
         elif ("hunter" in badge_placements[str(the_badge)]) or ("arg1" in badge_placements[str(the_badge)]):
           x = badges[int(the_badge) - 1][0] - 15
-          y = badges[int(the_badge) - 1][1] 
+          y = badges[int(the_badge) - 1][1]
           badge = Image.open(f"images/assets/badges/{badge_placements[str(the_badge)]}.png")
           img.paste(badge, (x, y), badge)
 
         else:
           img.paste(no_badge, badges[int(the_badge) - 1], no_badge)
-    
+
     if rep2 < 10:
       position4 = (75, 310)
     else:
       position4 = (65, 310)
 
-    
+
     draw = ImageDraw.Draw(img)
     _, _, w, h = draw.textbbox((0, 0), f">> Badges <<", font=ImageFont.truetype("images/assets/que.otf", 60))
     draw.text(((2380-w)/2, 80), f">> Badges <<", (255, 255, 255), font=ImageFont.truetype("images/assets/que.otf", 60), stroke_fill=(0, 0, 0), stroke_width=3)
@@ -1314,8 +1126,8 @@ class Scores(commands.Cog):
     #embed.set_image(url="attachment://profile.png")
 
     await ctx.respond(f"> **Viewing profile card • [** {ctx.author.name} **]**", file=f, view=Edit_Profile(ctx))
-    
-  
+
+
   @commands.command()
   @commands.before_invoke(disabled_check)
   @commands.cooldown(1, 20, commands.BucketType.user)
@@ -1540,4 +1352,3 @@ class Scores(commands.Cog):
 
 def setup(client):
   client.add_cog(Scores(client))
-    

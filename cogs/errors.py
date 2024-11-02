@@ -29,7 +29,11 @@ def check_patron(user_id):
 class Errors(commands.Cog):
   def __init__(self, client):
     self.client = client
-    self.command_list.start()
+
+  @commands.Cog.listener()
+  async def on_ready(self):
+    if client.is_ready():
+      self.command_list.start()
 
   @tasks.loop(hours=10)
   async def command_list(self):
@@ -93,8 +97,8 @@ class Errors(commands.Cog):
       global comms2
       embed = discord.Embed(description=f"Command used in {ctx.channel.mention}.\n[Jump to the message]({ctx.message.jump_url})", color=0x038211, timestamp=ctx.message.created_at)
       embed.add_field(name=f'Command used:', value=f"{ctx.message.content}")
-      embed.set_author(name=f"{ctx.author} • ID: {ctx.author.id}", icon_url=ctx.author.avatar)
-      embed.set_footer(text=f'{client.user.name}', icon_url=client.user.avatar)
+      embed.set_author(name=f"{ctx.author} • ID: {ctx.author.id}", icon_url=ctx.author.display_avatar)
+      embed.set_footer(text=f'{client.user.name}', icon_url=client.user.display_avatar)
 
       logs2 = ctx.guild.get_channel(int(value))
       try:
@@ -235,7 +239,7 @@ class Errors(commands.Cog):
     ver5 = ver4.replace("releaselevel", "\nreleaselevel")
     embed = discord.Embed(description=f"The bot is running.\n`Ping:` {round(client.latency * 1000)} ms\n`Guild:` {server}\n`Status:` [online]({site_link})\n`Version:` {discord.__version__}", color=discord.Color.from_rgb(r=0, g=randint(1, 255), b=0), timestamp=currentDT)
     embed.add_field(name=f"`Version Info:`", value=f"{ver5}")
-    embed.set_footer(text=f'Last restart:', icon_url=fax.avatar)
+    embed.set_footer(text=f'Last restart:', icon_url=fax.display_avatar)
     await ctx.send(embed=embed, content=None)
 
   @commands.command()
@@ -246,7 +250,7 @@ class Errors(commands.Cog):
     value3 = value2.replace(":", ":` ")
     embed = discord.Embed(description=f"**{comms2}** commands used.", color=discord.Color.from_rgb(r=0, g=randint(1, 255), b=0), timestamp=currentDT)
     embed.add_field(name="Total:", value=f"{value3}")
-    embed.set_footer(text="Last restart:", icon_url=client.user.avatar)
+    embed.set_footer(text="Last restart:", icon_url=client.user.display_avatar)
     await ctx.send(embed=embed, content=None)
 
 

@@ -2,23 +2,13 @@ import discord
 from discord.ext import commands, tasks
 import random
 from random import randint
-import asyncio
-from rea import sexres
-from nword import *
-import json
-import requests
-import math
-from discord.commands import slash_command
 from main import client, bot_prefix, round_time, ses, currency, red, green, check_name
-from termcolor import cprint
-from discord import Option
-import datetime
 from cogs.shop import role1emoji, role2emoji, role3emoji, role4emoji, role5emoji
 from cogs.score import check_currency
 from discord.ui import InputText, Modal
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 from io import BytesIO
-from cogs.slash import add_milestone
+from cogs.mini_games import add_milestone
 import os
 import time
 from database import *

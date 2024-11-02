@@ -171,8 +171,8 @@ class Events(commands.Cog):
                 logs2 = discord.utils.get(interaction.message.guild.channels, id=int(logs2))
                 embed = discord.Embed(description=f"Command used in <#{interaction.message.channel.id}>.\n[Jump to the message]({interaction.message.jump_url})", color=discord.Color.random(), timestamp=interaction.message.created_at)
                 embed.add_field(name=f'Command used:', value=f"{interaction.message.content}")
-                embed.set_author(name=f"{interaction.user} • ID: {interaction.user.id}", icon_url=interaction.message.author.avatar)
-                embed.set_footer(text=f'{client.user.name}', icon_url=client.user.avatar)
+                embed.set_author(name=f"{interaction.user} • ID: {interaction.user.id}", icon_url=interaction.message.author.display_avatar)
+                embed.set_footer(text=f'{client.user.name}', icon_url=client.user.display_avatar)
                 await logs2.send(embed=embed, content=None)
               except:
                 return
@@ -184,11 +184,11 @@ class Events(commands.Cog):
     ses2 = client.get_user(ses)
     try:
       embed = discord.Embed(description=f"Guild {guild.name} • ID: {guild.id} has become unavailable.\n`Reason:` Unknown.", timestamp=datetime.datetime.now())
-      embed.set_footer(text="Last restart:", icon_url=client.user.avatar)
+      embed.set_footer(text="Last restart:", icon_url=client.user.display_avatar)
       await ses2.send(embed=embed, content=None)
     except discord.HTTPException as error:
       embed = discord.Embed(description=f"**`Error:`**\n```python\n{error}```", timestamp=datetime.datetime.now())
-      embed.set_footer(text="Last restart:", icon_url=client.user.avatar)
+      embed.set_footer(text="Last restart:", icon_url=client.user.display_avatar)
       await ses2.send(embed=embed, content=None)
   
   @commands.Cog.listener()
@@ -249,12 +249,12 @@ class Events(commands.Cog):
               mess = mess.replace(x, change_to[index])
 
             welcome = discord.Embed(title="New Member!", description=f"{mess}", color=color)
-            welcome.set_footer(text=f"{member} • ID: {member.id}", icon_url=member.avatar)
+            welcome.set_footer(text=f"{member} • ID: {member.id}", icon_url=member.display_avatar)
             if image != "None":
               try:
                 welcome.set_image(url=f"{image}")
               except:
-                welcome.set_footer(text=f"{member} • ID: {member.id}\nFailed to set image. Consider re-adding it.", icon_url=member.avatar)
+                welcome.set_footer(text=f"{member} • ID: {member.id}\nFailed to set image. Consider re-adding it.", icon_url=member.display_avatar)
 
             await wm_channel.send(embed=welcome, content=None)
             await wm_channel.send(member.mention, delete_after=0.1)
@@ -266,8 +266,8 @@ class Events(commands.Cog):
 
         if channel2:
           logger = discord.Embed(title="New Member.", description=f"{member.mention} - {member}")
-          logger.set_thumbnail(url=member.avatar)
-          logger.set_author(name=f"ID: {member.id}", icon_url=member.avatar)
+          logger.set_thumbnail(url=member.display_avatar)
+          logger.set_author(name=f"ID: {member.id}", icon_url=member.display_avatar)
           await channel2.send(embed=logger, content=None)
   
 
@@ -283,7 +283,7 @@ class Events(commands.Cog):
           return
 
         embed = discord.Embed(description=f'{member.mention} left the server.', color=discord.Color.random(), timestamp=member.created_at)
-        embed.set_footer(text=f'{member} • ID: {member.id}', icon_url=f"{member.avatar}")
+        embed.set_footer(text=f'{member} • ID: {member.id}', icon_url=f"{member.display_avatar}")
         await channel.send(embed=embed, content=None)
 
   @commands.Cog.listener()
@@ -298,8 +298,8 @@ class Events(commands.Cog):
 
         async for entry in guild.audit_logs(action=discord.AuditLogAction.ban, limit=1, oldest_first=False):
           embed = discord.Embed(description=f'{user.mention} has been **banned** from the server.', color=discord.Color.from_rgb(r=randint(1, 255), g=randint(1, 255),b=randint(1, 255)))
-          embed.set_author(name=f'{user} • ID: {user.id}', icon_url=user.avatar)
-          embed.set_footer(text=f"Banned by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.avatar)
+          embed.set_author(name=f'{user} • ID: {user.id}', icon_url=user.display_avatar)
+          embed.set_footer(text=f"Banned by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.display_avatar)
           await channel.send(embed=embed, content=None)
 
   @commands.Cog.listener()
@@ -314,8 +314,8 @@ class Events(commands.Cog):
 
         async for entry in guild.audit_logs(action=discord.AuditLogAction.unban, limit=1, oldest_first=False):
           embed = discord.Embed(description=f'{user.mention} has been **unbanned** from the server.', color=discord.Color.random())
-          embed.set_author(name=f'{user} • ID: {user.id}', icon_url=user.avatar)
-          embed.set_footer(text=f"Unbanned by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.avatar)
+          embed.set_author(name=f'{user} • ID: {user.id}', icon_url=user.display_avatar)
+          embed.set_footer(text=f"Unbanned by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.display_avatar)
           await channel.send(embed=embed, content=None)
 
   @commands.Cog.listener()
@@ -332,7 +332,7 @@ class Events(commands.Cog):
 
         async for entry in channel.guild.audit_logs(action=discord.AuditLogAction.channel_create, limit=1, oldest_first=False):
           embed = discord.Embed(description=f'<#{channel.id}> has been created.\nID: {channel.id}', color=discord.Color.random(), timestamp=channel.created_at)
-          embed.set_footer(text=f'Created by {entry.user} • ID: {entry.user.id}', icon_url=entry.user.avatar)
+          embed.set_footer(text=f'Created by {entry.user} • ID: {entry.user.id}', icon_url=entry.user.display_avatar)
           await channel.send(embed=embed, content=None)
 
   @commands.Cog.listener()
@@ -349,7 +349,7 @@ class Events(commands.Cog):
 
         async for entry in channel.audit_logs(action=discord.AuditLogAction.channel_delete, limit=1, oldest_first=False):
           embed = discord.Embed(description=f'`#{channel}` has been deleted.\nID: {channel.id}', color=discord.Color.random(), timestamp=channel.created_at)
-          embed.set_footer(text=f'Deleted by {entry.user} • ID: {entry.user.id}', icon_url=f"{entry.user.avatar}")
+          embed.set_footer(text=f'Deleted by {entry.user} • ID: {entry.user.id}', icon_url=f"{entry.user.display_avatar}")
           await channel.send(embed=embed, content=None)
 
   @commands.Cog.listener()
@@ -368,7 +368,7 @@ class Events(commands.Cog):
           if before != None:
             async for entry in before.guild.audit_logs(action=discord.AuditLogAction.channel_update, limit=1, oldest_first=False):
               embed = discord.Embed(description=f"<#{before.id}> has been updated.", color=discord.Color.random(), timestamp=before.created_at)
-              embed.set_footer(text=f'Edited by {entry.user} • ID: {entry.user.id}', icon_url=entry.user.avatar)
+              embed.set_footer(text=f'Edited by {entry.user} • ID: {entry.user.id}', icon_url=entry.user.display_avatar)
               embed.add_field(name=f"Before:", value=f"`Name:` {before}\n`ID:` {before.id}\n`Position:` {before.position}\n`Slowmode delay:` {before.slowmode_delay}\n`Category:` {before.category}")
               embed.add_field(name=f"After:", value=f"`Name:` {after}\n`ID:` {after.id}\n`Position:` {after.position}\n`Slowmode delay:` {after.slowmode_delay}\n`Category:` {after.category}")
               await channel.send(embed=embed, content=None)
@@ -430,7 +430,7 @@ class Events(commands.Cog):
         embed = discord.Embed(description=f'Reactions removed from a message in <#{channel2.id}> • Message ID: {message.id}\n[Jump to the message](https://discordapp.com/channelsᚋ{message.guild.id}ᚋ{channel2.id}ᚋ{message.id})', color=discord.Color.random(), timestamp=message.created_at)
         embed.add_field(name='Reactions removed:', value=f'{reactions}')
         embed.set_footer(text=f'Message Author: {message.author} • ID: {message.author.id}')
-        embed.set_author(name=f'{message.author} • ID:{message.author.id}', icon_url=message.author.avatar)
+        embed.set_author(name=f'{message.author} • ID:{message.author.id}', icon_url=message.author.display_avatar)
         await channel.send(embed=embed, content=None)
 
   @commands.Cog.listener()
@@ -451,7 +451,7 @@ class Events(commands.Cog):
               else:
                 if before.content != after.content:
                   embed = discord.Embed(description=f"**A message has been edited in {before.channel.mention}.**\n[Jump to the message]({after.jump_url})", color=0x0023e8, timestamp=after.created_at)
-                  embed.set_author(name=f'{before.author} • ID:{before.author.id}', icon_url=before.author.avatar)
+                  embed.set_author(name=f'{before.author} • ID:{before.author.id}', icon_url=before.author.display_avatar)
                   embed.set_footer(text=f"Message ID: {before.id}")
                   embed.add_field(name='Before:', value=before.content + "\u200b")
                   embed.add_field(name="After:", value=after.content + "\u200b")
@@ -476,7 +476,7 @@ class Events(commands.Cog):
 
         async for entry in role.guild.audit_logs(action=discord.AuditLogAction.role_create, limit=1, oldest_first=False):
           embed = discord.Embed(description=f'<@&{role.id}> has been created.\nID: {role.id}', color=role.color, timestamp=role.created_at)
-          embed.set_footer(text=f"Created by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.avatar)
+          embed.set_footer(text=f"Created by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.display_avatar)
           await channel.send(embed=embed, content=None)
 
   @commands.Cog.listener()
@@ -493,7 +493,7 @@ class Events(commands.Cog):
         async for entry in role.guild.audit_logs(action=discord.AuditLogAction.role_delete, limit=1, oldest_first=False):
           embed = discord.Embed(description=f'`@{role}` has been deleted.', color=role.color, timestamp=role.created_at)
           embed.set_footer(text=f'Role ID: {role.id}')
-          embed.set_footer(text=f"Deleted by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.avatar)
+          embed.set_footer(text=f"Deleted by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.display_avatar)
           await channel.send(embed=embed, content=None)
 
   @commands.Cog.listener()
@@ -508,7 +508,7 @@ class Events(commands.Cog):
 
         async for entry in before.audit_logs(action=discord.AuditLogAction.guild_update, limit=1, oldest_first=False):
           embed = discord.Embed(description=f'**The server has been edited.**', color=discord.Color.random(), timestamp=after.created_at)
-          embed.set_footer(text=f"Edited by {entry.user} • ID: {entry.user.id}\nServer ID: {before.id}", icon_url=entry.user.avatar)
+          embed.set_footer(text=f"Edited by {entry.user} • ID: {entry.user.id}\nServer ID: {before.id}", icon_url=entry.user.display_avatar)
           embed.add_field(name='Before:', value=f'`Name:` **{before}**\n`VL:` **{before.verification_level}**\n`Boosts:` **{before.premium_subscription_count}**')
           embed.add_field(name='After:', value=f'`Name:` **{after}**\n`VL:` **{after.verification_level}**\n`Boosts:` **{after.premium_subscription_count}**')
           embed.set_thumbnail(url=after.icon.url)
@@ -525,7 +525,7 @@ class Events(commands.Cog):
           return
 
         embed = discord.Embed(description=f"**A new invite has been created.**", color=discord.Color.random(), timestamp=invite.created_at)
-        embed.set_footer(text=f'Invite created by {invite.inviter}\n{invite.url}', icon_url=invite.inviter.avatar)
+        embed.set_footer(text=f'Invite created by {invite.inviter}\n{invite.url}', icon_url=invite.inviter.display_avatar)
         embed.add_field(name=f'Invite properties:', value=f"`Code:` {invite.code}\n`Channel:` {invite.channel}\n`Time left:` {invite.max_age} seconds\n`Max uses:` {invite.max_uses}", inline=False)
         await channel.send(embed=embed, content=None)
 
@@ -586,8 +586,8 @@ class Events(commands.Cog):
 
         embed = discord.Embed(description=f"Slash Command used in <#{ctx.channel.id}>.", color=discord.Color.random())
         embed.add_field(name=f'Command used:', value=f"/snipe")
-        embed.set_author(name=f"{ctx.author} • ID: {ctx.author.id}", icon_url=ctx.author.avatar)
-        embed.set_footer(text=f'{client.user.name}', icon_url=client.user.avatar)
+        embed.set_author(name=f"{ctx.author} • ID: {ctx.author.id}", icon_url=ctx.author.display_avatar)
+        embed.set_footer(text=f'{client.user.name}', icon_url=client.user.display_avatar)
         await channel.send(embed=embed, content=None)
 
 def setup(client):
