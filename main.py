@@ -13,6 +13,8 @@ from termcolor import cprint
 import requests
 from database import *
 import tracemalloc
+import platform
+from inputimeout import inputimeout, TimeoutOccurred
 
 tracemalloc.start()
 
@@ -29,7 +31,10 @@ patreon_id = 20100324
 
 currency = "Kromer"
 
-bot_prefix = 'g!'
+if platform.system() == "Windows":
+    bot_prefix = "!"
+else:
+    bot_prefix = 'g!'
 
 def check_name(name):
   if "#0" in str(name):
@@ -42,18 +47,17 @@ def get_prefix(bot, message):
     try:
         value = get_db('guilds')[f'{message.guild.id}']["prefix"]
     except:
-        prefixes = ['g!', 'G!']
+        prefixes = [f"{bot_prefix}", f"{bot_prefix.upper()}"]
         return commands.when_mentioned_or(*prefixes)(bot, message)
     else:
         prefixes = [f"{value}"]
         return commands.when_mentioned_or(*prefixes)(bot, message)
 
 def server_prefix(guild_id):
-  serv_pref = "g!"
   try:
     value = get_db('guilds')[f'{guild_id}']["prefix"]
   except:
-    return serv_pref
+    return bot_prefix
   else:
     return value
 
@@ -125,14 +129,21 @@ async def on_ready():
         print(f"Number of lines in ai.txt: {nm_lines}")
         update_db("misc", 'none', {"ai_lines": nm_lines})
 
-        global ch, msggg, cl, count
-        ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
-        msggg = await ch.fetch_message(831865097726328833)
-        cl = client.get_guild(msggg.guild.id)
-        bot_data.start()
-        del_db('misc', 'time_alive')
+        if platform.system() == "Linux":
+            global ch, msggg, cl, count
+            ch = client.get_guild(508043534071365652).get_channel(788656008867086346)
+            msggg = await ch.fetch_message(831865097726328833)
+            cl = client.get_guild(msggg.guild.id)
+            bot_data.start()
+            del_db('misc', 'time_alive')
 
-        change_status.start()
+            change_status.start()
+
+            all_guilds = []
+            for x in client.guilds:
+                all_guilds.append(x.id)
+            else:
+                update_db('misc', 'none', {"all_servers": all_guilds})
 
         for x in list(get_db('minigames')):
             if x != 'holder':
@@ -140,36 +151,28 @@ async def on_ready():
         else:
             cprint("Cleaned the 'minigames' database.", "blue")
 
-        all_guilds = ""
-        for x in client.guilds:
-            all_guilds += f"{x.id},"
-        else:
-            update_db('misc', 'none', {"all_servers": all_guilds})
-
         print(create_directories())
-
-        unloaded_cogs = []
-        all_files_num = 0
-        ### LOAD COGS HERE TO MAKE TIMERS WORK ###
-        for filename in os.listdir('./cogs'):
-            if filename.endswith('.py'):
-                try:
-                    all_files_num += 1
-                    client.load_extension(f'cogs.{filename[:-3]}')
-                except Exception as e:
-                    unloaded_cogs.append((f"{filename[:-3]}", f"{e}", f"{e.__traceback__.tb_lineno}"))
-        else:
-            errors = ""
-            if unloaded_cogs:
-                for x in unloaded_cogs:
-                    errors += f"- ERROR - COG: {x[0]}\n- ERROR - REASON: {x[1]}\n- ERROR - LINE: {x[2]}"
-
-            print(f"Finished cog loading. {len(client.cogs)}/{all_files_num}\n{errors}")
 
         ### START LATENCY GRAPH ###
         if os.path.exists(PING_DATA_FILE):
             open(PING_DATA_FILE, "w").close()
         monitor_shard_latency.start()
+
+        ### delete all starboard_messages instances ###
+        guilds = get_db('guilds')
+        wiped_starboard = 0
+        for x in guilds:
+            try:
+                starboard_messages = guilds[x]['starboard_messages']
+                if starboard_messages:
+                    del_db(f'guilds/{x}', 'starboard_messages')
+                    wiped_starboard += 1
+            except:
+                continue
+        else:
+            print(f"Wiped {wiped_starboard} instance of starboard messages.")
+
+        print(finished_cogs)
         cprint('----------------------------------', 'blue')
 
 @client.event
@@ -306,12 +309,12 @@ async def on_message(message):
     if lastuser != message.author.id:
         lastuser = message.author.id
         fact_chance = randint(1, 4)
-        if message.content == "g!":
+        if message.content == bot_prefix:
             if fact_chance == 1:
                 await message.channel.send(fact_generator())
             else:
                 await message.channel.send(random.choice(prefixresponse))
-        elif message.content == "G!":
+        elif message.content == bot_prefix.upper():
             if fact_chance == 1:
                 await message.channel.send(fact_generator())
             else:
@@ -338,7 +341,7 @@ async def on_message(message):
     except:
       if message.content.startswith(f"{bot_prefix}"):
         await client.process_commands(message)
-      elif message.content.startswith(f"G!"):
+      elif message.content.startswith(bot_prefix.upper()):
         await client.process_commands(message)
       elif message.content.startswith(client.user.mention):
         await client.process_commands(message)
@@ -358,7 +361,35 @@ async def on_error(event, *args, **kwargs):
     embed = discord.Embed(description=f"**`ERROR:`** ```python\n{message}\n```", color=0xc40000)
     await channel.send(embed=embed, content=None)
 
-token = os.environ.get("DISCORD_BOT_SECRET")
+unloaded_cogs = []
+all_files_num = 0
+errors = ""
+### LOAD COGS HERE TO MAKE TIMERS WORK ###
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        try:
+            all_files_num += 1
+            client.load_extension(f'cogs.{filename[:-3]}')
+        except Exception as e:
+            unloaded_cogs.append((f"{filename[:-3]}", f"{e}", f"{e.__traceback__.tb_lineno}"))
+        else:
+            if unloaded_cogs:
+                for x in unloaded_cogs:
+                    errors += f"- ERROR - COG: {x[0]}\n- ERROR - REASON: {x[1]}\n- ERROR - LINE: {x[2]}"
+
+else:
+    global finished_cogs
+    finished_cogs = f"Finished cog loading. {len(client.cogs)}/{all_files_num}\n{errors}"
+
+if platform.system() == "Windows":
+    try:
+        user_input = inputimeout(prompt='Test or Live? ', timeout=3)
+        if user_input:
+            token = os.environ.get("DISCORD_BOT_SECRET")
+    except TimeoutOccurred:
+        token = os.environ.get("DISCORD_BOT_SECRET_TEST")
+else:
+    token = os.environ.get("DISCORD_BOT_SECRET")
 
 def exception_handler(loop, context):
   cprint("Caught the following exception", "red")

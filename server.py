@@ -48,7 +48,7 @@ logger = logging.getLogger("BotLogger")
 logger.setLevel(logging.DEBUG)
 
 # Create a file handler
-file_handler = logging.FileHandler('templates/bot_logs.txt')
+file_handler = logging.FileHandler('templates/bot_logs.txt', encoding='utf-8', mode='w')
 file_handler.setLevel(logging.DEBUG)
 file_handler.addFilter(IgnoreLogFilter())
 
@@ -76,7 +76,7 @@ def home():
 
 @app.route('/logs', methods=['POST', 'GET'])
 def get_logs():
-    with open("templates/bot_logs.txt", "r") as f:
+    with open("templates/bot_logs.txt", "r", encoding='utf-8') as f:
         logs = f.readlines()
     return jsonify(logs=logs)
 

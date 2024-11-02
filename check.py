@@ -13,9 +13,6 @@ def run_discord_bot():
     main.run_bot()
 
 if __name__ == "__main__":
-    # Print the IP and notify about the running site
-    cprint(f"Running Site... IP: {socket.gethostbyname(socket.gethostname())}", "light_green")
-
     # Start both the Flask app and the bot in separate threads
     flask_thread = Thread(target=run_flask)
     bot_thread = Thread(target=run_discord_bot)
