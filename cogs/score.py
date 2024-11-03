@@ -735,7 +735,7 @@ class Scores(commands.Cog):
     await ctx.message.reply("The **rep** command has been moved to a slash command.\nPlease type **/rep** to collect your reward.", delete_after=10)
     await ctx.message.delete(delay=10)
 
-  @discord.slash_command(name='rep', description='Give a reputation point to someone.')
+  @commands.slash_command(name='rep', description='Give a reputation point to someone.', default_permissions=True)
   async def rep(self, ctx, *, member: Option(discord.Member, "The person you give a reputation point to.", required=True)):
     time_add = 86400
 
@@ -796,7 +796,7 @@ class Scores(commands.Cog):
         embed = discord.Embed(description=f"**`ERROR:`** ```python\nYou are unable to give out anymore reputation points at this time.\nTime left: {new_time}.\n```", color=red)
         await ctx.respond(embed=embed, content=None)
 
-  @discord.slash_command(name="daily", description="Claim your daily reward.")
+  @commands.slash_command(name="daily", description="Claim your daily reward.", default_permissions=True)
   async def daily_slash(self, ctx):
     earning = round(random.uniform(20.00, 60.00), 2)
 

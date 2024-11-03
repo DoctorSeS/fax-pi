@@ -58,7 +58,7 @@ class Slash_commands(commands.Cog):
 	def __init__(self, client):
 		self.client = client
 
-	@discord.slash_command(description="Display your avatar, or somebody else's.")
+	@commands.slash_command(description="Display your avatar, or somebody else's.", default_permissions=True)
 	async def avatar(self, ctx, *, member: discord.User = None):
 		if ctx.guild:
 			if check_logs(ctx.guild.id)[0] is True:
@@ -88,7 +88,7 @@ class Slash_commands(commands.Cog):
 
 		await ctx.respond(embed=avatar, content=None, view=view, ephemeral=True)
 
-	@discord.slash_command(name="userinfo", description="Display information about someone, or yourself. This command isn't ephemeral.")
+	@commands.slash_command(name="userinfo", description="Display information about someone, or yourself. This command isn't ephemeral.", default_permissions=True)
 	async def userinfo_slash(self, ctx, *, member: Option(discord.Member, "The person you want information on.", required=False, default=None)):
 		if not ctx.guild:
 			await ctx.respond("This command cannot be used in private messages.")
@@ -183,7 +183,7 @@ class Slash_commands(commands.Cog):
 				await asyncio.sleep(1)
 				await ctx.respond(embed=embed, content=None)
 
-	@discord.slash_command(name="roleinfo", description="Display information about someone's roles, or your roles. This command isn't ephemeral.")
+	@commands.slash_command(name="roleinfo", description="Display information about someone's roles, or your roles. This command isn't ephemeral.", default_permissions=True)
 	async def roleinfo_slash(self, ctx, *, member: Option(discord.Member, "The person you want role information on.", required=False, default=None)):
 		if not ctx.guild:
 			await ctx.respond("This command cannot be used in private messages.")
@@ -262,7 +262,7 @@ class Slash_commands(commands.Cog):
 				await asyncio.sleep(1)
 				await ctx.respond(embed=embed, content=None)
 
-	@discord.slash_command(description="Display any emoji of your choosing. Must be from a server the bot is in.")
+	@commands.slash_command(description="Display any emoji of your choosing. Must be from a server the bot is in.", default_permissions=True)
 	async def emoji(self, ctx, emoji: Option(discord.PartialEmoji, "The emoji you want to enlarge, can be just the name of it.", requried=True)):
 		if ctx.guild:
 			if check_logs(ctx.guild.id)[0] is True:
@@ -281,7 +281,7 @@ class Slash_commands(commands.Cog):
 			embed.set_footer(text=f'Created at: {emoji.created_at}')
 			await ctx.respond(embed=embed, content=None)
 
-	@discord.slash_command(name="sticker", description="Display any sticker of your choosing. Must be from a server the bot is in.")
+	@commands.slash_command(name="sticker", description="Display any sticker of your choosing. Must be from a server the bot is in.")
 	async def sticker_slash(self, ctx, *, sticker: Option(str, "The name of the sticker you want to enlarge.", requried=True)):
 		if ctx.guild:
 			if check_logs(ctx.guild.id)[0] is True:
@@ -320,11 +320,8 @@ class Slash_commands(commands.Cog):
 			embed = discord.Embed(description=f'Error.', color=red)
 			await ctx.respond(embed=embed, content=None)
 
-	@discord.slash_command(name="transmit", description="Give someone else some of your score.",
-	                       guild_ids=[863561097604497438])
-	async def transmit_slash(self, ctx,
-	                         user: Option(discord.User, "The person you want to give score to.", required=True),
-	                         amount: Option(int, "The amount of score you want to give.", required=True)):
+	@commands.slash_command(name="transmit", description="Give someone else some of your score.", default_permissions=True)
+	async def transmit_slash(self, ctx, user: Option(discord.User, "The person you want to give score to.", required=True), amount: Option(int, "The amount of score you want to give.", required=True)):
 		if ctx.guild:
 			if check_logs(ctx.guild.id)[0] is True:
 				logs2 = check_logs(ctx.guild.id)[2]
