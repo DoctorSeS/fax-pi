@@ -751,7 +751,7 @@ class Scores(commands.Cog):
 
     rep = 0
     try:
-      rep = get_db('users')[f'{ctx.author.id}']['reputation']
+      rep = get_db('users')[f'{member.id}']['reputation']
     except:
       rep = 0
     finally:
@@ -759,7 +759,7 @@ class Scores(commands.Cog):
       try:
         check = get_db('timers')[f'TimerRep-{ctx.author.id}']
       except:
-        rep2 = int(rep) + 1
+        amount = 1
 
         embed = discord.Embed(description=f"**{ctx.author.mention} has given {member.mention} a reputation point!** `({int(rep)} >> {int(rep) + 1})`", color=green)
 
@@ -767,22 +767,22 @@ class Scores(commands.Cog):
         if str(ctx.author.id) in list(patron_check):
           pledge = int(patron_check[f"{ctx.author.id}"]["pledge"])
           if pledge == 1000:
-            rep2 = int(rep) + 2
+            amount = 2
             embed = discord.Embed(description=f"**{ctx.author.mention}{role7emoji} has given {member.mention} a reputation point!** `({rep} >> {int(rep) + 2})`", color=green)
 
         elif str(member.id) in patron_check:
           pledge = int(patron_check[f"{member.id}"]["pledge"])
           if pledge == 1000:
-            rep2 = int(rep) + 2
+            amount = 2
             embed = discord.Embed(description=f"**{ctx.author.mention} has given {member.mention}{role7emoji} a reputation point!** `({rep} >> {int(rep) + 2})`", color=green)
 
         elif ctx.author.id == ses:
-          rep2 = int(rep) + 2
+          amount = 2
           embed = discord.Embed(description=f"**{ctx.author.mention}{role7emoji} has given {member.mention} a reputation point!** `({rep} >> {int(rep) + 2})`", color=green)
 
-        update_db('users', f"{member.id}", {'reputation': rep2})
+        update_db('users', f"{member.id}", {'reputation': rep + amount})
 
-        update_db('misc', 'all_rep', {f'{member.id}': rep2})
+        update_db('misc', 'all_rep', {f'{member.id}': rep + amount})
 
         await ctx.respond(embed=embed, content=None)
         update_db("timers", f"none", {f"TimerRep-{ctx.author.id}": f"{add_time(time_add)}"})
