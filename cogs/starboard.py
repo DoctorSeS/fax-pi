@@ -227,11 +227,11 @@ class Starboard(commands.Cog):
       msg = await client.wait_for("message", check=check, timeout=60)
       await msg.delete()
       try:
-        msg2 = msg1.replace("<", "")
-        msg3 = msg2.replace(">", "")
-        msg4 = msg3.replace("!", "")
-        msg5 = msg4.replace("#", "")
-        msg6 = int(msg5)
+        msg6 = msg1.replace("<", "")
+        msg6 = msg6.replace(">", "")
+        msg6 = msg6.replace("!", "")
+        msg6 = msg6.replace("#", "")
+        msg5 = int(msg6)
       except:
         channel = discord.utils.get(ctx.guild.channels, name=msg5)
       else:

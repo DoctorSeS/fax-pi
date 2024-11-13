@@ -7,16 +7,50 @@ from main import client
 from termcolor import cprint
 import patreon
 from database import *
+import requests
 
+
+def refresh_access_token():
+  client_id = os.environ.get("PATREON_CLIENT_ID")
+  client_secret = os.environ.get("PATREON_KEY")
+  refresh_token = os.environ.get("PATREON_REFRESH_TOKEN")
+
+  token_url = "https://www.patreon.com/api/oauth2/token"
+  payload = {
+    'grant_type': 'refresh_token',
+    'refresh_token': refresh_token,
+    'client_id': client_id,
+    'client_secret': client_secret,
+  }
+
+  response = requests.post(token_url, data=payload)
+  if response.status_code == 200:
+    tokens = response.json()
+    os.environ["PATREON_KEY"] = tokens['access_token']
+    os.environ["PATREON_REFRESH_TOKEN"] = tokens['refresh_token']
+    print("Access token refreshed.")
+    update_db('misc', 'none', {'patreon_key': tokens['access_token'], 'patreon_refresh_token': tokens['refresh_token']})
+    return True
+  else:
+    print("Failed to refresh token:", response.json())
+    return False
 
 def check_patreon():
   access_token = os.environ.get("PATREON_KEY")
   api_client = patreon.API(access_token)
-  # get the campaign ID
+
   campaign_response = api_client.fetch_campaign()
   if "The server could not verify" in str(campaign_response):
-    print('PATREON API KEY EXPIRED, PLEASE REFRESH KEY AT https://www.patreon.com/portal/registration/register-clients')
-    return
+    print("Access token expired, refreshing...")
+    response = refresh_access_token()
+    if response is False:
+      return
+    else:
+      access_token = os.environ.get("PATREON_KEY")
+      api_client = patreon.API(access_token)
+
+      campaign_response = api_client.fetch_campaign()
+      pass
 
   campaign_id = campaign_response.data()[0].id()
   
