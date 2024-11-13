@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import time
 
 import discord
@@ -22,7 +23,9 @@ os.environ["DISCORD_BOT_SECRET"] = "ODMwMTk5NTEyNTcyMTAwNjA5.GyR50E.sFezI207cDpL
 os.environ["DISCORD_BOT_SECRET_TEST"] = "MTI1MjYzMDY4NTI4MjQ3MjAyNg.GBTiJG.B__cmQkImH866KCuZmPeLiuMqLxcTOcoB71LiI"
 os.environ["C.AI_TOKEN"] = "9d8224253e0afc39e09a9b8dfdef59f86c5b96a5"
 os.environ["C.AI_FAX"] = "eAit4xbYC5wLNLaSxmtDMzwXW6X8XyxY01c35ZHZ77U"
-os.environ["PATREON_KEY"] = "GLnoZ6C32T69k5gt4pD4PFEJBSTLd_UrH9cfs4_5vfw"
+os.environ["PATREON_KEY"] = get_db('misc')['patreon_key']
+os.environ["PATREON_CLIENT_ID"] = "JILolnWOMpX8rpAViza_ww1zCwB1mesWe9XCUbN9tvQ0lEB0dwdqhOEHfWRrE0kq"
+os.environ["PATREON_REFRESH_TOKEN"] = get_db('misc')['patreon_refresh_token']
 os.environ["API_NINJAS_KEY"] = "8LxAVyDMAusp/1SV/svJjw==eIMYqUC8KOH6dHK5"
 os.environ["OAUTH2_CLIENT_ID"] = "830199512572100609"
 os.environ["OAUTH2_CLIENT_SECRET"] = "CZTQl12s2hPnC2hggCMIZusC3Ej7_kWZ"
