@@ -296,7 +296,7 @@ class Events(commands.Cog):
         except:
           return
 
-        async for entry in guild.audit_logs(action=discord.AuditLogAction.ban, limit=1, oldest_first=False):
+        async for entry in guild.audit_logs(action=discord.AuditLogAction.ban, limit=1):
           embed = discord.Embed(description=f'{user.mention} has been **banned** from the server.', color=discord.Color.from_rgb(r=randint(1, 255), g=randint(1, 255),b=randint(1, 255)))
           embed.set_author(name=f'{user} • ID: {user.id}', icon_url=user.display_avatar)
           embed.set_footer(text=f"Banned by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.display_avatar)
@@ -312,7 +312,7 @@ class Events(commands.Cog):
         except:
           return
 
-        async for entry in guild.audit_logs(action=discord.AuditLogAction.unban, limit=1, oldest_first=False):
+        async for entry in guild.audit_logs(action=discord.AuditLogAction.unban, limit=1):
           embed = discord.Embed(description=f'{user.mention} has been **unbanned** from the server.', color=discord.Color.random())
           embed.set_author(name=f'{user} • ID: {user.id}', icon_url=user.display_avatar)
           embed.set_footer(text=f"Unbanned by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.display_avatar)
@@ -330,7 +330,7 @@ class Events(commands.Cog):
         except:
           return
 
-        async for entry in channel.guild.audit_logs(action=discord.AuditLogAction.channel_create, limit=1, oldest_first=False):
+        async for entry in channel.guild.audit_logs(action=discord.AuditLogAction.channel_create, limit=1):
           embed = discord.Embed(description=f'<#{channel.id}> has been created.\nID: {channel.id}', color=discord.Color.random(), timestamp=channel.created_at)
           embed.set_footer(text=f'Created by {entry.user} • ID: {entry.user.id}', icon_url=entry.user.display_avatar)
           await channel.send(embed=embed, content=None)
@@ -347,7 +347,7 @@ class Events(commands.Cog):
         except:
           return
 
-        async for entry in channel.audit_logs(action=discord.AuditLogAction.channel_delete, limit=1, oldest_first=False):
+        async for entry in channel.audit_logs(action=discord.AuditLogAction.channel_delete, limit=1):
           embed = discord.Embed(description=f'`#{channel}` has been deleted.\nID: {channel.id}', color=discord.Color.random(), timestamp=channel.created_at)
           embed.set_footer(text=f'Deleted by {entry.user} • ID: {entry.user.id}', icon_url=f"{entry.user.display_avatar}")
           await channel.send(embed=embed, content=None)
@@ -366,7 +366,7 @@ class Events(commands.Cog):
           return
         else:
           if before != None:
-            async for entry in before.guild.audit_logs(action=discord.AuditLogAction.channel_update, limit=1, oldest_first=False):
+            async for entry in before.guild.audit_logs(action=discord.AuditLogAction.channel_update, limit=1):
               embed = discord.Embed(description=f"<#{before.id}> has been updated.", color=discord.Color.random(), timestamp=before.created_at)
               embed.set_footer(text=f'Edited by {entry.user} • ID: {entry.user.id}', icon_url=entry.user.display_avatar)
               embed.add_field(name=f"Before:", value=f"`Name:` {before}\n`ID:` {before.id}\n`Position:` {before.position}\n`Slowmode delay:` {before.slowmode_delay}\n`Category:` {before.category}")
@@ -474,7 +474,7 @@ class Events(commands.Cog):
         except:
           return
 
-        async for entry in role.guild.audit_logs(action=discord.AuditLogAction.role_create, limit=1, oldest_first=False):
+        async for entry in role.guild.audit_logs(action=discord.AuditLogAction.role_create, limit=1):
           embed = discord.Embed(description=f'<@&{role.id}> has been created.\nID: {role.id}', color=role.color, timestamp=role.created_at)
           embed.set_footer(text=f"Created by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.display_avatar)
           await channel.send(embed=embed, content=None)
@@ -490,7 +490,7 @@ class Events(commands.Cog):
         except:
           return
 
-        async for entry in role.guild.audit_logs(action=discord.AuditLogAction.role_delete, limit=1, oldest_first=False):
+        async for entry in role.guild.audit_logs(action=discord.AuditLogAction.role_delete, limit=1):
           embed = discord.Embed(description=f'`@{role}` has been deleted.', color=role.color, timestamp=role.created_at)
           embed.set_footer(text=f'Role ID: {role.id}')
           embed.set_footer(text=f"Deleted by {entry.user} • ID: {entry.user.id}", icon_url=entry.user.display_avatar)
@@ -506,7 +506,7 @@ class Events(commands.Cog):
         except:
           return
 
-        async for entry in before.audit_logs(action=discord.AuditLogAction.guild_update, limit=1, oldest_first=False):
+        async for entry in before.audit_logs(action=discord.AuditLogAction.guild_update, limit=1):
           embed = discord.Embed(description=f'**The server has been edited.**', color=discord.Color.random(), timestamp=after.created_at)
           embed.set_footer(text=f"Edited by {entry.user} • ID: {entry.user.id}\nServer ID: {before.id}", icon_url=entry.user.display_avatar)
           embed.add_field(name='Before:', value=f'`Name:` **{before}**\n`VL:` **{before.verification_level}**\n`Boosts:` **{before.premium_subscription_count}**')
