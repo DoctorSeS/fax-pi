@@ -243,9 +243,18 @@ class Owner(commands.Cog):
     
   @commands.command()
   @commands.is_owner()
-  async def nick_change(self, ctx, *, nickname: str):
-    await ctx.author.edit(nick=f"{nickname}", reason="hi")
-    await ctx.message.delete()
+  async def reset_perms(self, ctx, guild_id : int, channel_id : int):
+    guild = client.get_guild(int(guild_id))
+    everyone_role = guild.default_role
+    channel = guild.get_channel(int(channel_id))
+
+    try:
+      await channel.set_permissions(everyone_role, overwrite=None)
+    except:
+      await ctx.send(f"fucked up {channel.mention}")
+    else:
+      await ctx.send(f"Reset permissions for {channel.mention}")
+
     
   @commands.command()
   @commands.is_owner()

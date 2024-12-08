@@ -210,7 +210,6 @@ class Mod_coms(commands.Cog):
       if str(logs2).lower() != "none":
         channel2 = discord.utils.get(server.channels, id=int(logs2))
 
-
     log = discord.Embed(description=f"<#{channel.id}> has been locked.\n`Duration:` {timer[:-1]}\n`Reason:` {reason}", color=discord.Color.from_rgb(r=255, g=0, b=0))
     log.set_footer(text=f"Moderator: {ctx.author}", icon_url=ctx.author.avatar)
     timer2 = timer.lower()
@@ -224,7 +223,7 @@ class Mod_coms(commands.Cog):
       await channel.send(embed=lk, content=None)
       if channel2 != "none":
         await channel2.send(embed=log, content=None)
-      update_db('guilds', f"{ctx.guild.id}", {f'TimerLock-{channel.id}': add_time(timerfinal)})
+      update_db('timers', f"none", {f'TimerLock-{channel.id}={ctx.guild.id}': add_time(timerfinal)})
 
     elif timer2[-1] == "m":
       lk = discord.Embed(description=f"<#{channel.id}> has been locked.\nDuration: {timerfinal} minute(s)\nReason: {reason}", color=discord.Color.from_rgb(r=255, g=0, b=0), timestamp=ctx.message.created_at)
@@ -235,7 +234,7 @@ class Mod_coms(commands.Cog):
       if channel2 != "none":
         await channel2.send(embed=log, content=None)
       tm = int(timerfinal)*60
-      update_db('guilds', f"{ctx.guild.id}", {f'TimerLock-{channel.id}': add_time(tm)})
+      update_db('timers', f"none", {f'TimerLock-{channel.id}={ctx.guild.id}': add_time(tm)})
       
     elif timer2[-1] == "h":
       lk = discord.Embed(description=f"<#{channel.id}> has been locked.\nDuration: {timerfinal} hour(s)\nReason: {reason}", color=discord.Color.from_rgb(r=255, g=0, b=0), timestamp=ctx.message.created_at)
@@ -247,8 +246,7 @@ class Mod_coms(commands.Cog):
         await channel2.send(embed=log, content=None)
       tm = int(timerfinal)*60
       tm2 = tm*60
-      update_db('guilds', f"{ctx.guild.id}", {f'TimerLock-{channel.id}': add_time(tm2)})
-
+      update_db('timers', f"none", {f'TimerLock-{channel.id}={ctx.guild.id}': add_time(tm2)})
 
   @commands.command(alieases=['unlockdown'])
   @commands.has_permissions(manage_roles=True)
@@ -265,7 +263,7 @@ class Mod_coms(commands.Cog):
       embed.set_footer(text=f"Moderator: {ctx.author}", icon_url=ctx.author.avatar)
       await channel.send(embed=embed, content=None)
       await channel.set_permissions(ctx.guild.default_role, add_reactions=True)
-      del_db(f'guilds/{ctx.guild.id}', f"TimerLock-{channel.id}")
+      del_db(f'timers', f"TimerLock-{channel.id}={ctx.guild.id}")
   
   @commands.command()
   @commands.before_invoke(disabled_check)
@@ -398,7 +396,6 @@ class Mod_coms(commands.Cog):
       await member.ban(reason=reason)
       await ctx.send(embed=embed, content=None, delete_after=10)
       await msg.delete()
-
 
   @commands.command()
   @commands.before_invoke(disabled_check)
