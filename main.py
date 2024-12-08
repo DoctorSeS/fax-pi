@@ -128,7 +128,7 @@ async def on_ready():
       if client.is_ready():
         cprint("Client ready.", "green")
 
-        nm_lines = len(open(r"ai.txt", "r", encoding='unicode_escape').readlines())
+        nm_lines = len(open(r"ai.txt", "r", encoding='utf-8', errors='replace').readlines())
         print(f"Number of lines in ai.txt: {nm_lines}")
         update_db("misc", 'none', {"ai_lines": nm_lines})
 
