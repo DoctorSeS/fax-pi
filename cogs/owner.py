@@ -255,6 +255,27 @@ class Owner(commands.Cog):
     else:
       await ctx.send(f"Reset permissions for {channel.mention}")
 
+  @commands.command(name="finduser", help="Find a user by ID across all servers the bot is in.")
+  @commands.is_owner()
+  async def find_user(self, ctx, *, user_id: int):
+      found_guilds = []
+      for guild in client.guilds:
+          try:
+              member = await guild.fetch_member(user_id)
+              if member:
+                  found_guilds.append((guild.name, str(guild.id)))
+          except discord.NotFound:
+              continue
+          except discord.Forbidden:
+              continue
+          except Exception as e:
+              print(f"Error in {guild.name}: {e}")
+
+      if found_guilds:
+          formatted_guilds = [f"{name} (ID: {guild_id})" for name, guild_id in found_guilds]
+          await ctx.send(f"User with ID `{user_id}` was found in the following servers:\n" + "\n".join(formatted_guilds))
+      else:
+          await ctx.send(f"User with ID `{user_id}` was not found in any servers the bot is in.")
     
   @commands.command()
   @commands.is_owner()
