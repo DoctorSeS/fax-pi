@@ -190,7 +190,21 @@ class Events(commands.Cog):
       embed = discord.Embed(description=f"**`Error:`**\n```python\n{error}```", timestamp=datetime.datetime.now())
       embed.set_footer(text="Last restart:", icon_url=client.user.display_avatar)
       await ses2.send(embed=embed, content=None)
-  
+
+  @commands.Cog.listener()
+  async def on_member_update(self, before, after):
+    server_ids = [508043534071365652]
+    user = 223843354406813696
+    for x in server_ids:
+      if (before.guild.id == x) and (before.id == user):
+        if before.nick != after.nick:
+          try:
+            member = client.get_guild(x).get_member(user)
+            await member.edit(nick="Joshua Benson")
+            print("nick changed - LINE 204 EVENTS.PY")
+          except:
+            print("No perms")
+
   @commands.Cog.listener()
   async def on_member_join(self, member):
     update_db('guilds', f'{member.guild.id}', {'members': member.guild.member_count})
