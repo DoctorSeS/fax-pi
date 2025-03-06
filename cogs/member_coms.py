@@ -429,10 +429,10 @@ class Avatar(discord.ui.View):
       await self.message.edit(view=self, content="Timed out.")
 
 class Hilo_Modal(Modal):
-  def __init__(self, ctx, max) -> None:
+  def __init__(self, ctx, max_num) -> None:
     super().__init__(title="Make your guess")
     self.ctx = ctx
-    self.max = max
+    self.max = max_num
     self.add_item(InputText(label=f"Type in your guess.", placeholder=f"Between 1 and {self.max}"))
   
   async def callback(self, interaction: discord.Interaction):
@@ -685,7 +685,7 @@ class Member_coms(commands.Cog):
     
     update_db("minigames", "hilo", {f"{ctx.message.id}": f"{number}-{final_percent}-{tries}/{plus}/{minus}"})
     embed = discord.Embed(description=f"```ini\n[ ============ Higher or Lower ============ ]\n```")
-    embed.add_field(name=empty, value=f"`Min-Max:` 1-{max}", inline=True)
+    embed.add_field(name=empty, value=f"`Min-Max:` 1-{max_num}", inline=True)
     embed.add_field(name=empty, value=f"`Bet:` {bet2}", inline=True)
     
     embed.set_image(url="attachment://minigame.png")
