@@ -625,38 +625,33 @@ class Member_coms(commands.Cog):
             raise discord.ext.commands.CommandError(f"Commands are not allowed in this channel.")
           else:
             pass
-    
 
   ###commands##
 
   @commands.command(aliases=['guess', 'guessing', 'random', 'high', 'low'])
   @commands.before_invoke(disabled_check)
   @commands.cooldown(1, 30, commands.BucketType.guild)
-  async def hilo(self, ctx, max: int, bet: int=None):
-    if max < 4:
-      max = 4
-    
-    if max < 20:
+  async def hilo(self, ctx, max_num: int, bet: int = None):
+    if max_num < 20:
       tries = 2
       numbers = 2
-    elif max >= 90:
-      numbers = int(max / 10)
-      tries = int(max / 15)
-    elif max > 100:
-      max = 100
-      numbers = int(max / 10)
-      tries = int(max / 15)
+    if max_num > 1000:
+      max_num = 1000
+
+    if max_num > 100:
+      numbers = int(max_num / 10)
+      tries = int(max_num / 20)
     else:
-      numbers = int(max / 10)
-      tries = int(max / 10)
+      numbers = int(max_num / 10)
+      tries = int(max_num / 10)
     
-    number = randint(1, max)
+    number = randint(1, max_num)
     final_percent = 100
     plus = ""
     minus = ""
 
     # percentages #
-    max2 = max
+    max2 = max_num
     while max2 != 4:
       max2 -= 1
       final_percent += 1.5
@@ -675,8 +670,8 @@ class Member_coms(commands.Cog):
         pass
 
     if bet:
-      if bet > 1000:
-        bet = 1000
+      if bet > 10000:
+        bet = 10000
       bet2 = bet
       bet3 = bet * final_percent / 10
       score = get_db('users')[f'{ctx.author.id}']['score']

@@ -1,3 +1,5 @@
+import math
+
 import discord
 from discord.ext import commands, tasks
 import random
@@ -78,7 +80,7 @@ class Change_Modal(Modal):
     self.add_item(InputText(label="Type in your bet", placeholder=f"Ex: {randint(1, 1000)}"))
 
   async def callback(self, interaction: discord.Interaction):
-    response = float(self.children[0].value)
+    response = int(self.children[0].value)
 
     value = get_db('minigames')['Slots'][f"{interaction.message.id}"]
     ev_else = value.split("/")[1]
@@ -362,25 +364,26 @@ class Slots(commands.Cog):
   @commands.before_invoke(disabled_check)
   @commands.cooldown(1, 15, commands.BucketType.guild)
   async def slots(self, ctx, amount: float):
+    amount = math.floor(amount)
     try:
-      firstvalue = get_db('users')[f'{ctx.author.id}']['score']
+      user_money = get_db('users')[f'{ctx.author.id}']['score']
     except:
-      firstvalue = 0
+      user_money = 0
 
     if amount <= 0:
-      embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you can not bet below 1 {check_currency(ctx.guild.id)}.```", color=red)
+      embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you cannot bet below 1 {check_currency(ctx.guild.id)}.```", color=red)
       await ctx.send(embed=embed2, content=None, delete_after=30)
       return
     elif amount > 1000:
-      embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you can not bet above 1000 {check_currency(ctx.guild.id)}.```", color=red)
+      embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you cannot bet above 1000 {check_currency(ctx.guild.id)}.```", color=red)
       await ctx.send(embed=embed2, content=None, delete_after=30)
       return
-    elif float(firstvalue) < amount:
-      embed2 = discord.Embed(description=f"**`ERROR:`** ```\n{ctx.author.name}, you do not have enough {check_currency(ctx.guild.id)}.\n\nYour bet: {amount}\nYour {check_currency(ctx.guild.id)}: {firstvalue}```", color=red)
+    elif int(user_money) < amount:
+      embed2 = discord.Embed(description=f"**`ERROR:`** ```\n{ctx.author.name}, you do not have enough {check_currency(ctx.guild.id)}.\n\nYour bet: {amount}\nYour {check_currency(ctx.guild.id)}: {user_money}```", color=red)
       await ctx.send(embed=embed2, content=None, delete_after=30)
       return
     else:
-      start = float(firstvalue)
+      start = int(user_money)
 
       f = discord.File(f"{os.getcwd()}/images/assets/slots2.png", filename="slots2.png")
       embed = discord.Embed(color=0x36393F)
