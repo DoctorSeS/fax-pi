@@ -374,10 +374,10 @@ class Slots(commands.Cog):
       embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you cannot bet below 1 {check_currency(ctx.guild.id)}.```", color=red)
       await ctx.send(embed=embed2, content=None, delete_after=30)
       return
-    elif amount > 1000:
-      embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you cannot bet above 1000 {check_currency(ctx.guild.id)}.```", color=red)
-      await ctx.send(embed=embed2, content=None, delete_after=30)
-      return
+    #elif amount > 50000:
+      #embed2 = discord.Embed(description=f"**`ERROR:`** ```python\n{ctx.author.name}, you cannot bet above 50000 {check_currency(ctx.guild.id)}.```", color=red)
+      #await ctx.send(embed=embed2, content=None, delete_after=30)
+      #return
     elif int(user_money) < amount:
       embed2 = discord.Embed(description=f"**`ERROR:`** ```\n{ctx.author.name}, you do not have enough {check_currency(ctx.guild.id)}.\n\nYour bet: {amount}\nYour {check_currency(ctx.guild.id)}: {user_money}```", color=red)
       await ctx.send(embed=embed2, content=None, delete_after=30)

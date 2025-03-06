@@ -504,6 +504,7 @@ class Hilo_Modal(Modal):
         score = get_db('users')[f'{interaction.user.id}']['score']
         new_score = float(score) + float(payout)
         update_db('users', f"{interaction.user.id}", {'score': new_score})
+        del_db('minigames/hilo', f"{self.ctx.message.id}")
 
       add_milestone(user=self.ctx.author.id, milestone="mini-games, Hi-Lo", amount=1)
       await interaction.message.edit(embed=embed, content=None, view=None, file=f)
@@ -552,8 +553,7 @@ class Hilo_Modal(Modal):
         embed.add_field(name=empty, value=field1)
         embed.add_field(name=empty, value=field2)
         embed.set_image(url="attachment://minigame2.png")
-        
-          
+
         await interaction.message.edit(embed=embed, content=None, view=view, file=f)
         await interaction.response.defer()
         
