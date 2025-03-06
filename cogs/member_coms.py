@@ -596,8 +596,8 @@ class Hi_lo(discord.ui.View):
       field1 = embeddict['fields'][0]['value']
       field2 = embeddict['fields'][1]['value']
   
-      max = int(str(field1).split("1-")[1])
-      modal = Hilo_Modal(self.ctx, max)
+      max_num = int(str(field1).split("1-")[1])
+      modal = Hilo_Modal(self.ctx, max_num)
       await interaction.response.send_modal(modal)
           
 
