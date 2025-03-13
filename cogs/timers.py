@@ -200,9 +200,8 @@ class Timers(commands.Cog):
 
   @tasks.loop(seconds=20)
   async def timers(self):
-    all_timers = get_db('timers')
     current = datetime.datetime.now()
-    for x in all_timers:
+    for x in get_db('timers'):
       if "holder" in x:
         continue
 
