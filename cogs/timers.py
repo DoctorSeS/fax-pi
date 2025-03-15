@@ -200,12 +200,10 @@ class Timers(commands.Cog):
 
   @tasks.loop(seconds=20)
   async def timers(self):
-    current = datetime.datetime.now()
-    for x in get_db('timers'):
-      if "holder" in x:
-        continue
 
-      if "Remind" in x:
+    for x in get_db('timers'):
+      current = datetime.datetime.now()
+      if ("holder" in x) or ("Remind" in x):
         continue
 
       try:
