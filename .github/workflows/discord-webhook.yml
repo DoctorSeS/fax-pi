@@ -48,9 +48,9 @@ jobs:
           }
           
           # Add fields for each change type
-          add_field "Added Files" "**$ADDED**"
-          add_field "Updated Files" "**$MODIFIED**"
-          add_field "Removed Files" "**$DELETED**"
+          add_field "Added Files" "$ADDED"
+          add_field "Updated Files" "$MODIFIED"
+          add_field "Removed Files" "$DELETED"
           
           # Create final payload file
           jq -n \
