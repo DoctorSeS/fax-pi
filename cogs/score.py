@@ -1,19 +1,13 @@
 #Score (Fax Machine's Communist Republic of Lauren's Lair's Social Credit Score)
-from discord.ext import commands, tasks, bridge
+from discord.ext import commands
 import discord
-import logging
-import traceback
-import asyncio
 import datetime
 import random
 from random import randint
-from main import client, bot_prefix, round_time, ses, currency, check_name, green, red
-import fileinput
+from main import client, bot_prefix, ses, currency, check_name, green, red
 from discord import Option
-from termcolor import cprint
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 from io import BytesIO
-import os
 from database import *
 from cogs.events import check_logs
 
