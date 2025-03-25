@@ -295,13 +295,14 @@ class Slash_commands(commands.Cog):
 					await logs2.send(embed=embed, content=None)
 
 		if sticker:
+			sticker_id = None
 			for x in client.guilds:
 				stickers = client.get_guild(x.id).stickers
 				if sticker in str(stickers):
 					sticker_id = str(str(stickers).split(f"{sticker}' id=")[1].lstrip().split(" ")[0]) + f"-{x.id}"
 					break
 
-			if sticker_id != None:
+			if sticker_id is not None:
 				id = sticker_id.split("-")[0]
 				id2 = sticker_id.split("-")[1]
 				server = client.get_guild(int(id2))
@@ -332,7 +333,7 @@ class Slash_commands(commands.Cog):
 				embed.set_footer(text=f'{client.user.name}', icon_url=client.user.avatar)
 				await logs2.send(embed=embed, content=None)
 
-		if user == None:
+		if user is None:
 			embed2 = discord.Embed(
 				description=f"**`ERROR:`** ```python\nInvalid method.\nValid Methods: g!transmit <user> <amount>(+)```",
 				color=red)
@@ -347,7 +348,7 @@ class Slash_commands(commands.Cog):
 				return
 			else:
 				pass
-			if amount == None:
+			if amount is None:
 				embed2 = discord.Embed(
 					description=f"**`ERROR:`** ```python\nInvalid method.\nValid Methods: g!transmit <user> <amount>(+)```",
 					color=red)
