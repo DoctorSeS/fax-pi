@@ -39,7 +39,7 @@ jobs:
             if [ $count -gt 0 ]; then
               FIELDS=$(echo "$FIELDS" | jq \
                 --arg n "$name ($count)" \
-                --arg v "$(echo "$files" | jq -r 'join("\n")')" \
+                --arg v "$(echo "$files" | jq -r 'join("\\n")')" \
                 '. += [{"name": $n, "value": $v, "inline": false}]')
             fi
           }
@@ -49,8 +49,8 @@ jobs:
           add_field "✏️ Modified" "$MODIFIED"
           add_field "🗑️ Removed" "$DELETED"
           
-          # Create final payload
-          PAYLOAD=$(jq -n \
+          # Create final payload file
+          jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
             --argjson fields "$FIELDS" \
@@ -67,16 +67,20 @@ jobs:
                 },
                 "timestamp": now|strftime("%Y-%m-%dT%H:%M:%SZ")
               }]
-            }')
-          
-          # Escape for GitHub output
-          echo "PAYLOAD=${PAYLOAD//$'\n'/\\n}" >> $GITHUB_OUTPUT
+            }' > payload.json
 
-      - name: Send to Discord (CURL)
+          # Verify payload is valid JSON
+          if ! jq empty payload.json; then
+            echo "Error: Invalid JSON payload"
+            exit 1
+          fi
+
+      - name: Send to Discord
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
+          # Send using file reference to avoid shell escaping issues
           curl -X POST \
             -H "Content-Type: application/json" \
-            -d '${{ steps.generate-payload.outputs.PAYLOAD }}' \
+            -d @payload.json \
             "$DISCORD_WEBHOOK"
