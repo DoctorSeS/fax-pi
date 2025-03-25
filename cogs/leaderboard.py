@@ -115,7 +115,7 @@ class Leaderboard(commands.Cog):
   @commands.before_invoke(disabled_check)
   @commands.cooldown(1, 60, commands.BucketType.guild)
   async def leaderboard(self, ctx, the_db=None):
-    if the_db == None:
+    if the_db is None:
       scores = get_db('misc')['all_scores']
       title = f"Global {currency} Leaderboard"
       view = Rep_and_Xp(ctx)
