@@ -38,7 +38,7 @@ jobs:
             local count=$(echo "$files" | jq 'length')
             if [ $count -gt 0 ]; then
               # Format files with bullet points and bold markers
-              FORMATTED_FILES=$(echo "$files" | jq -r '.[] | "**• \(.)**"' | jq -R -s 'split("\n") | map(select(. != "")) | join("\\n")')
+              FORMATTED_FILES=$(echo "$files" | jq -r '.[] | **• \(.)**' | jq -R -s 'split("\n") | map(select(. != "")) | join("\\n")')
               
               FIELDS=$(echo "$FIELDS" | jq \
                 --arg n "$name ($count)" \
@@ -56,7 +56,7 @@ jobs:
           jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
-            --arg avatar "https://github.com/$AUTHOR.png" \
+            --arg avatar "${{ steps.get_avatar.outputs.AVATAR_URL }}"
             --argjson fields "$FIELDS" \
             '{
               "username": "GitHub",
