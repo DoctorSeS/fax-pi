@@ -1,7 +1,6 @@
 from discord.ext import commands, tasks
 import discord
 import datetime
-
 from cogs.events import check_logs
 from main import client
 from termcolor import cprint
@@ -198,7 +197,7 @@ class Timers(commands.Cog):
           role = guild.get_role(supporter_role)
           await user.add_roles(role, atomic=True)
 
-  @tasks.loop(seconds=20)
+  @tasks.loop(seconds=30)
   async def timers(self):
 
     for x in get_db('timers'):
