@@ -37,8 +37,13 @@ jobs:
             local files=$2
             local count=$(echo "$files" | jq 'length')
             if [ $count -gt 0 ]; then
-              # Format files with bullet points and bold markers, without extra quotes
-              FORMATTED_FILES=$(echo "$files" | jq -r '.[] | "• **\(.)**"' | tr '\n' '\f' | sed 's/\f/\\n/g')
+              # Format files with bullet points and bold markers
+              FORMATTED_FILES=$(echo "$files" | 
+                jq -r '.[] | "• **\(.)**"' |  # Format each line
+                tr '\n' '\f' |                 # Temporary replacement
+                sed 's/\f/\n/g' |              # Convert to literal newlines
+                jq -Rs . |                     # Convert to raw JSON string
+                sed 's/^"//;s/"$//')           # Remove surrounding quotes
               
               FIELDS=$(echo "$FIELDS" | jq \
                 --arg n "$name ($count)" \
