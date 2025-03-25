@@ -2,65 +2,11 @@ name: Discord Commit Notifier
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master ]  # ⚠️ Change to your branch name (e.g., main)
 
 jobs:
   notify-discord:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Extract commit metadata
-        id: commit
-        run: |
-          # Escape newlines in commit message for JSON
-          COMMIT_MSG=$(git log -1 --pretty=%B | sed ':a;N;$!ba;s/\n/\\n/g')
-          echo "COMMIT_MESSAGE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
-          echo "AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
-          echo "COMMIT_URL=https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" >> $GITHUB_OUTPUT
-          
-          # Get changed files (handle empty cases)
-          ADDED=$(git diff --name-only --diff-filter=A HEAD~1 HEAD || echo "")
-          MODIFIED=$(git diff --name-only --diff-filter=M HEAD~1 HEAD || echo "")
-          DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD || echo "")
-          
-          # Convert to JSON arrays (even if empty)
-          echo "ADDED_FILES=${ADDED:-[]}" >> $GITHUB_OUTPUT
-          echo "MODIFIED_FILES=${MODIFIED:-[]}" >> $GITHUB_OUTPUT
-          echo "DELETED_FILES=${DELETED:-[]}" >> $GITHUB_OUTPUT
-
-      - name: Debug output (for troubleshooting)
-        run: |
-          echo "Commit Message: ${{ steps.commit.outputs.COMMIT_MESSAGE }}"
-          echo "Added Files: ${{ steps.commit.outputs.ADDED_FILES }}"
-          echo "Modified Files: ${{ steps.commit.outputs.MODIFIED_FILES }}"
-          echo "Deleted Files: ${{ steps.commit.outputs.DELETED_FILES }}"
-
-      - name: Send Discord Notification
-        uses: Ilshidur/action-discord@master
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}  # Match your secret name
-        with:
-          args: |
-            {
-              "embeds": [{
-                "title": "New Commit Pushed 🚀",
-                "color": 5814783,
-                "fields": [
-                  { "name": "Author", "value": "${{ steps.commit.outputs.AUTHOR }}", "inline": true },
-                  { "name": "Message", "value": "${{ steps.commit.outputs.COMMIT_MESSAGE }}", "inline": false },
-                  { "name": "🔗 Commit Link", "value": "[View Commit](${{ steps.commit.outputs.COMMIT_URL }})", "inline": true },
-                  { "name": "📄 Added (${{ fromJson(steps.commit.outputs.ADDED_FILES) | length }})", "value": "${{ join(fromJson(steps.commit.outputs.ADDED_FILES), '\n') || 'None' }}", "inline": false },
-                  { "name": "✏️ Modified (${{ fromJson(steps.commit.outputs.MODIFIED_FILES) | length }})", "value": "${{ join(fromJson(steps.commit.outputs.MODIFIED_FILES), '\n') || 'None' }}", "inline": false },
-                  { "name": "🗑️ Deleted (${{ fromJson(steps.commit.outputs.DELETED_FILES) | length }})", "value": "${{ join(fromJson(steps.commit.outputs.DELETED_FILES), '\n') || 'None' }}", "inline": false }
-                ],
-                "footer": {
-                  "text": "GitHub • ${{ github.repository }}",
-                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-                },
-                "timestamp": "${{ steps.commit.outputs.TIMESTAMP || '' }}"
-              }]
-            }
+      - name: Check if workflow runs
+        run: echo "✅ Workflow triggered on $GITHUB_REF"
