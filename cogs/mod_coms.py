@@ -177,7 +177,7 @@ class Mod_coms(commands.Cog):
   @commands.has_permissions(manage_roles=True)
   async def invites(self, ctx, sv: int=None):
     server = client.get_guild(ctx.guild.id)
-    if sv != None:
+    if sv is not None:
       server = client.get_guild(sv)
     inv = await server.invites()
     inv2 = len(inv)
