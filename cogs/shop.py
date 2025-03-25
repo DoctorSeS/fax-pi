@@ -192,7 +192,6 @@ class BackgroundPurchase(discord.ui.Button):
               else:
                 inv["Backgrounds"].append(f"{self.custom_id}")
                 update_db(f'users/{interaction.user.id}', 'items', {"Backgrounds": inv["Backgrounds"]})
-                
 
             money2 = float(money) - price
             update_db('users', f"{interaction.user.id}", {"score": money2})
@@ -417,10 +416,10 @@ class Use_Background(discord.ui.View):
         if ("MoneyBooster" in inv.keys()) or ("ExperienceBooster" in inv.keys()):
           moneyboosters = 0
           xpboosters = 0 
-          if ("ExperienceBooster" in inv.keys()):
+          if "ExperienceBooster" in inv.keys():
             xpboosters = inv['ExperienceBooster']
             options.append(discord.SelectOption(label="Experience Booster"))
-          if ("MoneyBooster" in inv.keys()):
+          if "MoneyBooster" in inv.keys():
             moneyboosters = inv['MoneyBooster']
             options.append(discord.SelectOption(label="Money Booster"))
   
@@ -777,15 +776,15 @@ class Use(discord.ui.Select):
           if "Backgrounds" in inv.keys():
             embed.add_field(name="Backgrounds:", value=f"You own: **{len(list(inv['Backgrounds']))}**")
           if ("MoneyBooster" in inv.keys()) or ("ExperienceBooster" in inv.keys()):
-            if ("ExperienceBooster" in inv.keys()):
+            if "ExperienceBooster" in inv.keys():
               xpboosters = int(inv['ExperienceBooster'])
-            if ("MoneyBooster" in inv.keys()):
+            if "MoneyBooster" in inv.keys():
               moneyboosters = int(inv['MoneyBooster'])
 
         if boostertype == 0:
           if xpboosters > 0:
             xpboosters -= 1
-            if (xpboosters <= 0):
+            if xpboosters <= 0:
               inv.pop("ExperienceBooster")
               update_db(f'users/{userid}', "items", inv)
             else:
@@ -796,7 +795,7 @@ class Use(discord.ui.Select):
         else:
           if moneyboosters > 0:
             moneyboosters -= 1
-            if (moneyboosters <= 0):
+            if moneyboosters <= 0:
               inv.pop("MoneyBooster")
               update_db(f'users/{userid}', "items", inv)
             else:
