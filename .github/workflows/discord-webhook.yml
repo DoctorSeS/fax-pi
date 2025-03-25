@@ -2,48 +2,87 @@ name: Discord Commit Notifier
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master ]  # Change to your default branch
 
 jobs:
   notify-discord:
     runs-on: ubuntu-latest
     steps:
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Required for git diff
 
-      - name: Get commit data
+      - name: Extract commit data
         id: commit
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B | sed ':a;N;$!ba;s/\n/\\n/g')
-          echo "COMMIT_MESSAGE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
+          # Escape newlines in commit message for JSON
+          COMMIT_MSG=$(git log -1 --pretty=%B | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+          echo "COMMIT_MESSAGE=$COMMIT_MSG" >> $GITHUB_OUTPUT
           echo "AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
           echo "COMMIT_URL=https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" >> $GITHUB_OUTPUT
-          ADDED=$(git show --name-only --diff-filter=A --pretty=format:'' HEAD | tr '\n' ',' | sed 's/,$//')
-          MODIFIED=$(git show --name-only --diff-filter=M --pretty=format:'' HEAD | tr '\n' ',' | sed 's/,$//')
-          DELETED=$(git show --name-only --diff-filter=D --pretty=format:'' HEAD | tr '\n' ',' | sed 's/,$//')
-          echo "ADDED_FILES=[\"${ADDED//,/\",\"}\"]" >> $GITHUB_OUTPUT
-          echo "MODIFIED_FILES=[\"${MODIFIED//,/\",\"}\"]" >> $GITHUB_OUTPUT
-          echo "DELETED_FILES=[\"${DELETED//,/\",\"}\"]" >> $GITHUB_OUTPUT
 
-      - name: Send to Discord
+          # Get changed files (handle empty cases)
+          ADDED=$(git diff --name-only --diff-filter=A HEAD~1 HEAD 2>/dev/null || echo "")
+          MODIFIED=$(git diff --name-only --diff-filter=M HEAD~1 HEAD 2>/dev/null || echo "")
+          DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD 2>/dev/null || echo "")
+
+          # Format as JSON arrays (even if empty)
+          echo "ADDED_FILES=$(jq -Rn '[inputs | select(length>0)]' <<< "$ADDED")" >> $GITHUB_OUTPUT
+          echo "MODIFIED_FILES=$(jq -Rn '[inputs | select(length>0)]' <<< "$MODIFIED")" >> $GITHUB_OUTPUT
+          echo "DELETED_FILES=$(jq -Rn '[inputs | select(length>0)]' <<< "$DELETED")" >> $GITHUB_OUTPUT
+
+      - name: Debug outputs (optional)
+        run: |
+          echo "Commit: ${{ steps.commit.outputs.COMMIT_MESSAGE }}"
+          echo "Added: ${{ steps.commit.outputs.ADDED_FILES }}"
+          echo "Modified: ${{ steps.commit.outputs.MODIFIED_FILES }}"
+          echo "Deleted: ${{ steps.commit.outputs.DELETED_FILES }}"
+
+      - name: Send Discord embed
         uses: Ilshidur/action-discord@master
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
           args: |
             {
-              "embeds": [{
-                "title": "Commit Detected",
-                "description": "${{ steps.commit.outputs.COMMIT_MESSAGE }}",
-                "color": 5814783,
-                "fields": [
-                  { "name": "Author", "value": "${{ steps.commit.outputs.AUTHOR }}", "inline": true },
-                  { "name": "Added", "value": "${{ join(fromJson(steps.commit.outputs.ADDED_FILES), '\n') || 'None' }}", "inline": false }
-                ]
-              }]
+              "embeds": [
+                {
+                  "title": "📌 New Commit Pushed",
+                  "url": "${{ steps.commit.outputs.COMMIT_URL }}",
+                  "color": 3447003,
+                  "fields": [
+                    {
+                      "name": "👤 Author",
+                      "value": "${{ steps.commit.outputs.AUTHOR }}",
+                      "inline": true
+                    },
+                    {
+                      "name": "📝 Message",
+                      "value": "${{ steps.commit.outputs.COMMIT_MESSAGE }}",
+                      "inline": false
+                    },
+                    {
+                      "name": "🆕 Added Files (${{ fromJson(steps.commit.outputs.ADDED_FILES) | length }})",
+                      "value": "${{ join(fromJson(steps.commit.outputs.ADDED_FILES), '\n' }}",
+                      "inline": false
+                    },
+                    {
+                      "name": "✏️ Modified Files (${{ fromJson(steps.commit.outputs.MODIFIED_FILES) | length }})",
+                      "value": "${{ join(fromJson(steps.commit.outputs.MODIFIED_FILES), '\n' }}",
+                      "inline": false
+                    },
+                    {
+                      "name": "❌ Deleted Files (${{ fromJson(steps.commit.outputs.DELETED_FILES) | length }})",
+                      "value": "${{ join(fromJson(steps.commit.outputs.DELETED_FILES), '\n' }}",
+                      "inline": false
+                    }
+                  ],
+                  "footer": {
+                    "text": "GitHub Actions",
+                    "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                  },
+                  "timestamp": "${{ steps.commit.outputs.TIMESTAMP || '' }}"
+                }
+              ]
             }
