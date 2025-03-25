@@ -103,10 +103,11 @@ class Xp(commands.Cog):
                   boost = 2
                 calculated_score = round(((len(edited_msg) * round(random.uniform(0.75, 1.00), 1) * multiplier) * boost))
 
+                xp = 0
                 try:
                   xp = get_db('users')[f'{message.author.id}'][f'xp-{message.guild.id}']
                 except:
-                  xp = 0
+                  pass
                 finally:
                   final_xp = int(xp) + calculated_score
                   seconds = 120
