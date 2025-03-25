@@ -121,19 +121,19 @@ role7name = role7emoji.split("<:")[1].lstrip().split(":")[0]
 
 def next_role(role):
   if "None" in role:
-    return f"you have to buy the roles in order.\nThe next role you can buy is **`{role1name}`** {role1emoji}."
+    return f"you have to get the roles in order.\nThe next role you can get is **`{role1name}`** {role1emoji}."
   elif role1name in role:
-    return f"you have to buy the roles in order.\nThe next role you can buy is **`{role2name}`** {role2emoji}."
+    return f"you have to get the roles in order.\nThe next role you can get is **`{role2name}`** {role2emoji}."
   elif role2name in role:
-    return f"you have to buy the roles in order.\nThe next role you can buy is **`{role3name}`** {role3emoji}."
+    return f"you have to get the roles in order.\nThe next role you can get is **`{role3name}`** {role3emoji}."
   elif role3name in role:
-    return f"you have to buy the roles in order.\nThe next role you can buy is **`{role4name}`** {role4emoji}."
+    return f"you have to get the roles in order.\nThe next role you can get is **`{role4name}`** {role4emoji}."
   elif role4name in role:
-    return f"you have to buy the roles in order.\nThe next role you can buy is **`{role5name}`** {role5emoji}."
+    return f"you have to get the roles in order.\nThe next role you can get is **`{role5name}`** {role5emoji}."
   elif role5name in role:
-    return f"the next role you can buy is on [patreon](https://www.patreon.com/doctorses)."
+    return f"the next role you can get is on [patreon](https://www.patreon.com/doctorses)."
   elif role6name in role:
-    return f"the next role you can buy is on [patreon](https://www.patreon.com/doctorses)."
+    return f"the next role you can get is on [patreon](https://www.patreon.com/doctorses)."
   elif role7name in role:
     return f"you already have the maximum possible role!"
 
