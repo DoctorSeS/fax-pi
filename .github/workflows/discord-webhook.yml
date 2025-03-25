@@ -1,9 +1,8 @@
-name: Discord Webhook on Push
+name: Discord Commit Notifier
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
 
 jobs:
   notify-discord:
@@ -12,68 +11,73 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
-      - name: Get previous commit
-        id: prev_commit
-        run: echo "LAST_COMMIT=$(git rev-parse HEAD~1)" >> $GITHUB_ENV
-
-      - name: Get changed files
-        id: changes
+      - name: Get commit details
+        id: commit
         run: |
-          ADDED=$(git diff --diff-filter=A --name-only ${{ env.LAST_COMMIT }} HEAD)
-          MODIFIED=$(git diff --diff-filter=M --name-only ${{ env.LAST_COMMIT }} HEAD)
-          DELETED=$(git diff --diff-filter=D --name-only ${{ env.LAST_COMMIT }} HEAD)
+          # Get commit message
+          echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+          
+          # Get commit author
+          echo "AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
+          
+          # Get commit URL
+          echo "COMMIT_URL=https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" >> $GITHUB_OUTPUT
+          
+          # Get changed files (added, modified, deleted)
+          echo "ADDED_FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          echo "MODIFIED_FILES=$(git diff --name-only --diff-filter=M HEAD~1 HEAD | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          echo "DELETED_FILES=$(git diff --name-only --diff-filter=D HEAD~1 HEAD | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
-          echo "ADDED_FILES<<EOF" >> $GITHUB_ENV
-          echo "$ADDED" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-          echo "MODIFIED_FILES<<EOF" >> $GITHUB_ENV
-          echo "$MODIFIED" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-          echo "DELETED_FILES<<EOF" >> $GITHUB_ENV
-          echo "$DELETED" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Send message to Discord
-        run: |
-          MESSAGE=$(cat <<EOF
-          🚀 **New Push to \`${{ github.repository }}\` (master branch)**
-          **Author:** ${{ github.actor }}
-          **Commit Message:** ${{ github.event.head_commit.message }}
-
-          EOF
-          )
-
-          if [[ ! -z "${{ env.ADDED_FILES }}" ]]; then
-            MESSAGE+="🟢 **Added Files:**\n"
-            while IFS= read -r line; do
-              MESSAGE+="- \`$line\`\n"
-            done <<< "${{ env.ADDED_FILES }}"
-            MESSAGE+="\n"
-          fi
-
-          if [[ ! -z "${{ env.MODIFIED_FILES }}" ]]; then
-            MESSAGE+="🟡 **Modified Files:**\n"
-            while IFS= read -r line; do
-              MESSAGE+="- \`$line\`\n"
-            done <<< "${{ env.MODIFIED_FILES }}"
-            MESSAGE+="\n"
-          fi
-
-          if [[ ! -z "${{ env.DELETED_FILES }}" ]]; then
-            MESSAGE+="🔴 **Deleted Files:**\n"
-            while IFS= read -r line; do
-              MESSAGE+="- \`$line\`\n"
-            done <<< "${{ env.DELETED_FILES }}"
-            MESSAGE+="\n"
-          fi
-
-          MESSAGE+="**[View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})**"
-
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d "{\"content\": \"$MESSAGE\"}" \
-               "${{ secrets.DISCORD_WEBHOOK_URL }}"
+      - name: Send Discord Notification
+        uses: Ilshidur/action-discord@master
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        with:
+          args: |
+            {
+              "embeds": [
+                {
+                  "title": "New Commit Pushed 🚀",
+                  "color": 5814783,
+                  "fields": [
+                    {
+                      "name": "Author",
+                      "value": "${{ steps.commit.outputs.AUTHOR }}",
+                      "inline": true
+                    },
+                    {
+                      "name": "Commit Message",
+                      "value": "${{ steps.commit.outputs.COMMIT_MESSAGE }}",
+                      "inline": false
+                    },
+                    {
+                      "name": "🔗 View Commit",
+                      "value": "[Click Here](${{ steps.commit.outputs.COMMIT_URL }})",
+                      "inline": true
+                    },
+                    {
+                      "name": "📄 Added Files (${{ fromJson(steps.commit.outputs.ADDED_FILES) | length }})",
+                      "value": "${{ join(fromJson(steps.commit.outputs.ADDED_FILES), '\n') || 'None' }}",
+                      "inline": false
+                    },
+                    {
+                      "name": "✏️ Modified Files (${{ fromJson(steps.commit.outputs.MODIFIED_FILES) | length }})",
+                      "value": "${{ join(fromJson(steps.commit.outputs.MODIFIED_FILES), '\n') || 'None' }}",
+                      "inline": false
+                    },
+                    {
+                      "name": "❌ Deleted Files (${{ fromJson(steps.commit.outputs.DELETED_FILES) | length }})",
+                      "value": "${{ join(fromJson(steps.commit.outputs.DELETED_FILES), '\n') || 'None' }}",
+                      "inline": false
+                    }
+                  ],
+                  "footer": {
+                    "text": "GitHub • ${{ github.repository }}",
+                    "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                  },
+                  "timestamp": "${{ steps.commit.outputs.TIMESTAMP }}"
+                }
+              ]
+            }
