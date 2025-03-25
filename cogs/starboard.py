@@ -308,7 +308,7 @@ class Starboard(commands.Cog):
               number = str(x).split("count=")[1].lstrip().split(">")[0]
               break
 
-          if number != None:
+          if number is not None:
             msg = message.guild.get_channel(find_channel).get_partial_message(int(editor2))
             await msg.edit(content=f"<:{emoji_name}:{emoji_id}> **{number}**")
             return
@@ -374,15 +374,18 @@ class Starboard(commands.Cog):
         msg2 = await channel.send(embed=embed, content=f"{reaction.emoji} **{counter}**")
 
         try:
-          editor = get_db('guilds')[f'{message.guild.id}']['starboard_messages']
+          editor = get_db('guilds')[f'{message.guild.id}'].get("starboard_messages", {})
         except:
-          update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
+          try:
+            update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
+          except:
+            return
         else:
           update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{editor}{message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
 
         if_100(message.guild.id)
 
-        if content == None:
+        if content is None:
           return
         else:
           await channel.send(content)
