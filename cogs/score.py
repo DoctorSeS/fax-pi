@@ -1019,7 +1019,7 @@ class Scores(commands.Cog):
     else:
       del badge_placements['holder']
       for the_badge in badge_placements:
-        if "role" in badge_placements[str(the_badge)] or ("gambl" in badge_placements[str(the_badge)]):
+        if "role" in badge_placements[str(the_badge)]:
           num = int(str(badge_placements[str(the_badge)])[-1])
           if (num == 1) or (num == 2):
             x = badges[int(the_badge) - 1][0] - 15
@@ -1031,7 +1031,7 @@ class Scores(commands.Cog):
           badge = Image.open(f"images/assets/badges/{badge_placements[str(the_badge)]}.png")
           img.paste(badge, (x, y), badge)
 
-        elif "game" in badge_placements[str(the_badge)]:
+        elif ("game" in badge_placements[str(the_badge)]) or ("gambl" in badge_placements[str(the_badge)]):
           num = str(badge_placements[str(the_badge)])[-1]
           if num == 6:
             x = badges[int(the_badge) - 1][0] - 41
@@ -1245,7 +1245,7 @@ class Scores(commands.Cog):
     else:
       del badge_placements['holder']
       for the_badge in badge_placements:
-        if "role" in badge_placements[str(the_badge)] or ("gambl" in badge_placements[str(the_badge)]):
+        if "role" in badge_placements[str(the_badge)]:
           num = int(str(badge_placements[str(the_badge)])[-1])
           if (num == 1) or (num == 2):
             x = badges[int(the_badge) - 1][0] - 15
@@ -1257,7 +1257,7 @@ class Scores(commands.Cog):
           badge = Image.open(f"images/assets/badges/{badge_placements[str(the_badge)]}.png")
           img.paste(badge, (x, y), badge)
 
-        elif "game" in badge_placements[str(the_badge)]:
+        elif ("game" in badge_placements[str(the_badge)]) or ("gambl" in badge_placements[str(the_badge)]):
           num = str(badge_placements[str(the_badge)])[-1]
           if num == 6:
             x = badges[int(the_badge) - 1][0] - 41
