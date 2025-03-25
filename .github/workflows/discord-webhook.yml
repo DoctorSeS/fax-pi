@@ -11,64 +11,49 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 2  # Required for proper diffing
 
-      - name: Prepare commit data
-        id: prepare
+      - name: Generate Discord payload
+        id: generate-payload
         run: |
-          # Get basic commit info
+          # Install jq if not present
+          sudo apt-get -qq install jq
+
+          # Get commit info
           AUTHOR=$(git log -1 --pretty=%an)
           COMMIT_URL="https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
           
-          # Get changed files (properly handle spaces and special chars)
-          ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} | jq -R -s -c 'split("\n")[:-1]')
-          MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} | jq -R -s -c 'split("\n")[:-1]')
-          DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} | jq -R -s -c 'split("\n")[:-1]')
-          
-          # Output everything safely
-          echo "AUTHOR=${AUTHOR}" >> $GITHUB_OUTPUT
-          echo "COMMIT_URL=${COMMIT_URL}" >> $GITHUB_OUTPUT
-          echo "ADDED=${ADDED}" >> $GITHUB_OUTPUT
-          echo "MODIFIED=${MODIFIED}" >> $GITHUB_OUTPUT
-          echo "DELETED=${DELETED}" >> $GITHUB_OUTPUT
+          # Get changed files as proper JSON arrays
+          ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
+          MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
+          DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
 
-      - name: Create and send Discord message
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
-          # Load the prepared data
-          AUTHOR="${{ steps.prepare.outputs.AUTHOR }}"
-          COMMIT_URL="${{ steps.prepare.outputs.COMMIT_URL }}"
-          ADDED="${{ steps.prepare.outputs.ADDED }}"
-          MODIFIED="${{ steps.prepare.outputs.MODIFIED }}"
-          DELETED="${{ steps.prepare.outputs.DELETED }}"
-          
-          # Initialize fields array
-          FIELDS="[]"
+          # Create fields array
+          FIELDS=()
           
           # Helper function to add fields
           add_field() {
             local name=$1
             local files=$2
             local count=$(echo "$files" | jq 'length')
-            if [ "$count" -gt 0 ]; then
-              FIELDS=$(echo "$FIELDS" | jq \
-                --arg n "$name" \
-                --arg v "$(echo "$files" | jq -r 'join("\n")')" \
-                '. += [{"name": $n, "value": $v, "inline": false}]')
+            if [ $count -gt 0 ]; then
+              FIELDS+=("{\"name\":\"$name ($count)\",\"value\":\"$(echo "$files" | jq -r 'join("\\n")')\",\"inline\":false}")
             fi
           }
           
           # Add fields for each change type
-          add_field "📥 Added ($(echo "$ADDED" | jq 'length'))" "$ADDED"
-          add_field "✏️ Modified ($(echo "$MODIFIED" | jq 'length'))" "$MODIFIED"
-          add_field "🗑️ Removed ($(echo "$DELETED" | jq 'length'))" "$DELETED"
+          add_field "📥 Added" "$ADDED"
+          add_field "✏️ Modified" "$MODIFIED"
+          add_field "🗑️ Removed" "$DELETED"
           
-          # Create the final payload
+          # Join fields with commas
+          FIELDS_JSON=$(IFS=, ; echo "[${FIELDS[*]}]")
+          
+          # Create final payload
           PAYLOAD=$(jq -n \
-            --argjson fields "$FIELDS" \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
+            --argjson fields "$FIELDS_JSON" \
             '{
               "embeds": [{
                 "author": {"name": $author, "url": $url},
@@ -82,8 +67,23 @@ jobs:
               }]
             }')
           
-          # Send to Discord using curl (more reliable than actions)
-          curl -X POST \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            "$DISCORD_WEBHOOK"
+          # Save payload for debugging
+          echo "$PAYLOAD" > payload.json
+          echo "PAYLOAD=$(jq -c . < payload.json)" >> $GITHUB_OUTPUT
+
+      - name: Debug payload
+        run: |
+          echo "Generated payload:"
+          cat payload.json
+          echo ""
+          echo "Field counts:"
+          echo "Added: $(jq '.embeds[0].fields | map(select(.name | startswith("📥"))) | length' payload.json)"
+          echo "Modified: $(jq '.embeds[0].fields | map(select(.name | startswith("✏️"))) | length' payload.json)"
+          echo "Removed: $(jq '.embeds[0].fields | map(select(.name | startswith("🗑️"))) | length' payload.json)"
+
+      - name: Send to Discord
+        uses: Ilshidur/action-discord@master
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        with:
+          embeds: ${{ steps.generate-payload.outputs.PAYLOAD }}
