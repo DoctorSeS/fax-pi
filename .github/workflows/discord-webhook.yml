@@ -9,9 +9,24 @@ jobs:
   notify-discord:
     runs-on: ubuntu-latest
     steps:
+      - name: Get changed files
+        id: changes
+        run: |
+          echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Send message to Discord
         run: |
+          MESSAGE="**New Push to `${{ github.repository }}`**\n"
+          MESSAGE+="**Author:** ${{ github.actor }}\n"
+          MESSAGE+="**Commit Message:** ${{ github.event.head_commit.message }}\n"
+          MESSAGE+="**Changed Files:**\n"
+          while IFS= read -r line; do
+            MESSAGE+="- \`$line\`\n"
+          done <<< "${{ env.CHANGED_FILES }}"
+
           curl -H "Content-Type: application/json" \
           -X POST \
-          -d '{"content": "New push to the repository! Check it out: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"}' \
+          -d "{\"content\": \"$MESSAGE\"}" \
           "${{ secrets.DISCORD_WEBHOOK_URL }}"
