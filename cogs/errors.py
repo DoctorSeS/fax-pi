@@ -1,12 +1,9 @@
 import discord
 from discord.ext import commands, tasks
-import logging
-import traceback
 from random import randint
 from main import client, bot_prefix, ses, red, green, site_link
 import difflib
 import random
-from termcolor import cprint
 from database import *
 import datetime
 
