@@ -56,6 +56,7 @@ jobs:
           jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
+            --arg avatar "https://github.com/$AUTHOR.png" \
             --argjson fields "$FIELDS" \
             '{
               "username": "GitHub",
