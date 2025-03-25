@@ -3,17 +3,64 @@ name: Discord Webhook on Push
 on:
   push:
     branches:
-      - master
+      - master  # Use 'master' instead of 'main'
 
 jobs:
   notify-discord:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changes
+        run: |
+          ADDED=$(git diff --diff-filter=A --name-only ${{ github.event.before }} ${{ github.sha }})
+          MODIFIED=$(git diff --diff-filter=M --name-only ${{ github.event.before }} ${{ github.sha }})
+          DELETED=$(git diff --diff-filter=D --name-only ${{ github.event.before }} ${{ github.sha }})
+
+          echo "ADDED_FILES<<EOF" >> $GITHUB_ENV
+          echo "$ADDED" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+          echo "MODIFIED_FILES<<EOF" >> $GITHUB_ENV
+          echo "$MODIFIED" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+          echo "DELETED_FILES<<EOF" >> $GITHUB_ENV
+          echo "$DELETED" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Send message to Discord
         run: |
-          MESSAGE="🚀 **New Push to \`${{ github.repository }}\`**\n"
+          MESSAGE="🚀 **New Push to \`${{ github.repository }}\` (master branch)**\n"
           MESSAGE+="**Author:** ${{ github.actor }}\n"
-          MESSAGE+="**Commit Message:** ${{ github.event.head_commit.message }}\n"
+          MESSAGE+="**Commit Message:** ${{ github.event.head_commit.message }}\n\n"
+
+          if [[ ! -z "${{ env.ADDED_FILES }}" ]]; then
+            MESSAGE+="🟢 **Added Files:**\n"
+            while IFS= read -r line; do
+              MESSAGE+="- \`$line\`\n"
+            done <<< "${{ env.ADDED_FILES }}"
+            MESSAGE+="\n"
+          fi
+
+          if [[ ! -z "${{ env.MODIFIED_FILES }}" ]]; then
+            MESSAGE+="🟡 **Modified Files:**\n"
+            while IFS= read -r line; do
+              MESSAGE+="- \`$line\`\n"
+            done <<< "${{ env.MODIFIED_FILES }}"
+            MESSAGE+="\n"
+          fi
+
+          if [[ ! -z "${{ env.DELETED_FILES }}" ]]; then
+            MESSAGE+="🔴 **Deleted Files:**\n"
+            while IFS= read -r line; do
+              MESSAGE+="- \`$line\`\n"
+            done <<< "${{ env.DELETED_FILES }}"
+            MESSAGE+="\n"
+          fi
+
           MESSAGE+="**[View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})**"
 
           curl -H "Content-Type: application/json" \
