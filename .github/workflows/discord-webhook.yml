@@ -18,32 +18,31 @@ jobs:
         run: |
           # Install jq if not present
           sudo apt-get -qq install jq
-
+      
           # Get commit info
           AUTHOR=$(git log -1 --pretty=%an)
           COMMIT_URL="https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
+          
+          # Get GitHub avatar URL (with fallback)
+          AVATAR_URL=$(curl -s "https://api.github.com/users/$AUTHOR" | jq -r '.avatar_url // empty') || true
+          AVATAR_URL=${AVATAR_URL:-"https://github.com/$AUTHOR.png?$(date +%s)"}
           
           # Get changed files as arrays
           ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
           MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
           DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
-
+      
           # Create fields array
           FIELDS="[]"
           
-          # Helper function to add fields
+          # Helper function to add fields with proper newlines
           add_field() {
             local name=$1
             local files=$2
             local count=$(echo "$files" | jq 'length')
             if [ $count -gt 0 ]; then
               # Format files with bullet points and bold markers
-              FORMATTED_FILES=$(echo "$files" | 
-                jq -r '.[] | "• **\(.)**"' |  # Format each line
-                tr '\n' '\f' |                 # Temporary replacement
-                sed 's/\f/\n/g' |              # Convert to literal newlines
-                jq -Rs . |                     # Convert to raw JSON string
-                sed 's/^"//;s/"$//')           # Remove surrounding quotes
+              FORMATTED_FILES=$(echo "$files" | jq -r '.[] | "• **\(.)**"' | jq -R -s 'join("\n")' | sed 's/^"//;s/"$//')
               
               FIELDS=$(echo "$FIELDS" | jq \
                 --arg n "$name ($count)" \
@@ -51,17 +50,18 @@ jobs:
                 '. += [{"name": $n, "value": $v, "inline": false}]')
             fi
           }
-                    
+          
           # Add fields for each change type
           add_field "Added Files" "$ADDED"
           add_field "Updated Files" "$MODIFIED"
           add_field "Removed Files" "$DELETED"
+
           
           # Create final payload file
           jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
-            --arg avatar "${{ steps.get_avatar.outputs.AVATAR_URL }}" \
+            --arg avatar "$AVATAR_URL" \
             --argjson fields "$FIELDS" \
             '{
               "username": "GitHub",
