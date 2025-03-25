@@ -3,7 +3,7 @@ name: Discord Webhook on Push
 on:
   push:
     branches:
-      - master  # Use 'master' instead of 'main'
+      - master  # Use 'master' branch
 
 jobs:
   notify-discord:
@@ -11,13 +11,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Ensure we have at least 2 commits to compare
+
+      - name: Get previous commit
+        id: prev_commit
+        run: echo "LAST_COMMIT=$(git rev-parse HEAD~1)" >> $GITHUB_ENV
 
       - name: Get changed files
         id: changes
         run: |
-          ADDED=$(git diff --diff-filter=A --name-only ${{ github.event.before }} ${{ github.sha }})
-          MODIFIED=$(git diff --diff-filter=M --name-only ${{ github.event.before }} ${{ github.sha }})
-          DELETED=$(git diff --diff-filter=D --name-only ${{ github.event.before }} ${{ github.sha }})
+          ADDED=$(git diff --diff-filter=A --name-only ${{ env.LAST_COMMIT }} HEAD)
+          MODIFIED=$(git diff --diff-filter=M --name-only ${{ env.LAST_COMMIT }} HEAD)
+          DELETED=$(git diff --diff-filter=D --name-only ${{ env.LAST_COMMIT }} HEAD)
 
           echo "ADDED_FILES<<EOF" >> $GITHUB_ENV
           echo "$ADDED" >> $GITHUB_ENV
@@ -57,13 +63,3 @@ jobs:
             MESSAGE+="🔴 **Deleted Files:**\n"
             while IFS= read -r line; do
               MESSAGE+="- \`$line\`\n"
-            done <<< "${{ env.DELETED_FILES }}"
-            MESSAGE+="\n"
-          fi
-
-          MESSAGE+="**[View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})**"
-
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d "{\"content\": \"$MESSAGE\"}" \
-               "${{ secrets.DISCORD_WEBHOOK_URL }}"
