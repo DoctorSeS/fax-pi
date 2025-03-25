@@ -37,17 +37,20 @@ jobs:
             local files=$2
             local count=$(echo "$files" | jq 'length')
             if [ $count -gt 0 ]; then
+              # Format files with bullet points and bold markers
+              FORMATTED_FILES=$(echo "$files" | jq -r '.[] | "**• \(.)**"' | jq -R -s 'split("\n") | map(select(. != "")) | join("\\n")')
+              
               FIELDS=$(echo "$FIELDS" | jq \
                 --arg n "$name ($count)" \
-                --arg v "$(echo "$files" | jq -r 'join("\\n")')" \
+                --arg v "$FORMATTED_FILES" \
                 '. += [{"name": $n, "value": $v, "inline": false}]')
             fi
           }
           
           # Add fields for each change type
-          add_field "📥 Added" "$ADDED"
-          add_field "✏️ Modified" "$MODIFIED"
-          add_field "🗑️ Removed" "$DELETED"
+          add_field "Added Files" "**$ADDED**"
+          add_field "Updated Files" "**$MODIFIED**"
+          add_field "Removed Files" "**$DELETED**"
           
           # Create final payload file
           jq -n \
@@ -58,12 +61,12 @@ jobs:
               "username": "GitHub",
               "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
               "embeds": [{
-                "author": {"name": $author, "url": $url},
-                "color": 5763719,
+                "author": {"name": $author, "icon_url": $avatar},
+                "color": 3447003,
                 "fields": $fields,
                 "footer": {
-                  "text": "GitHub Actions",
-                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                  "text": "The Fax Machine",
+                  "icon_url": "https://cdn.discordapp.com/avatars/830199512572100609/4b7402987cf65285260e0c16c12a7900.png"
                 },
                 "timestamp": now|strftime("%Y-%m-%dT%H:%M:%SZ")
               }]
