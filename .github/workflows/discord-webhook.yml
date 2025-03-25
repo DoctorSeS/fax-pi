@@ -16,64 +16,73 @@ jobs:
       - name: Prepare commit data
         id: prepare
         run: |
-          # Escape JSON special characters in commit message
-          COMMIT_MSG=$(git log -1 --pretty=%B | jq -Rs . | sed 's/^"//;s/"$//')
-          echo "COMMIT_MESSAGE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
+          # Get basic commit info
           echo "AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
           echo "COMMIT_URL=https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" >> $GITHUB_OUTPUT
           
-          # Get changed files (handle empty cases)
-          ADDED=$(git diff --name-only --diff-filter=A HEAD~1 HEAD || echo "None")
-          MODIFIED=$(git diff --name-only --diff-filter=M HEAD~1 HEAD || echo "None")
-          DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD || echo "None")
+          # Get changed files (ignore empty results)
+          ADDED=$(git diff --name-only --diff-filter=A HEAD~1 HEAD | grep . || true)
+          MODIFIED=$(git diff --name-only --diff-filter=M HEAD~1 HEAD | grep . || true)
+          DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD | grep . || true)
           
-          # Format with newlines
+          # Format with newlines and count
           echo "ADDED_FILES=$(echo "$ADDED" | sed 's/ /\\n/g')" >> $GITHUB_OUTPUT
           echo "MODIFIED_FILES=$(echo "$MODIFIED" | sed 's/ /\\n/g')" >> $GITHUB_OUTPUT
           echo "DELETED_FILES=$(echo "$DELETED" | sed 's/ /\\n/g')" >> $GITHUB_OUTPUT
+          echo "ADDED_COUNT=$(echo "$ADDED" | wc -w)" >> $GITHUB_OUTPUT
+          echo "MODIFIED_COUNT=$(echo "$MODIFIED" | wc -w)" >> $GITHUB_OUTPUT
+          echo "DELETED_COUNT=$(echo "$DELETED" | wc -w)" >> $GITHUB_OUTPUT
 
-      - name: Send Discord notification
+      - name: Generate Discord payload
+        id: discord
+        run: |
+          # Start building fields array
+          FIELDS="[]"
+          
+          # Helper function to add fields
+          add_field() {
+            local name=$1
+            local value=$2
+            local count=$3
+            FIELDS=$(echo "$FIELDS" | jq --arg n "$name" --arg v "$value" --arg c "$count" \
+              '. += [{"name": "\($n) (\($c))", "value": $v, "inline": false}]')
+          }
+          
+          # Only add fields for non-empty changes
+          if [ "${{ steps.prepare.outputs.ADDED_COUNT }}" -gt 0 ]; then
+            add_field "📥 Added" "${{ steps.prepare.outputs.ADDED_FILES }}" "${{ steps.prepare.outputs.ADDED_COUNT }}"
+          fi
+          
+          if [ "${{ steps.prepare.outputs.MODIFIED_COUNT }}" -gt 0 ]; then
+            add_field "✏️ Modified" "${{ steps.prepare.outputs.MODIFIED_FILES }}" "${{ steps.prepare.outputs.MODIFIED_COUNT }}"
+          fi
+          
+          if [ "${{ steps.prepare.outputs.DELETED_COUNT }}" -gt 0 ]; then
+            add_field "🗑️ Removed" "${{ steps.prepare.outputs.DELETED_FILES }}" "${{ steps.prepare.outputs.DELETED_COUNT }}"
+          fi
+          
+          # Create final payload
+          echo "PAYLOAD=$(jq -n \
+            --argjson fields "$FIELDS" \
+            --arg author "${{ steps.prepare.outputs.AUTHOR }}" \
+            --arg url "${{ steps.prepare.outputs.COMMIT_URL }}" \
+            '{
+              "embeds": [{
+                "author": {"name": $author},
+                "url": $url,
+                "color": 5763719,
+                "fields": $fields,
+                "footer": {
+                  "text": "GitHub",
+                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                },
+                "timestamp": now|strftime("%Y-%m-%dT%H:%M:%SZ")
+              }]
+            }')" >> $GITHUB_OUTPUT
+
+      - name: Send to Discord
         uses: Ilshidur/action-discord@master
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
-          embeds: |
-            [
-              {
-                "title": "New Commit Pushed",
-                "url": "${{ steps.prepare.outputs.COMMIT_URL }}",
-                "color": 3447003,
-                "fields": [
-                  {
-                    "name": "Author",
-                    "value": "${{ steps.prepare.outputs.AUTHOR }}",
-                    "inline": true
-                  },
-                  {
-                    "name": "Message",
-                    "value": "${{ steps.prepare.outputs.COMMIT_MESSAGE }}",
-                    "inline": false
-                  },
-                  {
-                    "name": "Added Files ($(echo "${{ steps.prepare.outputs.ADDED_FILES }}" | grep -c '\\n' || echo 0)",
-                    "value": "${{ steps.prepare.outputs.ADDED_FILES }}",
-                    "inline": false
-                  },
-                  {
-                    "name": "Modified Files ($(echo "${{ steps.prepare.outputs.MODIFIED_FILES }}" | grep -c '\\n' || echo 0)",
-                    "value": "${{ steps.prepare.outputs.MODIFIED_FILES }}",
-                    "inline": false
-                  },
-                  {
-                    "name": "Deleted Files ($(echo "${{ steps.prepare.outputs.DELETED_FILES }}" | grep -c '\\n' || echo 0)",
-                    "value": "${{ steps.prepare.outputs.DELETED_FILES }}",
-                    "inline": false
-                  }
-                ],
-                "footer": {
-                  "text": "GitHub Actions",
-                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-                },
-                "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-              }
-            ]
+          embeds: ${{ steps.discord.outputs.PAYLOAD }}
