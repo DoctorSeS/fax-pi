@@ -11,66 +11,65 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 2  # Need previous commit for proper diff
 
-      - name: Prepare commit data
-        id: prepare
+      - name: Analyze changes
+        id: changes
         run: |
-          # Get basic commit info
-          echo "AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
-          echo "COMMIT_URL=https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" >> $GITHUB_OUTPUT
-          
-          # Get changed files
-          ADDED=$(git diff --name-only --diff-filter=A HEAD~1 HEAD)
-          MODIFIED=$(git diff --name-only --diff-filter=M HEAD~1 HEAD)
-          DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD)
-          
+          # Get proper diff between commits
+          echo "ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} | grep . || echo '')" >> $GITHUB_OUTPUT
+          echo "MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} | grep . || echo '')" >> $GITHUB_OUTPUT
+          echo "DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} | grep . || echo '')" >> $GITHUB_OUTPUT
+
+      - name: Prepare Discord message
+        id: discord
+        run: |
           # Count changes
-          echo "ADDED_COUNT=$(echo "$ADDED" | wc -w | tr -d ' ')" >> $GITHUB_OUTPUT
-          echo "MODIFIED_COUNT=$(echo "$MODIFIED" | wc -w | tr -d ' ')" >> $GITHUB_OUTPUT
-          echo "DELETED_COUNT=$(echo "$DELETED" | wc -w | tr -d ' ')" >> $GITHUB_OUTPUT
-          
-          # Format file lists with newlines
-          echo "ADDED_FILES=$(echo "$ADDED" | sed ':a;N;$!ba;s/\n/\\n/g')" >> $GITHUB_OUTPUT
-          echo "MODIFIED_FILES=$(echo "$MODIFIED" | sed ':a;N;$!ba;s/\n/\\n/g')" >> $GITHUB_OUTPUT
-          echo "DELETED_FILES=$(echo "$DELETED" | sed ':a;N;$!ba;s/\n/\\n/g')" >> $GITHUB_OUTPUT
+          ADDED_COUNT=$(echo "${{ steps.changes.outputs.ADDED }}" | wc -w | tr -d ' ')
+          MODIFIED_COUNT=$(echo "${{ steps.changes.outputs.MODIFIED }}" | wc -w | tr -d ' ')
+          DELETED_COUNT=$(echo "${{ steps.changes.outputs.DELETED }}" | wc -w | tr -d ' ')
 
-      - name: Create Discord payload
-        run: |
-          # Start with basic embed structure
-          PAYLOAD='{
-            "embeds": [{
-              "author": {"name": "${{ steps.prepare.outputs.AUTHOR }}"},
-              "url": "${{ steps.prepare.outputs.COMMIT_URL }}",
-              "color": 5763719,
-              "footer": {
-                "text": "GitHub",
-                "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-              },
-              "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",
-              "fields": []
-            }]
-          }'
+          # Format file lists
+          ADDED_FILES=$(echo "${{ steps.changes.outputs.ADDED }}" | sed 's/ /\\n/g')
+          MODIFIED_FILES=$(echo "${{ steps.changes.outputs.MODIFIED }}" | sed 's/ /\\n/g')
+          DELETED_FILES=$(echo "${{ steps.changes.outputs.DELETED }}" | sed 's/ /\\n/g')
+
+          # Build fields array
+          FIELDS="[]"
           
-          # Conditionally add fields
-          if [ "${{ steps.prepare.outputs.ADDED_COUNT }}" -gt 0 ]; then
-            PAYLOAD=$(echo "$PAYLOAD" | jq --arg files "${{ steps.prepare.outputs.ADDED_FILES }}" \
-              '.embeds[0].fields += [{"name": "📥 Added (${{ steps.prepare.outputs.ADDED_COUNT }})", "value": $files, "inline": false}]')
+          if [ "$ADDED_COUNT" -gt 0 ]; then
+            FIELDS=$(echo "$FIELDS" | jq --arg files "$ADDED_FILES" \
+              '. += [{"name": "📥 Added ($ADDED_COUNT)", "value": $files, "inline": false}]')
           fi
           
-          if [ "${{ steps.prepare.outputs.MODIFIED_COUNT }}" -gt 0 ]; then
-            PAYLOAD=$(echo "$PAYLOAD" | jq --arg files "${{ steps.prepare.outputs.MODIFIED_FILES }}" \
-              '.embeds[0].fields += [{"name": "✏️ Modified (${{ steps.prepare.outputs.MODIFIED_COUNT }})", "value": $files, "inline": false}]')
+          if [ "$MODIFIED_COUNT" -gt 0 ]; then
+            FIELDS=$(echo "$FIELDS" | jq --arg files "$MODIFIED_FILES" \
+              '. += [{"name": "✏️ Modified ($MODIFIED_COUNT)", "value": $files, "inline": false}]')
           fi
           
-          if [ "${{ steps.prepare.outputs.DELETED_COUNT }}" -gt 0 ]; then
-            PAYLOAD=$(echo "$PAYLOAD" | jq --arg files "${{ steps.prepare.outputs.DELETED_FILES }}" \
-              '.embeds[0].fields += [{"name": "🗑️ Removed (${{ steps.prepare.outputs.DELETED_COUNT }})", "value": $files, "inline": false}]')
+          if [ "$DELETED_COUNT" -gt 0 ]; then
+            FIELDS=$(echo "$FIELDS" | jq --arg files "$DELETED_FILES" \
+              '. += [{"name": "🗑️ Removed ($DELETED_COUNT)", "value": $files, "inline": false}]')
           fi
-          
-          # Save payload to file for the next step
-          echo "$PAYLOAD" > payload.json
-          echo "PAYLOAD=$(jq -c . < payload.json)" >> $GITHUB_OUTPUT
+
+          # Create final payload
+          echo "PAYLOAD=$(jq -n \
+            --argjson fields "$FIELDS" \
+            --arg author "$(git log -1 --pretty=%an)" \
+            --arg url "https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" \
+            '{
+              "embeds": [{
+                "author": {"name": $author},
+                "url": $url,
+                "color": 5763719,
+                "fields": $fields,
+                "footer": {
+                  "text": "GitHub",
+                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                },
+                "timestamp": now|strftime("%Y-%m-%dT%H:%M:%SZ")
+              }]
+            }')" >> $GITHUB_OUTPUT
 
       - name: Send to Discord
         uses: Ilshidur/action-discord@master
