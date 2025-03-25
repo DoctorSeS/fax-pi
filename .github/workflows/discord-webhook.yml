@@ -11,13 +11,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Need previous commit for diff
+          fetch-depth: 2
 
-      - name: Setup environment
-        id: setup
+      - name: Prepare commit data
+        id: prepare
         run: |
-          # Get basic commit info
-          echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B | jq -Rs . | sed 's/^"//;s/"$//')" >> $GITHUB_OUTPUT
+          # Escape JSON special characters in commit message
+          COMMIT_MSG=$(git log -1 --pretty=%B | jq -Rs . | sed 's/^"//;s/"$//')
+          echo "COMMIT_MESSAGE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
           echo "AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
           echo "COMMIT_URL=https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" >> $GITHUB_OUTPUT
           
@@ -26,54 +27,53 @@ jobs:
           MODIFIED=$(git diff --name-only --diff-filter=M HEAD~1 HEAD || echo "None")
           DELETED=$(git diff --name-only --diff-filter=D HEAD~1 HEAD || echo "None")
           
-          # Format for Discord
-          echo "ADDED_FILES=${ADDED}" >> $GITHUB_OUTPUT
-          echo "MODIFIED_FILES=${MODIFIED}" >> $GITHUB_OUTPUT
-          echo "DELETED_FILES=${DELETED}" >> $GITHUB_OUTPUT
+          # Format with newlines
+          echo "ADDED_FILES=$(echo "$ADDED" | sed 's/ /\\n/g')" >> $GITHUB_OUTPUT
+          echo "MODIFIED_FILES=$(echo "$MODIFIED" | sed 's/ /\\n/g')" >> $GITHUB_OUTPUT
+          echo "DELETED_FILES=$(echo "$DELETED" | sed 's/ /\\n/g')" >> $GITHUB_OUTPUT
 
-      - name: Create Discord payload
-        id: discord
-        run: |
-          # Format file lists with newlines
-          ADDED_FORMATTED=$(echo "${{ steps.setup.outputs.ADDED_FILES }}" | sed 's/ /\n/g')
-          MODIFIED_FORMATTED=$(echo "${{ steps.setup.outputs.MODIFIED_FILES }}" | sed 's/ /\n/g')
-          DELETED_FORMATTED=$(echo "${{ steps.setup.outputs.DELETED_FILES }}" | sed 's/ /\n/g')
-          
-          # Count changes
-          ADDED_COUNT=$(echo "$ADDED_FORMATTED" | wc -l)
-          MODIFIED_COUNT=$(echo "$MODIFIED_FORMATTED" | wc -l)
-          DELETED_COUNT=$(echo "$DELETED_FORMATTED" | wc -l)
-          
-          # Create JSON payload
-          PAYLOAD=$(cat <<EOF
-          {
-            "embeds": [{
-              "title": "New Commit Pushed",
-              "url": "${{ steps.setup.outputs.COMMIT_URL }}",
-              "color": 3447003,
-              "fields": [
-                {"name": "Author", "value": "${{ steps.setup.outputs.AUTHOR }}", "inline": true},
-                {"name": "Message", "value": "${{ steps.setup.outputs.COMMIT_MESSAGE }}", "inline": false},
-                {"name": "Added Files ($ADDED_COUNT)", "value": "$ADDED_FORMATTED", "inline": false},
-                {"name": "Modified Files ($MODIFIED_COUNT)", "value": "$MODIFIED_FORMATTED", "inline": false},
-                {"name": "Deleted Files ($DELETED_COUNT)", "value": "$DELETED_FORMATTED", "inline": false}
-              ],
-              "footer": {
-                "text": "GitHub Actions",
-                "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-              },
-              "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            }]
-          }
-          EOF
-          )
-          # Escape newlines for GitHub Actions
-          PAYLOAD_ESCAPED=$(echo "$PAYLOAD" | jq -c . | sed 's/"/\\"/g')
-          echo "PAYLOAD=$PAYLOAD_ESCAPED" >> $GITHUB_OUTPUT
-
-      - name: Send to Discord
+      - name: Send Discord notification
         uses: Ilshidur/action-discord@master
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
-          args: ${{ steps.discord.outputs.PAYLOAD }}
+          embeds: |
+            [
+              {
+                "title": "New Commit Pushed",
+                "url": "${{ steps.prepare.outputs.COMMIT_URL }}",
+                "color": 3447003,
+                "fields": [
+                  {
+                    "name": "Author",
+                    "value": "${{ steps.prepare.outputs.AUTHOR }}",
+                    "inline": true
+                  },
+                  {
+                    "name": "Message",
+                    "value": "${{ steps.prepare.outputs.COMMIT_MESSAGE }}",
+                    "inline": false
+                  },
+                  {
+                    "name": "Added Files ($(echo "${{ steps.prepare.outputs.ADDED_FILES }}" | grep -c '\\n' || echo 0)",
+                    "value": "${{ steps.prepare.outputs.ADDED_FILES }}",
+                    "inline": false
+                  },
+                  {
+                    "name": "Modified Files ($(echo "${{ steps.prepare.outputs.MODIFIED_FILES }}" | grep -c '\\n' || echo 0)",
+                    "value": "${{ steps.prepare.outputs.MODIFIED_FILES }}",
+                    "inline": false
+                  },
+                  {
+                    "name": "Deleted Files ($(echo "${{ steps.prepare.outputs.DELETED_FILES }}" | grep -c '\\n' || echo 0)",
+                    "value": "${{ steps.prepare.outputs.DELETED_FILES }}",
+                    "inline": false
+                  }
+                ],
+                "footer": {
+                  "text": "GitHub Actions",
+                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                },
+                "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+              }
+            ]
