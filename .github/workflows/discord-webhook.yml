@@ -1,3 +1,49 @@
-steps:
-  - name: Install jq
-    run: sudo apt-get install -y jq  # For Ubuntu runner
+name: Discord Commit Notifier
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  notify-discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit data
+        id: commit
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B | sed ':a;N;$!ba;s/\n/\\n/g')
+          echo "COMMIT_MESSAGE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
+          echo "AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
+          echo "COMMIT_URL=https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" >> $GITHUB_OUTPUT
+          ADDED=$(git show --name-only --diff-filter=A --pretty=format:'' HEAD | tr '\n' ',' | sed 's/,$//')
+          MODIFIED=$(git show --name-only --diff-filter=M --pretty=format:'' HEAD | tr '\n' ',' | sed 's/,$//')
+          DELETED=$(git show --name-only --diff-filter=D --pretty=format:'' HEAD | tr '\n' ',' | sed 's/,$//')
+          echo "ADDED_FILES=[\"${ADDED//,/\",\"}\"]" >> $GITHUB_OUTPUT
+          echo "MODIFIED_FILES=[\"${MODIFIED//,/\",\"}\"]" >> $GITHUB_OUTPUT
+          echo "DELETED_FILES=[\"${DELETED//,/\",\"}\"]" >> $GITHUB_OUTPUT
+
+      - name: Send to Discord
+        uses: Ilshidur/action-discord@master
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        with:
+          args: |
+            {
+              "embeds": [{
+                "title": "Commit Detected",
+                "description": "${{ steps.commit.outputs.COMMIT_MESSAGE }}",
+                "color": 5814783,
+                "fields": [
+                  { "name": "Author", "value": "${{ steps.commit.outputs.AUTHOR }}", "inline": true },
+                  { "name": "Added", "value": "${{ join(fromJson(steps.commit.outputs.ADDED_FILES), '\n') || 'None' }}", "inline": false }
+                ]
+              }]
+            }
