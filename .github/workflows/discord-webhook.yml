@@ -11,7 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Required for proper diffing
+          fetch-depth: 2
 
       - name: Generate Discord payload
         id: generate-payload
@@ -23,13 +23,13 @@ jobs:
           AUTHOR=$(git log -1 --pretty=%an)
           COMMIT_URL="https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
           
-          # Get changed files as proper JSON arrays
+          # Get changed files as arrays
           ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
           MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
           DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
 
           # Create fields array
-          FIELDS=()
+          FIELDS="[]"
           
           # Helper function to add fields
           add_field() {
@@ -37,7 +37,10 @@ jobs:
             local files=$2
             local count=$(echo "$files" | jq 'length')
             if [ $count -gt 0 ]; then
-              FIELDS+=("{\"name\":\"$name ($count)\",\"value\":\"$(echo "$files" | jq -r 'join("\\n")')\",\"inline\":false}")
+              FIELDS=$(echo "$FIELDS" | jq \
+                --arg n "$name ($count)" \
+                --arg v "$(echo "$files" | jq -r 'join("\n")')" \
+                '. += [{"name": $n, "value": $v, "inline": false}]')
             fi
           }
           
@@ -46,44 +49,34 @@ jobs:
           add_field "✏️ Modified" "$MODIFIED"
           add_field "🗑️ Removed" "$DELETED"
           
-          # Join fields with commas
-          FIELDS_JSON=$(IFS=, ; echo "[${FIELDS[*]}]")
-          
           # Create final payload
           PAYLOAD=$(jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
-            --argjson fields "$FIELDS_JSON" \
+            --argjson fields "$FIELDS" \
             '{
+              "username": "GitHub",
+              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
               "embeds": [{
                 "author": {"name": $author, "url": $url},
                 "color": 5763719,
                 "fields": $fields,
                 "footer": {
-                  "text": "GitHub",
+                  "text": "GitHub Actions",
                   "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
                 },
                 "timestamp": now|strftime("%Y-%m-%dT%H:%M:%SZ")
               }]
             }')
           
-          # Save payload for debugging
-          echo "$PAYLOAD" > payload.json
-          echo "PAYLOAD=$(jq -c . < payload.json)" >> $GITHUB_OUTPUT
+          # Escape for GitHub output
+          echo "PAYLOAD=${PAYLOAD//$'\n'/\\n}" >> $GITHUB_OUTPUT
 
-      - name: Debug payload
-        run: |
-          echo "Generated payload:"
-          cat payload.json
-          echo ""
-          echo "Field counts:"
-          echo "Added: $(jq '.embeds[0].fields | map(select(.name | startswith("📥"))) | length' payload.json)"
-          echo "Modified: $(jq '.embeds[0].fields | map(select(.name | startswith("✏️"))) | length' payload.json)"
-          echo "Removed: $(jq '.embeds[0].fields | map(select(.name | startswith("🗑️"))) | length' payload.json)"
-
-      - name: Send to Discord
-        uses: Ilshidur/action-discord@master
+      - name: Send to Discord (CURL)
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        with:
-          embeds: ${{ steps.generate-payload.outputs.PAYLOAD }}
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '${{ steps.generate-payload.outputs.PAYLOAD }}' \
+            "$DISCORD_WEBHOOK"
