@@ -15,6 +15,8 @@ jobs:
 
       - name: Generate Discord payload
         id: generate-payload
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Install dependencies
           sudo apt-get -qq install jq
@@ -23,8 +25,9 @@ jobs:
           AUTHOR=$(git log -1 --pretty=%an)
           COMMIT_URL="https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
           
-          # Get avatar URL with cache busting
-          AVATAR_URL="https://github.com/$AUTHOR.png?$(date +%s)"
+          # Get avatar URL using GitHub API with authentication
+          AVATAR_URL=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/users/$AUTHOR" | jq -r '.avatar_url + "?size=128"')
           
           # Get changed files
           ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} || echo "")
@@ -76,13 +79,10 @@ jobs:
               }]
             }' > payload.json
 
-      - name: Debug payload
-        run: |
-          echo "Generated payload:"
+          # Debug output
+          echo "Avatar URL used: $AVATAR_URL"
+          echo "Payload content:"
           cat payload.json
-          echo ""
-          echo "Avatar URL:"
-          jq -r '.embeds[0].author.icon_url' payload.json
 
       - name: Send to Discord
         env:
