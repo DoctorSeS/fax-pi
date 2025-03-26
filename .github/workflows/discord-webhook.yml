@@ -3,6 +3,8 @@ name: Discord Commit Notifier
 on:
   push:
     branches: [ master ]
+    paths:
+      - 'images/avatar.json'
 
 jobs:
   notify-discord:
@@ -13,10 +15,15 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Load avatar URL
+        id: avatar
+        run: |
+          AVATAR_URL=$(jq -r '.avatar_url' images/avatar.json)
+          echo "Using avatar URL: $AVATAR_URL"
+          echo "AVATAR_URL=$AVATAR_URL" >> $GITHUB_OUTPUT
+
       - name: Generate Discord payload
         id: generate-payload
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Install dependencies
           sudo apt-get -qq install jq
@@ -24,10 +31,6 @@ jobs:
           # Get commit info
           AUTHOR=$(git log -1 --pretty=%an)
           COMMIT_URL="https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
-          
-          # Get avatar URL using GitHub API with authentication
-          AVATAR_URL=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/users/$AUTHOR" | jq -r '.avatar_url + "?size=128"')
           
           # Get changed files
           ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} || echo "")
@@ -58,7 +61,7 @@ jobs:
           jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
-            --arg avatar "$AVATAR_URL" \
+            --arg avatar "${{ steps.avatar.outputs.AVATAR_URL }}" \
             --argjson fields "$FIELDS_JSON" \
             '{
               "username": "GitHub",
