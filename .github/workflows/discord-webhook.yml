@@ -16,58 +16,56 @@ jobs:
       - name: Generate Discord payload
         id: generate-payload
         run: |
-          # Install jq if not present
+          # Install dependencies
           sudo apt-get -qq install jq
-      
+
           # Get commit info
           AUTHOR=$(git log -1 --pretty=%an)
           COMMIT_URL="https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
           
-          # Get GitHub avatar URL (with fallback)
-          AVATAR_URL=$(curl -s "https://api.github.com/users/$AUTHOR" | jq -r '.avatar_url // empty') || true
-          AVATAR_URL=${AVATAR_URL:-"https://github.com/$AUTHOR.png?$(date +%s)"}
+          # Get avatar URL with cache busting
+          AVATAR_URL="https://github.com/$AUTHOR.png?$(date +%s)"
           
-          # Get changed files as arrays
-          ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
-          MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
-          DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} | jq -R -s 'split("\n") | map(select(. != ""))')
-      
-          # Create fields array
-          FIELDS="[]"
+          # Get changed files
+          ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} || echo "")
+          MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} || echo "")
+          DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} || echo "")
+
+          # Format fields
+          FIELDS=()
           
-          # Helper function to add fields with proper newlines
           add_field() {
             local name=$1
             local files=$2
-            local count=$(echo "$files" | jq 'length')
-            if [ $count -gt 0 ]; then
-              # Format files with bullet points and bold markers
-              FORMATTED_FILES=$(echo "$files" | jq -r '.[] | "• **\(.)**"' | jq -R -s 'join("\n")' | sed 's/^"//;s/"$//')
-              
-              FIELDS=$(echo "$FIELDS" | jq \
-                --arg n "$name ($count)" \
-                --arg v "$FORMATTED_FILES" \
-                '. += [{"name": $n, "value": $v, "inline": false}]')
+            if [ -n "$files" ]; then
+              count=$(echo "$files" | wc -w)
+              formatted=$(echo "$files" | sed 's/ /\\n/g' | sed 's/^/• **/' | sed 's/$/**/')
+              FIELDS+=("{\"name\":\"$name ($count)\",\"value\":\"$formatted\",\"inline\":false}")
             fi
           }
           
-          # Add fields for each change type
-          add_field "Added Files" "$ADDED"
-          add_field "Updated Files" "$MODIFIED"
-          add_field "Removed Files" "$DELETED"
-
+          add_field "Added" "$ADDED"
+          add_field "Modified" "$MODIFIED"
+          add_field "Removed" "$DELETED"
           
-          # Create final payload file
+          # Join fields
+          FIELDS_JSON=$(IFS=, ; echo "[${FIELDS[*]}]")
+
+          # Create payload
           jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
             --arg avatar "$AVATAR_URL" \
-            --argjson fields "$FIELDS" \
+            --argjson fields "$FIELDS_JSON" \
             '{
               "username": "GitHub",
               "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
               "embeds": [{
-                "author": {"name": $author, "icon_url": $avatar},
+                "author": {
+                  "name": $author,
+                  "url": $url,
+                  "icon_url": $avatar
+                },
                 "color": 3447003,
                 "fields": $fields,
                 "footer": {
@@ -78,17 +76,18 @@ jobs:
               }]
             }' > payload.json
 
-          # Verify payload is valid JSON
-          if ! jq empty payload.json; then
-            echo "Error: Invalid JSON payload"
-            exit 1
-          fi
+      - name: Debug payload
+        run: |
+          echo "Generated payload:"
+          cat payload.json
+          echo ""
+          echo "Avatar URL:"
+          jq -r '.embeds[0].author.icon_url' payload.json
 
       - name: Send to Discord
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          # Send using file reference to avoid shell escaping issues
           curl -X POST \
             -H "Content-Type: application/json" \
             -d @payload.json \
