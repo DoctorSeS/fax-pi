@@ -5,6 +5,8 @@ on:
     branches: [ master ]
     paths:
       - 'images/avatar.json'
+      - '**.py'
+      - '!README.md'
 
 jobs:
   notify-discord:
@@ -15,12 +17,22 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Load avatar URL
-        id: avatar
+      - name: Verify avatar.json exists
+        id: check-avatar
         run: |
-          AVATAR_URL=$(jq -r '.avatar_url' images/avatar.json)
-          echo "Using avatar URL: $AVATAR_URL"
-          echo "AVATAR_URL=$AVATAR_URL" >> $GITHUB_OUTPUT
+          if [ ! -f "images/avatar.json" ]; then
+            echo "Using default avatar (file not found)"
+            echo "AVATAR_URL=https://cdn.discordapp.com/embed/avatars/0.png" >> $GITHUB_OUTPUT
+          else
+            AVATAR_URL=$(jq -r '.avatar_url // empty' images/avatar.json)
+            if [ -z "$AVATAR_URL" ]; then
+              echo "Using default avatar (invalid JSON)"
+              echo "AVATAR_URL=https://cdn.discordapp.com/embed/avatars/0.png" >> $GITHUB_OUTPUT
+            else
+              echo "Using avatar URL: $AVATAR_URL"
+              echo "AVATAR_URL=$AVATAR_URL" >> $GITHUB_OUTPUT
+            fi
+          fi
 
       - name: Generate Discord payload
         id: generate-payload
