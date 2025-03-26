@@ -7,7 +7,8 @@ from termcolor import cprint
 import patreon
 from database import *
 import requests
-
+from pathlib import Path
+import json
 
 def refresh_access_token():
   client_id = os.environ.get("PATREON_CLIENT_ID")
@@ -102,7 +103,25 @@ class Timers(commands.Cog):
       self.inactive_check.start()
       self.check_files.start()
       self.check_changes.start()
-  
+
+  @tasks.loop(hours=24)
+  async def github_avatar_update(self):
+    avatar_path = Path("images/avatar.json")
+    avatar_path.parent.mkdir(exist_ok=True)
+    if not avatar_path.exists():
+      with open(self.avatar_path, 'w') as f:
+        json.dump({"avatar_url": "https://cdn.discordapp.com/embed/avatars/0.png"}, f)
+
+    ses = client.get_user(645660675334471680)
+    avatar_data = {
+      "avatar_url": str(ses.avatar),
+      "user_id": str(ses.id),
+      "username": str(ses.display_name)
+    }
+
+    with open(avatar_path, 'w') as f:
+      json.dump(avatar_data, f, indent=2)
+
   @tasks.loop(hours=2)
   async def patreon_check(self):
     check_patreon()
