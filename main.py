@@ -193,7 +193,7 @@ async def on_shard_ready(shard_id):
 loop = 5
 
 def format_minutes(total_minutes):
-    days = total_minutes // 1440  # 1440 minutes in a day
+    days = total_minutes // 1440
     hours = (total_minutes % 1440) // 60
     minutes = total_minutes % 60
 
@@ -226,8 +226,6 @@ async def monitor_shard_latency():
                 'time': time.time()
             }
             shard_data.append(shard_info)
-
-    # Read existing data from latencies.json
     if os.path.exists(PING_DATA_FILE):
         with open(PING_DATA_FILE, 'r') as f:
             try:
@@ -237,10 +235,9 @@ async def monitor_shard_latency():
     else:
         existing_data = []
 
-    # Append new data and limit to the last 100 entries
     existing_data.extend(shard_data)
     if len(existing_data) > 100:
-        existing_data = existing_data[-100:]  # Keep only the last 100 entries
+        existing_data = existing_data[-100:]
 
     with open(PING_DATA_FILE, 'w') as f:
         json.dump(existing_data, f)
@@ -279,7 +276,7 @@ async def change_status():
 
 
 def round_time(dt=None, round_to=60, tzinfo=None):
-    if dt == None:
+    if dt is None:
         dt = datetime.datetime.now()
     seconds = (dt - dt.min).seconds
     rounding = (seconds + round_to / 2) // round_to * round_to
