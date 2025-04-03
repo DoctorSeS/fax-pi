@@ -106,4 +106,4 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -d @payload.json \
-            "$DISCORD_WEBHOOK?thread_id=1354252044369924096"
+            "$DISCORD_WEBHOOK?thread_id=1357465068648009978"
