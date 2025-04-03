@@ -354,7 +354,7 @@ class Avatar(discord.ui.View):
   @discord.ui.button(label="Server Avatar", style=discord.ButtonStyle.primary, custom_id="Avatar", disabled=False)
   async def svav(self, button, interaction):
     if interaction.user.id == self.ctx.author.id:
-      if (self.ctx.guild == None) or (self.auth2.guild_avatar == None):
+      if (self.ctx.guild is None) or (self.auth2.guild_avatar is None):
         button.disabled = True
         try:
           await interaction.message.edit(view=self)
