@@ -282,7 +282,7 @@ class Scores(commands.Cog):
   @commands.command(aliases=["transfer", "give"])
   @commands.before_invoke(disabled_check)
   async def transmit(self, ctx, user: discord.User=None, amount: int=None):
-    if user == None:
+    if user is None:
       embed2 = discord.Embed(description=f"**`ERROR:`** ```python\nInvalid method.\nValid Methods: g!transmit <user> <amount>(+)```", color=red)
       await ctx.send(embed=embed2, content=None, delete_after=10)
       return
