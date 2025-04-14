@@ -7,8 +7,6 @@ import random
 from database import *
 import datetime
 
-currentDT = datetime.datetime.now()
-
 def check_patron(user_id):
   patrons = get_db('misc')['all_patrons']
   if int(user_id) == ses:
@@ -225,7 +223,7 @@ class Errors(commands.Cog):
     ver3 = ver2.replace("(", "```python\n")
     ver4 = ver3.replace(")", '\n```')
     ver5 = ver4.replace("releaselevel", "\nreleaselevel")
-    embed = discord.Embed(description=f"The bot is running.\n`Ping:` {round(client.latency * 1000)} ms\n`Guild:` {server}\n`Status:` [online]({site_link})\n`Version:` {discord.__version__}", color=discord.Color.from_rgb(r=0, g=randint(1, 255), b=0), timestamp=currentDT)
+    embed = discord.Embed(description=f"The bot is running.\n`Ping:` {round(client.latency * 1000)} ms\n`Guild:` {server}\n`Status:` [online]({site_link})\n`Version:` {discord.__version__}", color=discord.Color.from_rgb(r=0, g=randint(1, 255), b=0), timestamp=datetime.datetime.now())
     embed.add_field(name=f"`Version Info:`", value=f"{ver5}")
     embed.set_footer(text=f'Last restart:', icon_url=fax.display_avatar)
     await ctx.send(embed=embed, content=None)
@@ -236,7 +234,7 @@ class Errors(commands.Cog):
     value = get_db('misc')['all_used_commands']
     value2 = value.replace(",", "\n`")
     value3 = value2.replace(":", ":` ")
-    embed = discord.Embed(description=f"**{comms2}** commands used.", color=discord.Color.from_rgb(r=0, g=randint(1, 255), b=0), timestamp=currentDT)
+    embed = discord.Embed(description=f"**{comms2}** commands used.", color=discord.Color.from_rgb(r=0, g=randint(1, 255), b=0), timestamp=datetime.datetime.now())
     embed.add_field(name="Total:", value=f"{value3}")
     embed.set_footer(text="Last restart:", icon_url=client.user.display_avatar)
     await ctx.send(embed=embed, content=None)
