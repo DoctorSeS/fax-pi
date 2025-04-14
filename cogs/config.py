@@ -46,7 +46,6 @@ class channel_chance_modal(Modal):
 
     await interaction.message.edit(embed=embed, content=None, view=ai_first_select(self.ctx))
     await interaction.response.defer()
-        
 
 class global_chance_modal(Modal):
   def __init__(self, ctx) -> None:

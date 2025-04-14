@@ -185,13 +185,10 @@ class Starboard(commands.Cog):
   @commands.before_invoke(disabled_check)
   @commands.is_owner()
   async def starboard(self, ctx):
-    try:
-      author = ctx.author.id
-      view = Select(ctx, author)
-      embed = discord.Embed(title="Starboard Module", description="Please select what you want to do with this module.") 
-      await ctx.send(embed=embed, content=None, view=view)
-    except:
-      return
+    author = ctx.author.id
+    view = Select(ctx, author)
+    embed = discord.Embed(title="Starboard Module", description="Please select what you want to do with this module.")
+    await ctx.send(embed=embed, content=None, view=view)
 
   @commands.Cog.listener()
   async def on_reaction_add(self, reaction, member):
