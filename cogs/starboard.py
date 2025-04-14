@@ -1,8 +1,8 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import random
 from random import randint
-from main import client, bot_prefix, ses, round_time, check_name, green, red
+from main import client, ses, green, red
 from discord.ui import InputText, Modal
 from database import *
 import re
@@ -306,6 +306,9 @@ class Starboard(commands.Cog):
           embed.description = message.content
 
         elif str(message.type) == "MessageType.reply":
+          author = "Unknown"
+          embeddict = {}
+          desc = ""
           embed.description = message.content
 
           reply_message = await message.channel.fetch_message(message.reference.message_id)

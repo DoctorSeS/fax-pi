@@ -1129,7 +1129,6 @@ class Config(commands.Cog):
       embed2 = discord.Embed(description=f"**`SUCCESS:`** ```k\nThe server has been added to the database.\nIf any person with an account that is less than {days} days old joins, that account will get timed out for one hour.```", color=green)
       embed2.set_footer(text=f"The Module is currently {status}.")
       await ctx.send(embed=embed2, content=None)
-        
 
 def setup(client):
     client.add_cog(Config(client))
