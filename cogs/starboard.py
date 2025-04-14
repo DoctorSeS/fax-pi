@@ -5,6 +5,7 @@ from random import randint
 from main import client, bot_prefix, ses, round_time, check_name, green, red
 from discord.ui import InputText, Modal
 from database import *
+import re
 
 def get_channels(guild):
   names = []
@@ -17,15 +18,6 @@ def get_channels(guild):
   else:
     thing = random.choice(names)
     return thing
-
-def if_100(guild):
-  n = 100
-  value = get_db('guilds')[f'{guild}']['starboard_messages']
-  value2 = value.split(",")
-  if len(value2) >= n:
-    del_db(f'guilds/{guild}', 'starboard_messages')
-  else:
-    return None
     
 
 class Starboard_Modal(Modal):
@@ -170,7 +162,6 @@ class Starboard(commands.Cog):
   @commands.has_permissions(administrator=True)
   async def starboard_settings(self, ctx, chosen: str):
     serverid = ctx.guild.id
-    channelid = ctx.channel.id
 
     if chosen == "enable":
       try:
@@ -183,67 +174,12 @@ class Starboard(commands.Cog):
         else:
           embed = discord.Embed(title="Module Enabled", description=f"The starboard has been enabled for this server.\nChannel: <#{channel}>", color=0x00d10a)
 
-
         update_db(f'guilds/{serverid}', 'starboard', {"active": True})
         await ctx.send(embed=embed, content=None)
       else:
         embed = discord.Embed(title="Module Disabled", description=f"The starboard has been disabled for this server.", color=0xd10000)
         update_db(f'guilds/{serverid}', 'starboard', {"active": False})
         await ctx.send(embed=embed, content=None)
-        
-    elif chosen == "count":
-      embed = discord.Embed(title="Awaiting Response...", description=f"Your next message will be set as the amount of reactions needed to send a message to the starboard.\nPlease Reply to this message with a number above 1.", color=0x00d10a)
-      mes = await ctx.send(embed=embed, content=None)
-
-      def check(m):
-        global msg1
-        msg1 = m.content
-        return m.content and m.author == ctx.author
-
-      msg = await client.wait_for("message", check=check, timeout=60)
-      await msg.delete()
-      
-      if int(msg1) > 1:
-        embed2 = discord.Embed(title="Reaction Amount Set", description=f"The starboard channel reaction amount has been set to **{msg1}**.", color=0x00d10a)
-        try:
-          sg = get_db('guilds')[f'{serverid}']['starboard']
-        finally:
-          update_db(f'guild/{serverid}', 'starboard', {'count': int(msg1)})
-
-        await mes.edit(embed=embed2, content=None)
-      else:
-        embed2 = discord.Embed(title="Failed to Set", description=f'Could not find a number in "{msg1}".', color=0xd10000)
-        await mes.edit(embed=embed2, content=None)
-      
-    elif chosen == "channel":
-      embed = discord.Embed(title="Awaiting Response...", description=f"Your next message will be set as the channel for the starboard.\nPlease Reply to this message with the mention/id/name of the channel you want to use for the starboard.", color=green)
-      mes = await ctx.send(embed=embed, content=None)
-
-      def check(m):
-        global msg1
-        msg1 = m.content
-        return m.content and m.author == ctx.author
-
-      msg = await client.wait_for("message", check=check, timeout=60)
-      await msg.delete()
-      try:
-        msg6 = msg1.replace("<", "")
-        msg6 = msg6.replace(">", "")
-        msg6 = msg6.replace("!", "")
-        msg6 = msg6.replace("#", "")
-        msg5 = int(msg6)
-      except:
-        channel = discord.utils.get(ctx.guild.channels, name=msg5)
-      else:
-        channel = discord.utils.get(ctx.guild.channels, id=msg6)
-      
-      embed2 = discord.Embed(title="Channel Successfully Set", description=f"The starboard channel has been set to {channel.mention}", color=0x00d10a)
-      try:
-        sg = get_db('guilds')[f'{serverid}']['starboard']
-      finally:
-        update_db(f'guild/{serverid}', 'starboard', {'channel': str(channel.id)})
-        
-      await mes.edit(embed=embed2, content=None)
 
   @commands.command(aliases=['board'])
   @commands.before_invoke(disabled_check)
@@ -269,126 +205,140 @@ class Starboard(commands.Cog):
       return
       
     if active is True:
-      if message.channel.is_nsfw():
+      if (message.channel.is_nsfw()) or (message.channel.is_news()) or (message.is_system()) or (message.author.bot is True):
         return
-      if message.channel.is_news():
-        return
-      if message.is_system():
-        return
-      if message.author.bot:
-        return
+    else:
+      return
 
-      
-      counter = 5
-      try:
-        counter = int(get_db('guilds')[f'{message.guild.id}']['starboard']['count'])
-      except:
-        pass
+    data = get_db('guilds').get(f'{message.guild.id}', None)
+    counter = int((data.get('starboard', {}).get('count', 5)))
 
-      editor = ""
+    messages = (data.get('starboard_messages', []))
+    match = next((item for item in messages if item.get("original_message_id") == message.id), None)
+    if match:
       try:
-        editor = get_db('guilds')[f'{message.guild.id}']['starboard_messages']
+        find_channel = int(get_db('guilds')[f'{message.guild.id}']['starboard']['channel'])
       except:
-        pass
-      else:
-        if str(message.id) in editor:
-          try:
-            find_channel = int(get_db('guilds')[f'{message.guild.id}']['starboard']['channel'])
-          except:
-            return
+        return
           
-          editor2 = editor.split(f"{message.id}-")[1].lstrip().split("+")[0]
-          emoji_id = editor.split(f"{message.id}-{editor2}+")[1].lstrip().split("/")[0]
-          emoji_name = editor.split(f"{message.id}-{editor2}+{emoji_id}/")[1].lstrip().split(",")[0]
+      starboard_message_id = match.get('starboard_message_id', None)
+      emoji_id = match.get('emoji_id', None)
+      emoji_name = match.get('emoji_name', None)
 
-          number = None
-          reactions = str(message.reactions).split(",")
-          for x in reactions:
-            if str(emoji_id) in str(x):
-              number = str(x).split("count=")[1].lstrip().split(">")[0]
-              break
+      number = None
+      reactions = str(message.reactions).split(",")
+      for x in reactions:
+        if str(emoji_id) in str(x):
+          number = str(x).split("count=")[1].lstrip().split(">")[0]
+          break
 
-          if number is not None:
-            msg = message.guild.get_channel(find_channel).get_partial_message(int(editor2))
-            await msg.edit(content=f"<:{emoji_name}:{emoji_id}> **{number}**")
-            return
-          else:
-            return
+      if number is not None:
+        msg = message.guild.get_channel(find_channel).get_partial_message(int(starboard_message_id))
+        await msg.edit(content=f"<:{emoji_name}:{emoji_id}> **{number}**")
 
-      if (counter == reaction.count) and (f"{message.id}" not in editor):
-        try:
-          find_channel = int(get_db('guilds')[f'{message.guild.id}']['starboard']['channel'])
-        except:
+    else:
+      if (counter == reaction.count) and (match is None):
+        find_channel = int((data.get('starboard', None).get("channel", None)))
+
+        messages = (data.get('starboard_messages', []))
+        match = next((item for item in messages if item.get("original_message_id") == message.id), None)
+        if match:
           return
 
-        if message.channel.id == find_channel:
-          return
-
-        try:
-          find_mes = get_db('guilds')[f'{message.guild.id}']['starboard_messages']
-        except:
-          find_mes = ""
-
-        if str(message.id) in find_mes: 
-          return
-        
-        content = None
         channel = message.guild.get_channel(find_channel)
+        ### EMBED START ###
+        content = None  ### This is for images
         embed = discord.Embed(description=message.content, timestamp=message.created_at, color=member.color)
-        embed.set_author(name=check_name(message.author), icon_url=message.author.avatar)
-        embed.add_field(name="Source:", value=f"[Jump]({message.jump_url})")
-        embed.set_footer(text=f"{message.id}")
 
+        ### check content ###
+        if ("<:" in message.content) or ("<a:" in message.content):
+          custom_emoji_pattern = r'<a?:(\w+):(\d+)>'
+
+          for match in re.finditer(custom_emoji_pattern, message.content):
+            emoji_name = match.group(1)
+            emoji_id = match.group(2)
+            emoji_found = None
+
+            # Search for emoji across all servers
+            for guild in client.guilds:
+              server = client.get_guild(int(guild.id))
+              if server:
+                emoji_found = discord.utils.get(server.emojis, name=emoji_name)
+                if emoji_found:
+                  break
+
+            if emoji_found:
+              continue
+
+            is_animated = match.group(0).startswith("<a:")
+            emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{'gif' if is_animated else 'png'}"
+            embed.set_thumbnail(url=emoji_url)
+
+        ### Sticker Check ###
+        if message.stickers:
+          embed.set_thumbnail(url=f"{message.stickers[0].url}")
+
+        ### Attachments check ###
         if message.attachments:
-          if ".mp4" in str(message.attachments[0].url):
-            content = f"{message.attachments[0].url}"
-          elif ".mov" in str(message.attachments[0].url):
+          if (".mp4" in str(message.attachments[0].url)) or (".mov" in str(message.attachments[0].url)):
             content = f"{message.attachments[0].url}"
           else:
             embed.set_image(url=f"{message.attachments[0].url}")
 
-        if message.stickers:
-          embed.set_thumbnail(url=f"{message.stickers[0].url}")
-        
-        if "http" in message.content:
-          if "/tenor.co" in str(message.content):
-            content = f"{message.content}"
-            pass
-          elif "twitter.com" in str(message.content):
-            content = f"{message.content}"
-                              
+        ### url checks ###
+        if "http" in str(message.content):
+          url_pattern = r'(https?://[^\s]+)'
+          urls = re.findall(url_pattern, message.content)
+          link = ""
+          for url in urls:
+            link += f"{url}\n"
+
+          if ("/tenor.co" in message.content) or ("fixvx" in message.content) or ("fxtwitter" in message.content) or ("twitter" in message.content) or ("vxtwitter" in message.content) or ("youtube" in message.content) or ("youtu.be" in message.content) or ("x.com" in message.content):
+            content = link
           else:
-            if " " in str(message.content):
-              if ".mp4" in str(message.content):
-                mes = str(message.content).split("http")[1].lstrip().split(' ')[0]
-                content = f"http{mes}"
-              elif ".mov" in str(message.content):
-                mes = str(message.content).split("http")[1].lstrip().split(' ')[0]
-                content = f"http{mes}"
-              else:
-                mes = str(message.content).split("http")[1].lstrip().split(' ')[0]
-                embed.set_image(url=f"http{mes}")
+            if (".mp4" in str(message.content)) or (".mov" in str(message.content)):
+              content = link
             else:
-              embed.set_image(url=f"{message.content}")
-                
+              try:
+                embed.set_image(url=urls[0])
+              except:
+                content = link
+
+        ### Get message Type ###
+        if str(message.type) == "MessageType.default":
+          embed.description = message.content
+
+        elif str(message.type) == "MessageType.reply":
+          embed.description = message.content
+
+          reply_message = await message.channel.fetch_message(message.reference.message_id)
+          embeds = reply_message.embeds
+          if str(embeds) != "[]":
+            for reply_embed in embeds:
+              embeddict = reply_embed.to_dict()
+
+            try:
+              desc = embeddict['description']
+            except:
+              desc = "Couldn't load message."
+              author = embeddict['author']['name']
+            else:
+              desc = reply_message.content
+              author = reply_message.author.display_name
+
+          embed.clear_fields()
+          embed.add_field(name=f"Replying to {author}:", value=desc)
+
+        embed.set_author(name=f"{message.author.display_name}", icon_url=message.author.display_avatar, url=message.author.display_avatar)
+        embed.add_field(name="Source:", value=f"[Jump]({message.jump_url})")
+        embed.set_footer(text=f"#{message.channel.name}")
+
         msg2 = await channel.send(embed=embed, content=f"{reaction.emoji} **{counter}**")
-
-        try:
-          editor = get_db('guilds')[f'{message.guild.id}'].get("starboard_messages", {})
-        except:
-          try:
-            update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
-          except:
-            return
-        else:
-          update_db(f'guilds', f"{message.guild.id}", {"starboard_messages": f"{editor}{message.id}-{msg2.id}+{reaction.emoji.id}/{reaction.emoji.name},"})
-
-        if_100(message.guild.id)
-
-        if content is None:
-          return
-        else:
+        if content is not None:
           await channel.send(content)
+
+        messages.append({"original_message_id": message.id, "starboard_message_id": msg2.id, "emoji_id": reaction.emoji.id, "emoji_name": reaction.emoji.name})
+        update_db("guilds", f'{message.guild.id}', {"starboard_messages": messages})
   
 
 def setup(client):

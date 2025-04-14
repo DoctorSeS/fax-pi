@@ -517,7 +517,7 @@ class Select_Command(discord.ui.View):
           await interaction.message.edit(embed=perm_embed, content=None, delete_after=20, view=None)
           return
 
-        p = discord.Embed(description="This configuration has been moved to the site, to make it easier to set up.\nPlease click (here)[CONFIGSITE]")
+        p = discord.Embed(description="This configuration has been moved to the site, to make it easier to set up.\nPlease click (here)[https://faxmachine.top]")
         await interaction.message.edit(embed=p, content=None, view=None)
         return
 
