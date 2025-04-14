@@ -68,13 +68,13 @@ jobs:
           
           # Join fields
           FIELDS_JSON=$(IFS=, ; echo "[${FIELDS[*]}]")
-
+          
           # Create payload
           jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
             --arg avatar "${{ steps.check-avatar.outputs.AVATAR_URL }}" \
-            --argjson fields "$FIELDS_JSON" \
+            --arg fields "$FIELDS_JSON" \
             '{
               "username": "GitHub",
               "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
@@ -85,7 +85,7 @@ jobs:
                   "icon_url": $avatar
                 },
                 "color": 3447003,
-                "fields": $fields,
+                "fields": ($fields | fromjson),
                 "footer": {
                   "text": "The Fax Machine",
                   "icon_url": "https://cdn.discordapp.com/avatars/830199512572100609/4b7402987cf65285260e0c16c12a7900.png"
@@ -93,11 +93,6 @@ jobs:
                 "timestamp": now|strftime("%Y-%m-%dT%H:%M:%SZ")
               }]
             }' > payload.json
-
-          # Debug output
-          echo "Avatar URL used: $AVATAR_URL"
-          echo "Payload content:"
-          cat payload.json
 
       - name: Send to Discord
         env:
