@@ -39,61 +39,58 @@ jobs:
         run: |
           # Install dependencies
           sudo apt-get -qq install jq
-
+      
           # Get commit info
           AUTHOR=$(git log -1 --pretty=%an)
           COMMIT_URL="https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
           
-          # Get changed files
-          ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} || echo "")
-          MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} || echo "")
-          DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} || echo "")
-
-          # Format fields
-          FIELDS=()
-          
-          add_field() {
-            local name=$1
-            local files=$2
-            if [ -n "$files" ]; then
-              count=$(echo "$files" | wc -w)
-              # Change the sed commands to use double backslashes
-              formatted=$(echo "$files" | sed 's/^/• **/' | sed 's/$/**/' | paste -sd '\\\\n' -)
-              FIELDS+=("{\"name\":\"$name ($count)\",\"value\":\"$formatted\",\"inline\":false}")
-            fi
-          }
-          
-          add_field "Added" "$ADDED"
-          add_field "Modified" "$MODIFIED"
-          add_field "Removed" "$DELETED"
-          
-          # Join fields
-          FIELDS_JSON=$(IFS=, ; echo "[${FIELDS[*]}]")
-          
+          # Get changed files as arrays
+          ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} | tr '\n' ' ' || echo "")
+          MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} | tr '\n' ' ' || echo "")
+          DELETED=$(git diff --name-only --diff-filter=D ${{ github.event.before }} ${{ github.sha }} | tr '\n' ' ' || echo "")
+      
           # Create payload
           jq -n \
             --arg author "$AUTHOR" \
             --arg url "$COMMIT_URL" \
             --arg avatar "${{ steps.check-avatar.outputs.AVATAR_URL }}" \
-            --arg fields "$FIELDS_JSON" \
-            '{
-              "username": "GitHub",
-              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-              "embeds": [{
-                "author": {
-                  "name": $author,
-                  "url": $url,
-                  "icon_url": $avatar
-                },
-                "color": 3447003,
-                "fields": ($fields | fromjson),
-                "footer": {
-                  "text": "The Fax Machine",
-                  "icon_url": "https://cdn.discordapp.com/avatars/830199512572100609/4b7402987cf65285260e0c16c12a7900.png"
-                },
-                "timestamp": now|strftime("%Y-%m-%dT%H:%M:%SZ")
-              }]
-            }' > payload.json
+            --arg added "$ADDED" \
+            --arg modified "$MODIFIED" \
+            --arg deleted "$DELETED" \
+            'def format_files($files):
+               if ($files | length) > 0 then
+                 ($files | split(" ") | map("• **\(.)**") | join("\n"))
+               else
+                 null
+               end;
+             {
+               "username": "GitHub",
+               "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+               "embeds": [{
+                 "author": {
+                   "name": $author,
+                   "url": $url,
+                   "icon_url": $avatar
+                 },
+                 "color": 3447003,
+                 "fields": ([
+                   if ($added | length) > 0 and ($added != " ") then
+                     {"name": "Added (\($added | split(" ") | length))", "value": format_files($added), "inline": false}
+                   else empty end,
+                   if ($modified | length) > 0 and ($modified != " ") then
+                     {"name": "Modified (\($modified | split(" ") | length))", "value": format_files($modified), "inline": false}
+                   else empty end,
+                   if ($deleted | length) > 0 and ($deleted != " ") then
+                     {"name": "Removed (\($deleted | split(" ") | length))", "value": format_files($deleted), "inline": false}
+                   else empty end
+                 ] | map(select(. != null))),
+                 "footer": {
+                   "text": "The Fax Machine",
+                   "icon_url": "https://cdn.discordapp.com/avatars/830199512572100609/4b7402987cf65285260e0c16c12a7900.png"
+                 },
+                 "timestamp": now|strftime("%Y-%m-%dT%H:%M:%SZ")
+               }]
+             }' > payload.json
 
       - name: Send to Discord
         env:
