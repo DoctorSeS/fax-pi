@@ -57,7 +57,8 @@ jobs:
             local files=$2
             if [ -n "$files" ]; then
               count=$(echo "$files" | wc -w)
-              formatted=$(echo "$files" | sed 's/^/• **/' | sed 's/$/**/' | paste -sd '\\n' -)
+              # Change the sed commands to use double backslashes
+              formatted=$(echo "$files" | sed 's/^/• **/' | sed 's/$/**/' | paste -sd '\\\\n' -)
               FIELDS+=("{\"name\":\"$name ($count)\",\"value\":\"$formatted\",\"inline\":false}")
             fi
           }
