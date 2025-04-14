@@ -110,17 +110,8 @@ class Errors(commands.Cog):
   async def on_command_error(self, ctx, error):
     msg = ctx.message
     if isinstance(error, commands.MissingRequiredArgument):
-      if f"mute" in ctx.command.name:
-        return
-      elif f"dm" in ctx.command.name:
-        return
-      elif f"purge" in ctx.command.name:
-        return
-      elif f"say" in ctx.command.name:
-        return
-      elif f"lock" in ctx.command.name:
-        return
-      elif f"role" in ctx.command.name:
+      not_command = ['mute', 'dm', 'purge', 'say', 'lock', 'role']
+      if ctx.command.name in not_command:
         return
       else:
         embed = discord.Embed(description=f"**`ERROR:`** ```python\nMissing required arguments.\n```", color=red)

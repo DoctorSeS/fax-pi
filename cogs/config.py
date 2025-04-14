@@ -1130,5 +1130,6 @@ class Config(commands.Cog):
       embed2.set_footer(text=f"The Module is currently {status}.")
       await ctx.send(embed=embed2, content=None)
 
+
 def setup(client):
     client.add_cog(Config(client))
