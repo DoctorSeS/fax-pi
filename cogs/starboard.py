@@ -19,6 +19,7 @@ def get_channels(guild):
     thing = random.choice(names)
     return thing
 
+
 class Starboard_Modal(Modal):
   def __init__(self, ctx, label, which) -> None:
     self.ctx = ctx

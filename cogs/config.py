@@ -612,7 +612,6 @@ class Select_Command(discord.ui.View):
         await self.ctx.invoke(client.get_command(command))
         await interaction.message.delete()
 
-
 def saveFilterToFile(filterList):
     f = open("bans.txt", "a")
     f.write('%d' % filterList + ", ")
