@@ -103,6 +103,7 @@ class Timers(commands.Cog):
       self.inactive_check.start()
       self.check_files.start()
       self.check_changes.start()
+      self.github_avatar_update.start()
 
   @tasks.loop(hours=24)
   async def github_avatar_update(self):
