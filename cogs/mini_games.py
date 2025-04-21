@@ -81,7 +81,7 @@ def add_milestone(user, milestone, amount=None):
     else:
       level2 = 0
 
-    filename = f"gambler{level2}"
+    filename = f"gambler_badge{level2}"
 
 
   all_milestones.update({f"{name}": {"level": level2, "amount": total_amount, "filename": filename}})
