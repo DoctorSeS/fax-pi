@@ -190,7 +190,7 @@ async def on_shard_ready(shard_id):
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
-loop = 5
+loop = 30
 
 def format_minutes(total_minutes):
     days = total_minutes // 1440
@@ -248,7 +248,7 @@ async def bot_data():
     total_time = format_minutes(loop)
     try:
         time = data['time_alive']
-        time += 5
+        time += loop
     except:
         update_db('misc', 'none', {'time_alive': 5})
     else:
@@ -264,7 +264,7 @@ async def bot_data():
     embed.add_field(name=f"**`Other:`**", value=f"`Run-time:` {total_time}\n`Buttons:` **{buttons}**")
     await msggg.edit(embed=embed, content=None)
 
-@tasks.loop(seconds=20)
+@tasks.loop(seconds=30)
 async def change_status():
     chance2 = randint(1, 30)
     if chance2 == 30:
