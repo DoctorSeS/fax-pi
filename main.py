@@ -190,7 +190,7 @@ async def on_shard_ready(shard_id):
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
-loop = 30
+loop = 10
 
 def format_minutes(total_minutes):
     days = total_minutes // 1440
@@ -208,7 +208,7 @@ def format_minutes(total_minutes):
 
     return ', '.join(result)
 
-@tasks.loop(seconds=30)
+@tasks.loop(minutes=5)
 async def monitor_shard_latency():
     shard_ids = [0, 1]
     shard_data = []
@@ -264,10 +264,10 @@ async def bot_data():
     embed.add_field(name=f"**`Other:`**", value=f"`Run-time:` {total_time}\n`Buttons:` **{buttons}**")
     await msggg.edit(embed=embed, content=None)
 
-@tasks.loop(seconds=30)
+@tasks.loop(minutes=5)
 async def change_status():
-    chance2 = randint(1, 30)
-    if chance2 == 30:
+    chance2 = randint(1, 10)
+    if chance2 == 10:
       line = random.choice(open("ai.txt", "r", encoding='cp932', errors='ignore').readlines())
       await client.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name=f"ai.txt | {line}"))
       words.clear()
