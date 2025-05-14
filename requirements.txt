@@ -144,7 +144,10 @@ uc-micro-py==1.0.1
 uritemplate==4.1.1
 urllib3==1.26.18
 uvicorn==0.20.0
-websockets==11.0.3
+
+### 13.1 IS MANDATORY FOR C.AI TO WORK
+websockets==13.1
+
 Werkzeug==3.0.1
 yarl==1.8.1
 zope.interface==5.4.0
