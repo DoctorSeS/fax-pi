@@ -337,7 +337,7 @@ class Starboard(commands.Cog):
         if content is not None:
           await channel.send(content)
 
-        messages.append({"original_message_id": message.id, "starboard_message_id": msg2.id, "emoji_id": getattr(reaction.emoji, 'id', None), "emoji_name": reaction.emoji.name})
+        messages.append({"original_message_id": message.id, "starboard_message_id": msg2.id, "emoji_id": getattr(reaction.emoji, 'id', None), "emoji_name": getattr(reaction.emoji, 'name', None)})
         update_db("guilds", f'{message.guild.id}', {"starboard_messages": messages})
   
 
