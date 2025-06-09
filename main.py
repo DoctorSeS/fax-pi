@@ -2,13 +2,13 @@ import json
 import logging
 import os
 import time
-
 import discord
 from discord.ext import commands, tasks
 import random
 import datetime
 from random import randint
 import traceback
+from dotenv import load_dotenv
 from rea import prefixresponse
 from termcolor import cprint
 import requests
@@ -18,17 +18,20 @@ import platform
 from inputimeout import inputimeout, TimeoutOccurred
 
 tracemalloc.start()
-
-os.environ["DISCORD_BOT_SECRET"] = "ODMwMTk5NTEyNTcyMTAwNjA5.GyR50E.sFezI207cDpL-hyhPGocIPxuiKbAD0unNV6IiE"
-os.environ["DISCORD_BOT_SECRET_TEST"] = "MTI1MjYzMDY4NTI4MjQ3MjAyNg.GBTiJG.B__cmQkImH866KCuZmPeLiuMqLxcTOcoB71LiI"
-os.environ["C.AI_TOKEN"] = "9d8224253e0afc39e09a9b8dfdef59f86c5b96a5"
-os.environ["C.AI_FAX"] = "eAit4xbYC5wLNLaSxmtDMzwXW6X8XyxY01c35ZHZ77U"
 os.environ["PATREON_KEY"] = get_db('misc')['patreon_key']
-os.environ["PATREON_CLIENT_ID"] = "JILolnWOMpX8rpAViza_ww1zCwB1mesWe9XCUbN9tvQ0lEB0dwdqhOEHfWRrE0kq"
 os.environ["PATREON_REFRESH_TOKEN"] = get_db('misc')['patreon_refresh_token']
-os.environ["API_NINJAS_KEY"] = "8LxAVyDMAusp/1SV/svJjw==eIMYqUC8KOH6dHK5"
-os.environ["OAUTH2_CLIENT_ID"] = "830199512572100609"
-os.environ["OAUTH2_CLIENT_SECRET"] = "CZTQl12s2hPnC2hggCMIZusC3Ej7_kWZ"
+load_dotenv()
+
+TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+TEST_TOKEN = os.getenv('DISCORD_BOT_TOKEN_TEST')
+C_AI_TOKEN = os.getenv('C_AI_TOKEN')
+C_AI_FAX = os.getenv('C_AI_FAX')
+PATREON_KEY = os.getenv('PATREON_KEY')
+PATREON_CLIENT_ID = os.getenv('PATREON_CLIENT_ID')
+PATREON_REFRESH_TOKEN = os.getenv('PATREON_REFRESH_TOKEN')
+API_NINJAS_KEY = os.getenv('API_NINJAS_KEY')
+OAUTH2_CLIENT_ID = os.getenv('OAUTH2_CLIENT_ID')
+OAUTH2_CLIENT_SECRET = os.getenv('OAUTH2_CLIENT_SECRET')
 
 patreon_id = 20100324
 
@@ -80,7 +83,7 @@ green = 0x00d10a
 logs = 639513264522526769
 logs_global = "logs"
 laure = 339823622774456322
-faxname = f"Lauren's Fax Machine"
+faxname = f"The Fax Machine"
 faxpfp = f"https://cdn.discordapp.com/attachments/863561097604497441/911788874349555732/fax.png"
 cgs = []
 words = []
@@ -354,12 +357,15 @@ async def on_message(message):
 
 @client.event
 async def on_error(event, *args, **kwargs):
-    message = args[0]  #Gets the message object
-    logging.warning(traceback.format_exc())  #logs the error
-    server = client.get_guild(863561097604497438)
-    channel = server.get_channel(943488712405291008)
-    embed = discord.Embed(description=f"**`ERROR:`** ```python\n{message}\n```", color=0xc40000)
-    await channel.send(embed=embed, content=None)
+    try:
+        message = args[0]  #Gets the message object
+        logging.warning(traceback.format_exc())  #logs the error
+        server = client.get_guild(863561097604497438)
+        channel = server.get_channel(943488712405291008)
+        embed = discord.Embed(description=f"**`ERROR:`** ```python\n{message}\n```", color=0xc40000)
+        await channel.send(embed=embed, content=None)
+    except:
+        print(f"ERROR - Couldn't send error message {args if not None else None}")
 
 unloaded_cogs = []
 all_files_num = 0
