@@ -45,7 +45,7 @@ class Ai(commands.Cog):
   def __init__(self, client):
     self.chat_ids = self.load_chat_ids()
     self.client = client
-    self.cai_client = aiocai.Client(os.getenv('C.AI_TOKEN'))
+    self.cai_client = aiocai.Client(os.getenv('C_AI_TOKEN'))
 
   def load_chat_ids(self):
     if os.path.exists(CHAT_IDS_FILE):
@@ -78,7 +78,7 @@ class Ai(commands.Cog):
         return
       else:
         try:
-          char = os.getenv('C.AI_FAX')  # Character ID
+          char = os.getenv('C_AI_FAX')  # Character ID
           user_id = str(message.author.id)
 
           async with message.channel.typing():
@@ -106,7 +106,7 @@ class Ai(commands.Cog):
           await channel.send(embed=embed2)
 
         except Exception as e:
-          await message.channel.send(f"`ERROR: Something definitely went wrong.\n\n{str(e)}")
+          await message.channel.send(f"```diff\nERROR: Something definitely went wrong.\n\n{str(e)}```")
 
           error_embed = discord.Embed(description=f"Error: {str(e)}", color=discord.Color.red())
           await channel.send(embed=error_embed)
