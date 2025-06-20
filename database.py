@@ -3,8 +3,7 @@ import os
 import firebase_admin
 
 cred = credentials.Certificate("fax-db-credentials.json")
-firebase_admin.initialize_app(cred)
-
+firebase_admin.initialize_app(cred, {'databaseURL': "https://fax-db-807bb-default-rtdb.europe-west1.firebasedatabase.app"})
 def get_db(table):
     ref = db.reference(f'/{table}/')
     got = dict(ref.get())
